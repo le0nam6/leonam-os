@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leonam OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0f;
+    --surface: #13131a;
+    --surface2: #1a1a24;
+    --border: #2a2a38;
+    --accent: #7c6af7;
+    --accent2: #f7a26a;
+    --text: #e8e8f0;
+    --muted: #6b6b80;
+    --success: #4ade80;
+    --danger: #f87171;
+    --youtube: #ff4444;
+    --pdf: #f7a26a;
+    --nota: #7c6af7;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+  }
+
+  .logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-text span { color: var(--accent); }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .nav { padding: 16px 12px; flex: 1; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--muted);
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--surface2); color: var(--text); }
+  .nav-item.active .nav-dot { background: var(--accent); }
+
+  .nav-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  .sidebar-stats {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .stat-pill {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .stat-pill strong {
+    display: block;
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  /* MAIN */
+  .main {
+    margin-left: 220px;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .page-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .content { padding: 32px; }
+
+  /* PÁGINAS */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* INGESTÃO */
+  .ingest-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .tab-btn {
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tab-btn:hover { border-color: var(--accent); color: var(--text); }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .ingest-panel { display: none; }
+  .ingest-panel.active { display: block; }
+
+  .form-group { margin-bottom: 20px; }
+
+  label {
+    display: block;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  input[type="text"], input[type="url"], textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { min-height: 180px; resize: vertical; line-height: 1.6; }
+
+  .btn {
+    padding: 11px 24px;
+    border-radius: 8px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost { background: var(--surface2); color: var(--text); }
+  .btn-ghost:hover { background: var(--border); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; }
+
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .upload-zone:hover { border-color: var(--accent); background: rgba(124, 106, 247, 0.05); }
+  .upload-zone.dragging { border-color: var(--accent); background: rgba(124, 106, 247, 0.1); }
+
+  .upload-icon { font-size: 36px; margin-bottom: 12px; }
+  .upload-text { color: var(--muted); font-size: 14px; }
+  .upload-text strong { color: var(--text); }
+
+  /* STATUS/FEEDBACK */
+  .status-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-top: 20px;
+    font-size: 13px;
+    display: none;
+  }
+
+  .status-box.show { display: block; }
+  .status-box.loading { border-color: var(--accent); color: var(--muted); }
+  .status-box.success { border-color: var(--success); }
+  .status-box.error { border-color: var(--danger); color: var(--danger); }
+
+  .spinner {
+    display: inline-block;
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* BIBLIOTECA */
+  .biblioteca-header {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    align-items: center;
+  }
+
+  .search-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+  }
+
+  .search-input:focus { border-color: var(--accent); }
+
+  .filter-select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .insights-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+  }
+
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: border-color 0.15s;
+  }
+
+  .insight-card:hover { border-color: var(--accent); }
+
+  .insight-tipo {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .tipo-nota { background: rgba(124,106,247,0.15); color: var(--nota); }
+  .tipo-livro { background: rgba(247,162,106,0.15); color: var(--pdf); }
+  .tipo-youtube { background: rgba(255,68,68,0.15); color: var(--youtube); }
+
+  .insight-titulo {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  .insight-preview {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .insight-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .insight-data {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .insight-actions { display: flex; gap: 6px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 80px 40px;
+    color: var(--muted);
+  }
+
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-text { font-size: 15px; }
+  .empty-sub { font-size: 13px; margin-top: 6px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 13px;
+    z-index: 9999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: var(--success); }
+  .toast.error { border-color: var(--danger); }
+
+  /* EXPORT BAR */
+  .export-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .export-info { font-size: 13px; color: var(--muted); }
+  .export-info strong { color: var(--text); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  .modal-titulo {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+  }
+
+  .modal-conteudo {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--muted);
+    white-space: pre-wrap;
+    margin-bottom: 20px;
+  }
+
+  .modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-text">Leonam<span>OS</span></div>
+    <div class="logo-sub">Segundo Cérebro</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="irPara('ingestao', this)">
+      <div class="nav-dot"></div>
+      Ingestão
+    </div>
+    <div class="nav-item" onclick="irPara('biblioteca', this)">
+      <div class="nav-dot"></div>
+      Biblioteca
+    </div>
+    <div class="nav-item" onclick="irPara('conteudo', this)">
+      <div class="nav-dot"></div>
+      Criar Conteúdo
+    </div>
+  </nav>
+  <div class="sidebar-stats">
+    <div class="stat-pill">
+      <strong id="stat-total">0</strong>
+      convicções salvas
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Ingestão de Conhecimento</div>
+  </div>
+
+  <div class="content">
+
+    <!-- PÁGINA: INGESTÃO -->
+    <div class="page active" id="page-ingestao">
+      <div class="ingest-tabs">
+        <button class="tab-btn active" onclick="abrirTab('docx', this)">📄 Reunião (.docx)</button>
+        <button class="tab-btn" onclick="abrirTab('nota', this)">✏️ Texto</button>
+        <button class="tab-btn" onclick="abrirTab('pdf', this)">📚 Livro (PDF)</button>
+        <button class="tab-btn" onclick="abrirTab('youtube', this)">▶️ YouTube</button>
+      </div>
+
+      <!-- DOCX -->
+      <div class="ingest-panel active" id="panel-docx">
+        <div class="form-group">
+          <label>Arquivo .docx da reunião</label>
+          <div class="upload-zone" id="docx-zone" onclick="document.getElementById('docx-input').click()">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text"><strong>Clique para selecionar</strong> ou arraste o .docx aqui</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:8px" id="docx-nome"></div>
+          </div>
+          <input type="file" id="docx-input" accept=".docx" style="display:none" onchange="selecionarDocx(this)">
+        </div>
+        <button class="btn btn-primary" id="btn-docx" onclick="ingerirDocx()" disabled>
+          Extrair convicções
+        </button>
+        <div id="status-docx" class="status-box"></div>
+      </div>
+
+      <!-- NOTA/TEXTO -->
+      <div class="ingest-panel" id="panel-nota">
+        <div class="form-group">
+          <label>Origem (nome da reunião, fonte, etc)</label>
+          <input type="text" id="nota-origem" placeholder="Ex: Reunião Croma-R — 02/04/2026">
+        </div>
+        <div class="form-group">
+          <label>Texto da nota</label>
+          <textarea id="nota-texto" placeholder="Cole aqui o conteúdo da nota de reunião, artigo, transcrição..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="ingerirTexto()" id="btn-nota">
+          Extrair convicções
+        </button>
+        <div class="status-box" id="status-nota"></div>
+      </div>
+
+      <!-- YOUTUBE -->
+      <div class="ingest-panel" id="panel-youtube">
+        <div class="form-group">
+          <label>URL do vídeo</label>
+          <input type="url" id="yt-url" placeholder="https://www.youtube.com/watch?v=...">
+        </div>
+        <button class="btn btn-primary" onclick="ingerirYoutube()" id="btn-yt">
+          Extrair convicções do vídeo
+        </button>
+        <div class="status-box" id="status-yt"></div>
+      </div>
+
+      <!-- PDF -->
+      <div class="ingest-panel" id="panel-pdf">
+        <div class="form-group">
+          <label>Nome do livro / documento</label>
+          <input type="text" id="pdf-origem" placeholder="Ex: A Startup Enxuta — Eric Ries">
+        </div>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('pdf-input').click()">
+          <div class="upload-icon">📂</div>
+          <div class="upload-text"><strong>Clique para selecionar</strong> ou arraste o PDF aqui</div>
+          <input type="file" id="pdf-input" accept=".pdf" style="display:none" onchange="selecionarPDF(this)">
+        </div>
+        <div id="pdf-nome" style="margin-top: 10px; font-size: 13px; color: var(--muted);"></div>
+        <br>
+        <button class="btn btn-primary" onclick="ingerirPDF()" id="btn-pdf" disabled>
+          Extrair convicções do PDF
+        </button>
+        <div class="status-box" id="status-pdf"></div>
+      </div>
+    </div>
+
+    <!-- PÁGINA: CRIAR CONTEÚDO -->
+    <div class="page" id="page-conteudo">
+
+      <div style="display:flex;gap:12px;margin-bottom:20px">
+        <div style="flex:2">
+          <label>Tema</label>
+          <input type="text" id="conteudo-tema" placeholder="Ex: Por que freelancers cobram barato, precificação para criativos...">
+        </div>
+        <div style="flex:1">
+          <label>Tipo</label>
+          <select id="conteudo-tipo" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+            <option value="carrossel">Carrossel Instagram</option>
+            <option value="substack">Artigo Substack</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label>Ângulo</label>
+          <select id="conteudo-angulo" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+            <option value="contraintuitivo">Contraintuitivo</option>
+            <option value="análise de caso">Análise de caso real</option>
+            <option value="prático">Prático</option>
+            <option value="financeiro">Financeiro / ROI</option>
+            <option value="psicológico">Psicológico</option>
+            <option value="estratégico">Estratégico</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- CONTEXTO ADICIONAL -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+        <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:14px">Contexto adicional (opcional mas recomendado)</div>
+
+        <div class="form-group">
+          <label>Link de notícia, artigo ou post de referência</label>
+          <div style="display:flex;gap:8px">
+            <input type="url" id="ctx-url" placeholder="https://..." style="flex:1">
+            <button class="btn btn-ghost btn-sm" onclick="adicionarURL()" style="white-space:nowrap">+ Adicionar</button>
+          </div>
+          <div id="urls-adicionadas" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Documento de deep research (PDF)</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="file" id="ctx-pdf" accept=".pdf" style="display:none" onchange="adicionarPDF(this)" multiple>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ctx-pdf').click()">+ Anexar PDF</button>
+            <span id="ctx-pdf-nome" style="font-size:12px;color:var(--muted)"></span>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0">
+          <label>Briefing livre — cole referências, ideias, dados, post de referência em texto</label>
+          <textarea id="ctx-briefing" placeholder="Cole aqui: transcrição de post, dados de pesquisa, contexto do cliente, ideia inicial, qualquer coisa que queira que o modelo considere..." style="min-height:100px"></textarea>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="btn-gerar" onclick="gerarConteudo()">
+        ✦ Gerar conteúdo
+      </button>
+      <div id="status-conteudo" class="status-box"></div>
+      <div id="resultado-conteudo" style="display:none;margin-top:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:12px;color:var(--muted)" id="notas-usadas"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="copiarConteudo()">Copiar</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportarConteudo()">↗ Obsidian</button>
+          </div>
+        </div>
+        <div id="conteudo-output" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;white-space:pre-wrap;font-size:14px;line-height:1.7;color:var(--text);max-height:600px;overflow-y:auto"></div>
+      </div>
+    </div>
+
+    <!-- PÁGINA: BIBLIOTECA -->
+    <div class="page" id="page-biblioteca">
+      <div class="export-bar">
+        <div class="export-info">
+          <strong id="count-insights">0</strong> convicções na biblioteca
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="exportarTodos()">
+          ↗ Exportar tudo pro Obsidian
+        </button>
+      </div>
+
+      <div class="biblioteca-header">
+        <input class="search-input" type="text" placeholder="Buscar convicções..." oninput="buscarInsights(this.value)">
+        <select class="filter-select" onchange="filtrarTipo(this.value)">
+          <option value="todos">Todos os tipos</option>
+          <option value="nota">Notas</option>
+          <option value="livro">Livros</option>
+          <option value="youtube">YouTube</option>
+        </select>
+      </div>
+
+      <div class="insights-grid" id="grid-insights">
+        <div class="empty-state">
+          <div class="empty-icon">🧠</div>
+          <div class="empty-text">Nenhuma convicção ainda</div>
+          <div class="empty-sub">Vá para Ingestão e processe seu primeiro conteúdo</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="fecharModal(event)">
+  <div class="modal">
+    <div class="modal-titulo" id="modal-titulo"></div>
+    <div class="modal-conteudo" id="modal-conteudo"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal()">Fechar</button>
+      <button class="btn btn-primary" id="modal-exportar">↗ Exportar pro Obsidian</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:3747';
+let pdfFile = null;
+let tipoAtual = 'todos';
+let buscaAtual = '';
+let modalId = null;
+
+// NAVEGAÇÃO
+function irPara(pagina, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + pagina).classList.add('active');
+  el.classList.add('active');
+
+  const titulos = { ingestao: 'Ingestão de Conhecimento', biblioteca: 'Biblioteca de Convicções' };
+  document.getElementById('page-title').textContent = titulos[pagina];
+
+  if (pagina === 'biblioteca') carregarInsights();
+}
+
+function abrirTab(tab, el) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.ingest-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// STATUS
+function setStatus(id, tipo, msg) {
+  const el = document.getElementById('status-' + id);
+  el.className = 'status-box show ' + tipo;
+  el.innerHTML = tipo === 'loading' ? `<span class="spinner"></span>${msg}` : msg;
+}
+
+function hideStatus(id) {
+  document.getElementById('status-' + id).className = 'status-box';
+}
+
+// TOAST
+function toast(msg, tipo = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + tipo;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// INGESTÃO: TEXTO
+async function ingerirTexto() {
+  const texto = document.getElementById('nota-texto').value.trim();
+  const origem = document.getElementById('nota-origem').value.trim() || 'nota sem nome';
+  if (!texto) return toast('Cola um texto antes', 'error');
+
+  const btn = document.getElementById('btn-nota');
+  btn.disabled = true;
+  setStatus('nota', 'loading', 'Enviando para o Gemini...');
+
+  try {
+    const res = await fetch(`${API}/api/ingerir/texto`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texto, origem, tipo: 'nota' })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      setStatus('nota', 'success', `✓ ${data.convicoes.length} convicção(ões) extraída(s) e salva(s)!`);
+      document.getElementById('nota-texto').value = '';
+      atualizarStats();
+    } else {
+      setStatus('nota', 'error', 'Erro: ' + data.erro);
+    }
+  } catch (e) {
+    setStatus('nota', 'error', 'Servidor offline. Inicie o servidor primeiro.');
+  }
+  btn.disabled = false;
+}
+
+// INGESTÃO: YOUTUBE
+async function ingerirYoutube() {
+  const url = document.getElementById('yt-url').value.trim();
+  if (!url) return toast('Cole uma URL do YouTube', 'error');
+
+  const btn = document.getElementById('btn-yt');
+  btn.disabled = true;
+  setStatus('yt', 'loading', 'Buscando transcrição do vídeo...');
+
+  try {
+    const res = await fetch(`${API}/api/ingerir/youtube`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      setStatus('yt', 'success', `✓ ${data.convicoes.length} convicção(ões) extraída(s)!`);
+      document.getElementById('yt-url').value = '';
+      atualizarStats();
+    } else {
+      setStatus('yt', 'error', 'Erro: ' + data.erro);
+    }
+  } catch (e) {
+    setStatus('yt', 'error', 'Servidor offline. Inicie o servidor primeiro.');
+  }
+  btn.disabled = false;
+}
+
+// INGESTÃO: PDF
+function selecionarPDF(input) {
+  pdfFile = input.files[0];
+  if (pdfFile) {
+    document.getElementById('pdf-nome').textContent = '📄 ' + pdfFile.name;
+    document.getElementById('btn-pdf').disabled = false;
+  }
+}
+
+async function ingerirPDF() {
+  if (!pdfFile) return;
+  const origem = document.getElementById('pdf-origem').value.trim() || pdfFile.name;
+
+  const btn = document.getElementById('btn-pdf');
+  btn.disabled = true;
+  setStatus('pdf', 'loading', 'Lendo o PDF e extraindo convicções...');
+
+  try {
+        const briefing = document.getElementById('ctx-briefing') ? document.getElementById('ctx-briefing').value.trim() : '';
+
+    // monta query string com campos de texto
+    const params = new URLSearchParams({ tema, tipo, angulo });
+    if (briefing) params.append('briefing', briefing);
+    if (typeof urlsContexto !== 'undefined' && urlsContexto.length) params.append('urls', JSON.stringify(urlsContexto));
+
+    // FormData só para arquivos
+    const formData = new FormData();
+    if (typeof pdfsContexto !== 'undefined') pdfsContexto.forEach((f, i) => formData.append(`pdf_${i}`, f));
+
+    const res = await fetch(`${API}/api/conteudo/gerar?${params.toString()}`, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    if (data.ok) {
+      setStatus('pdf', 'success', `✓ ${data.convicoes.length} convicção(ões) extraída(s)!`);
+      pdfFile = null;
+      document.getElementById('pdf-input').value = '';
+      document.getElementById('pdf-nome').textContent = '';
+      btn.disabled = true;
+      atualizarStats();
+    } else {
+      setStatus('pdf', 'error', 'Erro: ' + data.erro);
+    }
+  } catch (e) {
+    setStatus('pdf', 'error', 'Servidor offline. Inicie o servidor primeiro.');
+  }
+  btn.disabled = false;
+}
+
+// BIBLIOTECA
+async function carregarInsights() {
+  try {
+    const params = new URLSearchParams();
+    if (tipoAtual !== 'todos') params.set('tipo', tipoAtual);
+    if (buscaAtual) params.set('busca', buscaAtual);
+
+    const res = await fetch(`${API}/api/insights?${params}`);
+    const data = await res.json();
+    renderizarGrid(data);
+    document.getElementById('count-insights').textContent = data.length;
+  } catch (e) {
+    document.getElementById('grid-insights').innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-text">Servidor offline</div><div class="empty-sub">Inicie o servidor para ver a biblioteca</div></div>';
+  }
+}
+
+function renderizarGrid(insights) {
+  const grid = document.getElementById('grid-insights');
+  if (!insights.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🧠</div><div class="empty-text">Nenhuma convicção encontrada</div><div class="empty-sub">Tente outro filtro ou inira novo conteúdo</div></div>';
+    return;
+  }
+
+  grid.innerHTML = insights.map(i => {
+    const tipoClass = { nota: 'tipo-nota', livro: 'tipo-livro', youtube: 'tipo-youtube' }[i.tipo] || 'tipo-nota';
+    const tipoLabel = { nota: 'Nota', livro: 'Livro', youtube: 'YouTube' }[i.tipo] || i.tipo;
+    const data = new Date(i.criado_em).toLocaleDateString('pt-BR');
+    const preview = i.conteudo.replace(/##[^\n]*/g, '').replace(/\*\*[^*]*\*\*/g, '').trim().slice(0, 120);
+
+    return `
+      <div class="insight-card">
+        <span class="insight-tipo ${tipoClass}">${tipoLabel}</span>
+        <div class="insight-titulo">${i.titulo}</div>
+        <div class="insight-preview">${preview}...</div>
+        <div class="insight-footer">
+          <span class="insight-data">${data}</span>
+          <div class="insight-actions">
+            <button class="btn btn-ghost btn-sm" onclick="verInsight(${i.id})">Ver</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportarInsight(${i.id})">↗ Obsidian</button>
+            <button class="btn btn-danger btn-sm" onclick="deletarInsight(${i.id})">✕</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function buscarInsights(v) {
+  buscaAtual = v;
+  carregarInsights();
+}
+
+function filtrarTipo(v) {
+  tipoAtual = v;
+  carregarInsights();
+}
+
+async function exportarInsight(id) {
+  const res = await fetch(`${API}/api/exportar/${id}`, { method: 'POST' });
+  const data = await res.json();
+  if (data.ok) toast('✓ Exportado pro Obsidian!');
+  else toast('Erro: ' + data.erro, 'error');
+}
+
+async function exportarTodos() {
+  const res = await fetch(`${API}/api/exportar-todos`, { method: 'POST' });
+  const data = await res.json();
+  if (data.ok) toast(`✓ ${data.exportados} convicções exportadas!`);
+  else toast('Erro ao exportar', 'error');
+}
+
+async function deletarInsight(id) {
+  if (!confirm('Deletar essa convicção?')) return;
+  await fetch(`${API}/api/insights/${id}`, { method: 'DELETE' });
+  carregarInsights();
+  atualizarStats();
+}
+
+async function verInsight(id) {
+  const res = await fetch(`${API}/api/insights`);
+  const data = await res.json();
+  const insight = data.find(i => i.id === id);
+  if (!insight) return;
+
+  modalId = id;
+  document.getElementById('modal-titulo').textContent = insight.titulo;
+  document.getElementById('modal-conteudo').textContent = insight.conteudo;
+  document.getElementById('modal-exportar').onclick = () => { exportarInsight(id); fecharModal(); };
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function fecharModal(e) {
+  if (!e || e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('show');
+  }
+}
+
+// STATS
+async function atualizarStats() {
+  try {
+    const res = await fetch(`${API}/api/stats`);
+    const data = await res.json();
+    document.getElementById('stat-total').textContent = data.total;
+  } catch (e) {}
+}
+
+// DOCX
+let docxFile = null;
+function selecionarDocx(input) {
+  const f = input.files[0];
+  if (!f) return;
+  docxFile = f;
+  document.getElementById('docx-nome').textContent = '📄 ' + f.name;
+  document.getElementById('btn-docx').disabled = false;
+}
+
+const docxZone = document.getElementById('docx-zone');
+if (docxZone) {
+  docxZone.addEventListener('dragover', e => { e.preventDefault(); docxZone.classList.add('dragging'); });
+  docxZone.addEventListener('dragleave', () => docxZone.classList.remove('dragging'));
+  docxZone.addEventListener('drop', e => {
+    e.preventDefault();
+    docxZone.classList.remove('dragging');
+    const f = e.dataTransfer.files[0];
+    if (f && f.name.endsWith('.docx')) {
+      docxFile = f;
+      document.getElementById('docx-nome').textContent = '📄 ' + f.name;
+      document.getElementById('btn-docx').disabled = false;
+    } else {
+      toast('Só aceita arquivos .docx', 'error');
+    }
+  });
+}
+
+async function ingerirDocx() {
+  if (!docxFile) return;
+  const btn = document.getElementById('btn-docx');
+  btn.disabled = true;
+  setStatus('docx', 'loading', '<span class="spinner"></span>Processando reunião...');
+
+  const formData = new FormData();
+  formData.append('arquivo', docxFile);
+
+  try {
+    const res = await fetch(`${API}/api/ingerir/docx`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.ok) {
+      setStatus('docx', 'success', `✓ <strong>${data.origem}</strong> processado!<br>${data.convicoes.length} convicção(ões) extraída(s) e salva(s) na biblioteca.`);
+      docxFile = null;
+      document.getElementById('docx-input').value = '';
+      document.getElementById('docx-nome').textContent = '';
+      atualizarStats();
+    } else {
+      setStatus('docx', 'error', 'Erro: ' + data.erro);
+    }
+  } catch (e) {
+    setStatus('docx', 'error', 'Servidor offline.');
+  }
+  btn.disabled = false;
+}
+
+// CRIAR CONTEÚDO
+let conteudoGerado = null;
+let temaGerado = null;
+let tipoGerado = null;
+
+async function gerarConteudo() {
+  const tema = document.getElementById('conteudo-tema').value.trim();
+  const tipo = document.getElementById('conteudo-tipo').value;
+  const angulo = document.getElementById('conteudo-angulo').value;
+  if (!tema) return toast('Digite um tema', 'error');
+
+  const btn = document.getElementById('btn-gerar');
+  btn.disabled = true;
+  setStatus('conteudo', 'loading', '<span class="spinner"></span>Buscando notas no vault e gerando conteúdo...');
+  document.getElementById('resultado-conteudo').style.display = 'none';
+
+  try {
+    const res = await fetch(`${API}/api/conteudo/gerar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tema, tipo, angulo })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      conteudoGerado = data.conteudo;
+      temaGerado = tema;
+      tipoGerado = tipo;
+      setStatus('conteudo', 'success', `✓ Gerado com base em ${data.notasUsadas.length} nota(s) do vault.`);
+      document.getElementById('conteudo-output').textContent = data.conteudo;
+      document.getElementById('notas-usadas').textContent = data.notasUsadas.length > 0
+        ? `📚 Notas usadas: ${data.notasUsadas.slice(0, 3).join(', ')}${data.notasUsadas.length > 3 ? '...' : ''}`
+        : '📚 Sem notas do vault — gerado com conhecimento geral';
+      document.getElementById('resultado-conteudo').style.display = 'block';
+    } else {
+      setStatus('conteudo', 'error', 'Erro: ' + data.erro);
+    }
+  } catch (e) {
+    setStatus('conteudo', 'error', 'Servidor offline.');
+  }
+  btn.disabled = false;
+}
+
+function copiarConteudo() {
+  if (!conteudoGerado) return;
+  navigator.clipboard.writeText(conteudoGerado);
+  toast('✓ Copiado!');
+}
+
+async function exportarConteudo() {
+  if (!conteudoGerado) return;
+  const res = await fetch(`${API}/api/conteudo/exportar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ conteudo: conteudoGerado, tema: temaGerado, tipo: tipoGerado })
+  });
+  const data = await res.json();
+  if (data.ok) toast('✓ Exportado pro Obsidian!');
+  else toast('Erro: ' + data.erro, 'error');
+}
+
+// DRAG & DROP no upload
+const zone = document.getElementById('upload-zone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragging'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragging'));
+zone.addEventListener('drop', e => {
+  e.preventDefault();
+  zone.classList.remove('dragging');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type === 'application/pdf') {
+    pdfFile = f;
+    document.getElementById('pdf-nome').textContent = '📄 ' + f.name;
+    document.getElementById('btn-pdf').disabled = false;
+  } else {
+    toast('Só aceita arquivos PDF', 'error');
+  }
+});
+
+// INIT
+atualizarStats();
+setInterval(atualizarStats, 10000);
+</script>
+
+<style>
+.progress-bar-wrap { background: var(--surface2); border-radius: 6px; height: 8px; margin: 12px 0; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--accent); transition: width 0.3s; border-radius: 6px; }
+.progress-log { max-height: 160px; overflow-y: auto; font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.8; }
+.progress-log .ok { color: var(--success); }
+.progress-log .skip { color: var(--muted); }
+.progress-log .err { color: var(--danger); }
+</style>
+
+<script>
+// ── SOBRESCREVE ingerirPDF com SSE ──────────────────────────
+async function ingerirPDF() {
+  if (!pdfFile) return;
+  const origem = document.getElementById('pdf-origem').value.trim() || pdfFile.name.replace('.pdf','');
+  const btn = document.getElementById('btn-pdf');
+  btn.disabled = true;
+
+  const statusEl = document.getElementById('status-pdf');
+  statusEl.className = 'status-box show loading';
+  statusEl.innerHTML = '<span class="spinner"></span>Enviando arquivo...';
+
+  // 1. envia o arquivo
+  const formData = new FormData();
+  formData.append('arquivo', pdfFile);
+  formData.append('origem', origem);
+
+  let jobId;
+  try {
+    const r = await fetch('http://localhost:3747/api/ingerir/pdf/iniciar', { method: 'POST', body: formData });
+    const d = await r.json();
+    if (!d.ok) { statusEl.className = 'status-box show error'; statusEl.textContent = 'Erro: ' + d.erro; btn.disabled = false; return; }
+    jobId = d.jobId;
+  } catch(e) { statusEl.className = 'status-box show error'; statusEl.textContent = 'Servidor offline.'; btn.disabled = false; return; }
+
+  // 2. abre SSE de progresso
+  statusEl.innerHTML = `
+    <strong>Processando livro...</strong>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="pdf-bar" style="width:0%"></div></div>
+    <div id="pdf-pct" style="font-size:12px;color:var(--muted)">0%</div>
+    <div class="progress-log" id="pdf-log"></div>
+  `;
+  statusEl.className = 'status-box show loading';
+
+  const es = new EventSource('http://localhost:3747/api/ingerir/pdf/progresso/' + jobId);
+
+  es.onmessage = (e) => {
+    const d = JSON.parse(e.data);
+    const bar = document.getElementById('pdf-bar');
+    const pct = document.getElementById('pdf-pct');
+    const log = document.getElementById('pdf-log');
+
+    if (d.tipo === 'inicio') {
+      log.innerHTML += `<div>📚 ${d.origem} — ${d.total} partes para processar</div>`;
+    } else if (d.tipo === 'chunk') {
+      const p = Math.round((d.atual / d.total) * 100);
+      if (bar) bar.style.width = p + '%';
+      if (pct) pct.textContent = p + '% (' + d.atual + '/' + d.total + ')';
+      if (d.status === 'ok' && log) log.innerHTML += `<div class="ok">✓ Parte ${d.atual} — ${d.preview || ''}</div>`;
+      else if (d.status === 'sem_conteudo' && log) log.innerHTML += `<div class="skip">— Parte ${d.atual} sem conteúdo relevante</div>`;
+      else if (d.status === 'erro' && log) log.innerHTML += `<div class="err">✗ Parte ${d.atual} erro: ${d.erro}</div>`;
+      if (log) log.scrollTop = log.scrollHeight;
+    } else if (d.tipo === 'consolidando') {
+      if (bar) bar.style.width = '95%';
+      if (log) log.innerHTML += `<div>⚙️ Gerando nota de leitura e síntese Adler...</div>`;
+    } else if (d.tipo === 'concluido') {
+      es.close();
+      if (bar) bar.style.width = '100%';
+      statusEl.className = 'status-box show success';
+      const capitulosInfo = d.modoCapitulos && d.capitulos > 0
+        ? `<br>📖 ${d.capitulos} notas de capítulo → <code>03 - Literatura/${origem}/</code>`
+        : '';
+      statusEl.innerHTML = `
+        ✓ <strong>${origem}</strong> processado!<br>
+        📁 Tema: <strong>${d.tema}</strong><br>
+        📚 ${d.aprendizados} partes com conteúdo extraídas<br>
+        📄 Nota de leitura → <code>03 - Literatura/</code><br>
+        💡 Síntese → <code>02 - Notas Permanentes/${d.tema}/</code><br>
+        🗂 MOC atualizado${capitulosInfo}
+      `;
+      pdfFile = null;
+      document.getElementById('pdf-input').value = '';
+      document.getElementById('pdf-nome').textContent = '';
+      btn.disabled = true;
+      atualizarStats();
+    } else if (d.tipo === 'erro') {
+      es.close();
+      statusEl.className = 'status-box show error';
+      statusEl.textContent = 'Erro: ' + d.msg;
+      btn.disabled = false;
+    }
+  };
+
+  es.onerror = () => {
+    es.close();
+    btn.disabled = false;
+  };
+}
+
+// ── SOBRESCREVE ingerirYoutube ───────────────────────────────
+async function ingerirYoutube() {
+  const url = document.getElementById('yt-url').value.trim();
+  if (!url) return toast('Cole uma URL do YouTube', 'error');
+  const btn = document.getElementById('btn-yt');
+  btn.disabled = true;
+  setStatus('yt', 'loading', 'Baixando transcrição e gerando notas... isso pode levar 1-2 minutos.');
+  try {
+    const res = await fetch('http://localhost:3747/api/ingerir/youtube', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+    if (data.ok) {
+      setStatus('yt', 'success', `✓ "${data.titulo}" processado!<br>
+        📁 Tema: <strong>${data.tema}</strong><br>
+        📄 Transcrição → <code>03 - Literatura/YouTube/</code><br>
+        💡 Insights → <code>02 - Notas Permanentes/${data.tema}/</code><br>
+        🗂 MOC atualizado`);
+      document.getElementById('yt-url').value = '';
+      atualizarStats();
+    } else { setStatus('yt', 'error', 'Erro: ' + data.erro); }
+  } catch(e) { setStatus('yt', 'error', 'Servidor offline.'); }
+  btn.disabled = false;
+}
+</script>
+
+
+<script>
+// ── CONTEXTO: URLs e PDFs ─────────────────────────────────────
+let urlsContexto = [];
+let pdfsContexto = [];
+
+function adicionarURL() {
+  const input = document.getElementById('ctx-url');
+  const url = (input.value || '').trim();
+  if (!url.startsWith('http')) return toast('URL inválida — precisa começar com http', 'error');
+  if (urlsContexto.includes(url)) return toast('URL já adicionada', 'error');
+  urlsContexto.push(url);
+  input.value = '';
+  renderURLs();
+  toast('URL adicionada');
+}
+
+function removerURL(idx) {
+  urlsContexto.splice(idx, 1);
+  renderURLs();
+}
+
+function renderURLs() {
+  const c = document.getElementById('urls-adicionadas');
+  if (!c) return;
+  c.innerHTML = urlsContexto.map((u, i) => `
+    <div style="background:var(--surface2);border:0.5px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;display:inline-flex;align-items:center;gap:6px;margin:2px">
+      <span style="color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.replace(/https?:\/\//, '').slice(0, 40)}</span>
+      <span onclick="removerURL(${i})" style="cursor:pointer;color:var(--danger);font-weight:bold">✕</span>
+    </div>`).join('');
+}
+
+function adicionarPDF(input) {
+  Array.from(input.files).forEach(f => {
+    if (!pdfsContexto.find(p => p.name === f.name)) pdfsContexto.push(f);
+  });
+  input.value = '';
+  renderPDFs();
+}
+
+function removerPDF(idx) {
+  pdfsContexto.splice(idx, 1);
+  renderPDFs();
+}
+
+function renderPDFs() {
+  const el = document.getElementById('ctx-pdf-nome');
+  if (!el) return;
+  if (!pdfsContexto.length) { el.innerHTML = ''; return; }
+  el.innerHTML = pdfsContexto.map((f, i) => `
+    <span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface2);border:0.5px solid var(--border);border-radius:6px;padding:3px 8px;font-size:12px;margin:2px">
+      📄 ${f.name.slice(0, 30)}
+      <span onclick="removerPDF(${i})" style="cursor:pointer;color:var(--danger);font-weight:bold">✕</span>
+    </span>`).join('');
+}
+
+// ── GERAR CONTEÚDO (sobrescreve versão anterior) ──────────────
+async function gerarConteudo() {
+  const tema = (document.getElementById('conteudo-tema').value || '').trim();
+  const tipo = document.getElementById('conteudo-tipo').value;
+  const angulo = document.getElementById('conteudo-angulo').value;
+  const briefingEl = document.getElementById('ctx-briefing');
+  const briefing = briefingEl ? briefingEl.value.trim() : '';
+
+  if (!tema) return toast('Digite um tema', 'error');
+
+  const btn = document.getElementById('btn-gerar');
+  btn.disabled = true;
+  setStatus('conteudo', 'loading', '<span class="spinner"></span>Buscando vault, processando contexto e gerando...');
+  document.getElementById('resultado-conteudo').style.display = 'none';
+
+  try {
+    // tudo no FormData — sem query string
+    const formData = new FormData();
+    formData.append('tema', tema);
+    formData.append('tipo', tipo);
+    formData.append('angulo', angulo);
+    if (briefing) formData.append('briefing', briefing);
+    if (typeof urlsContexto !== 'undefined' && urlsContexto.length) formData.append('urls', JSON.stringify(urlsContexto));
+    if (typeof pdfsContexto !== 'undefined') pdfsContexto.forEach((f, i) => formData.append('pdf_' + i, f));
+
+    const res = await fetch('http://localhost:3747/api/conteudo/gerar', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+    if (data.ok) {
+      conteudoGerado = data.conteudo;
+      temaGerado = tema;
+      tipoGerado = tipo;
+      setStatus('conteudo', 'success', '✓ Gerado com base em ' + data.notasUsadas.length + ' nota(s) do vault.');
+      document.getElementById('conteudo-output').textContent = data.conteudo;
+      if (data.notasUsadas.length) {
+        document.getElementById('notas-usadas').textContent = 'Notas usadas: ' + data.notasUsadas.join(', ');
+      }
+      document.getElementById('resultado-conteudo').style.display = 'block';
+    } else {
+      setStatus('conteudo', 'error', 'Erro: ' + data.erro);
+    }
+  } catch (e) {
+    setStatus('conteudo', 'error', 'Servidor offline.');
+  }
+  btn.disabled = false;
+}
+</script>
+
+</body>
+</html>
