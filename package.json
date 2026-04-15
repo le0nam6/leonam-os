@@ -7,6 +7,7 @@
     "sync": "node sync-vault.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.89.0",
     "@supabase/supabase-js": "^2.39.3",
     "axios": "^1.6.7",
     "cors": "^2.8.5",

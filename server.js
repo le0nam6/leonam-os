@@ -7,6 +7,7 @@ const fs = require('fs');
 const axios = require('axios');
 const os = require('os');
 const { createClient } = require('@supabase/supabase-js');
+const Anthropic = require('@anthropic-ai/sdk');
 
 const app = express();
 const PORT = process.env.PORT || 3747;
@@ -26,6 +27,7 @@ const supabase = createClient(
   process.env.SUPABASE_URL || '',
   process.env.SUPABASE_KEY || ''
 );
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_KEY });
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 
@@ -108,6 +110,15 @@ async function chamarGemini(prompt, tentativas = 3) {
       if (i === tentativas - 1) throw e;
     }
   }
+}
+
+async function chamarClaude(prompt) {
+  const msg = await anthropic.messages.create({
+    model: 'claude-3-5-haiku-20241022',
+    max_tokens: 2048,
+    messages: [{ role: 'user', content: prompt }],
+  });
+  return msg.content[0].text;
 }
 
 async function chamarGroq(prompt, tentativas = 3) {
@@ -679,7 +690,7 @@ NOTAS DO VAULT:
 ${contextoTotal.slice(0, 5000)}`;
     }
 
-    const conteudo = await chamarGemini(prompt);
+    const conteudo = await chamarClaude(prompt);
     const notasUsadas = notas.map(n => n.arquivo);
     res.json({ ok: true, conteudo, notasUsadas, tema, tipo });
   } catch (e) {
