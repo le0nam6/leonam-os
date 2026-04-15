@@ -526,7 +526,10 @@ app.post('/api/conteudo/gerar', upload.any(), async (req, res) => {
       ? `\n\nNOTAS DO MEU VAULT SOBRE ESSE TEMA (use para extrair minha opinião e conhecimento real):\n${notas.map(n => `--- ${n.arquivo} ---\n${n.conteudo}`).join('\n\n')}`
       : '\n\n(Nenhuma nota encontrada no vault sobre esse tema — use apenas seu conhecimento geral sobre estratégia e negócios para criativos.)';
 
-    let contextoExterno = '';
+    // ── FONTES PRIMÁRIAS (briefing + links + PDFs fornecidos pelo Leonam) ─────────
+    let fontePrincipal = '';
+    if (briefing) fontePrincipal += `BRIEFING DO LEONAM:\n${briefing}\n\n`;
+
     for (const url of urls.slice(0, 5)) {
       try {
         const r = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 10000 });
@@ -534,9 +537,9 @@ app.post('/api/conteudo/gerar', upload.any(), async (req, res) => {
           .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
           .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
           .replace(/<[^>]+>/g, ' ')
-          .replace(/\s+/g, ' ').trim().slice(0, 1500);
-        contextoExterno += `\n\n--- FONTE: ${url} ---\n${texto}`;
-      } catch (e) { contextoExterno += `\n\n--- FONTE: ${url} --- (não foi possível acessar)`; }
+          .replace(/\s+/g, ' ').trim().slice(0, 2000);
+        fontePrincipal += `LINK DE REFERÊNCIA (${url}):\n${texto}\n\n`;
+      } catch (e) { fontePrincipal += `LINK (${url}): não foi possível acessar\n\n`; }
     }
 
     const pdfFiles = (req.files || []).filter(f => f.fieldname.startsWith('pdf_'));
@@ -545,45 +548,57 @@ app.post('/api/conteudo/gerar', upload.any(), async (req, res) => {
         const pdfParse = require('pdf-parse');
         const buffer = fs.readFileSync(pdfFile.path);
         const data = await pdfParse(buffer);
-        contextoExterno += `\n\n--- DOCUMENTO: ${pdfFile.originalname} ---\n${data.text.slice(0, 2000)}`;
+        fontePrincipal += `DOCUMENTO "${pdfFile.originalname}":\n${data.text.slice(0, 3000)}\n\n`;
         try { fs.unlinkSync(pdfFile.path); } catch (e) {}
       } catch (e) {}
     }
 
-    if (briefing) contextoExterno += `\n\n--- BRIEFING DO LEONAM ---\n${briefing}`;
-
-    const contextoTotal = contextoVault + (contextoExterno ? `\n\n═══ CONTEXTO EXTERNO FORNECIDO ═══${contextoExterno}` : '');
+    const temFontePrincipal = fontePrincipal.trim().length > 0;
 
     let prompt;
 
     const estiloBase = `
 IDENTIDADE DO AUTOR:
-Leonam Alves é estrategista de conteúdo baseado em São Luís, Maranhão. Ajuda criativos, designers e freelancers a entenderem a lógica de negócios para construírem carreiras e negócios sustentáveis. Tom: direto, realista, pragmático. Sem metáforas forçadas, sem linguagem "technocêntrica", sem papo motivacional vazio.
+Leonam Alves é estrategista de conteúdo baseado em São Luís, Maranhão. Ajuda criativos, designers e freelancers a entenderem a lógica de negócios para construírem carreiras e negócios sustentáveis. Tom: direto, realista, pragmático. Sem metáforas forçadas, sem papo motivacional vazio.
 
 ESTILO DE ESCRITA (obrigatório replicar):
-- Abre SEMPRE com uma situação concreta narrada na 3ª pessoa: um cliente que ligou, uma conversa real, um caso que aconteceu. PROIBIDO abrir com pergunta ao leitor. PROIBIDO: "Você já se sentiu...", "Você já se perguntou...", "Imagine que...", "E se você...". Sem introdução longa.
+- Abre SEMPRE com uma situação concreta narrada na 3ª pessoa: um cliente que ligou, uma conversa real, um caso que aconteceu. PROIBIDO abrir com pergunta ao leitor. PROIBIDO: "Você já se sentiu...", "Você já se perguntou...", "Imagine que...", "E se você...". PROIBIDO como primeira frase qualquer coisa que comece com "Você".
 - Parágrafos curtos: 1 a 3 linhas. Nunca blocos pesados.
 - Frases de impacto em linha própria: "Isso é exatamente o oposto da verdade.", "Gargalos não são promovidos.", "Atenção é barata. Confiança é cara."
 - Usa → para marcar conclusões ou viradas de lógica
 - Bold (**) em frases que o leitor vai querer sublinhar
-- Subtítulos como afirmações provocativas, não como tópicos descritivos. Ex: "O paradoxo da indispensabilidade" em vez de "Como funciona X"
-- Tom pessoal direto, mas não fabricar histórias. Use os casos e opiniões das notas do vault — não invente experiências.
-- Nunca usa: "fosso incopiável", "oceano de ruído digital", "jornada", "ecossistema", "sinergias", "impacto positivo", frases de coach, "fundamental", "essencial", "é importante"
-- ANALOGIAS: máximo UMA por peça. Evitar as desgastadas: caçador/fazendeiro, terreno alugado, construir casa na areia, plantar sementes, maratona vs sprint
-- Assina como "Leo" ou "Leonam" no final
-- Tamanho da newsletter: ☕ Mentoria matinal • 5-7 min de leitura`;
+- Subtítulos emergem do argumento específico — nunca genéricos. PROIBIDO usar: "A Importância de X", "O Framework para X", "O Que Você Pode Fazer Hoje", "Por que X é essencial"
+- Tom pessoal direto, mas não fabricar histórias
+- PALAVRAS BANIDAS: fundamental, essencial, é importante, você já se perguntou, imagine que, lembre-se de que, proposta de valor única, audiência comprometida, foco claro, jornada, ecossistema, sinergias, impacto positivo
+- ANALOGIAS: máximo UMA por peça. Evitar: caçador/fazendeiro, terreno alugado, construir casa na areia, plantar sementes, maratona vs sprint
+- Assina como "Leo" ou "Leonam" no final`;
+
+    const secaoBriefing = temFontePrincipal ? `
+════════════════════════════════
+MATÉRIA-PRIMA OBRIGATÓRIA (briefing, links e docs fornecidos pelo Leonam)
+O conteúdo abaixo É A BASE do texto. Use os argumentos, dados, referências e ideias daqui.
+Não ignore. Não substitua por genérico.
+════════════════════════════════
+${fontePrincipal.slice(0, 6000)}
+` : '';
+
+    const secaoVault = `
+════════════════════════════════
+NOTAS DO VAULT (contexto complementar — use para reforçar com voz e convicções do Leonam)
+════════════════════════════════
+${contextoVault.slice(0, 3000)}`;
 
     if (tipo === 'carrossel') {
       prompt = `Você é o ghostwriter do Leonam Alves. Escreva um carrossel de Instagram no estilo dele.
 
 ${estiloBase}
-
+${secaoBriefing}
 PADRÕES DOS CARROSSÉIS DO LEONAM:
 1. HOOK com nome real e situação concreta (ex: "A Cimed ofereceu um contrato milionário para o Toguro.")
 2. Valida parcialmente o argumento oposto antes de destruí-lo
 3. Identifica a falha lógica central com precisão — não é opinião, é análise
 4. Paradoxo que inverte a conclusão óbvia
-5. Dados específicos contextualizados (números reais, nomes reais)
+5. Dados específicos contextualizados (números reais, nomes reais) — USE os dados da matéria-prima acima
 6. Slides de 3-6 linhas quando o argumento precisa — não fragmentado
 7. Penúltimo slide inverte quem está na posição de poder (reversão de status)
 8. CTA com mecanismo: "Comente MARCA", "Salva esse post" — nunca "Me siga"
@@ -592,7 +607,7 @@ Tema: "${tema}"
 Ângulo: ${angulo || 'contraintuitivo — questione uma crença que o mercado aceita como verdade'}
 
 Decida antes de escrever:
-- Qual caso real ou nome específico usar como âncora?
+- Qual caso real ou nome específico (da matéria-prima acima) usar como âncora?
 - Qual é a crença errada a destruir?
 - Qual é a virada lógica inesperada?
 - Quantos slides o argumento precisa? (mínimo 8, máximo 15)
@@ -608,19 +623,17 @@ FORMATO DE SAÍDA:
 
 LEGENDA SUGERIDA:
 [legenda]
-
-CONHECIMENTO DO VAULT:
-${contextoTotal.slice(0, 6000)}
+${secaoVault}
 `;
 
     } else {
       prompt = `Você é o ghostwriter do Leonam Alves. Sua única tarefa é replicar o estilo exato dele.
 
 ${estiloBase}
-
+${secaoBriefing}
 ════════════════════════════════
 EXEMPLO REAL DE NEWSLETTER DO LEONAM
-(Estude o padrão. Replique a estrutura. Não copie o tema.)
+(Estude o TOM e a ABERTURA. NÃO replique os subtítulos — crie subtítulos originais que emergem do seu argumento.)
 ════════════════════════════════
 
 ☕ Mentoria matinal • 5 min de leitura
@@ -679,15 +692,14 @@ AGORA ESCREVA A NEWSLETTER
 Tema: "${tema}"
 Ângulo: ${angulo || 'estratégico'}
 
-REGRAS ABSOLUTAS — qualquer violação invalida o output:
-1. ABERTURA OBRIGATÓRIA: começa com diálogo real ou situação narrada na 3ª pessoa (ex: "Um cliente me ligou...", "Ontem um designer me mandou uma mensagem..."). PROIBIDO começar com qualquer variação de "Você já...". PROIBIDO começar com pergunta ao leitor.
+REGRAS ABSOLUTAS:
+1. ABERTURA: começa com diálogo real ou situação na 3ª pessoa. A primeira palavra NÃO pode ser "Você". PROIBIDO abrir com pergunta ao leitor.
 2. EXATAMENTE 3 seções com subtítulo — nem 2, nem 4, nem 5. Três.
-3. EXERCÍCIO FINAL (última seção): ação com verbo no imperativo e critério objetivamente verificável. PROIBIDO "pergunte a si mesmo", "reflita sobre", "pense em".
-4. 600-800 palavras — conte antes de enviar.
-5. Use as notas do vault para extrair argumentos e cases. NÃO cole trechos literais das notas — use as ideias, reescreva com voz do Leonam.
-
-NOTAS DO VAULT:
-${contextoTotal.slice(0, 5000)}`;
+3. SUBTÍTULOS: crie títulos que emergem do argumento específico do briefing. PROIBIDO títulos genéricos como "A Importância de X", "O Framework para X", "O Que Você Pode Fazer Hoje".
+4. EXERCÍCIO FINAL (3ª seção): ação concreta com verbo no imperativo. PROIBIDO "pergunte a si mesmo", "reflita sobre", "pense em".
+5. 600-800 palavras.
+6. Se há matéria-prima acima: o argumento central DEVE vir de lá. Não substitua por genérico.
+${secaoVault}`;
     }
 
     const conteudo = await chamarClaude(prompt);
