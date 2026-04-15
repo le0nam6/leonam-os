@@ -42,11 +42,45 @@
     display: flex;
     flex-direction: column;
     z-index: 100;
+    transition: width 0.25s cubic-bezier(0.4,0,0.2,1);
+    overflow: hidden;
   }
 
+  /* Collapsed state */
+  body.sidebar-collapsed .sidebar { width: 52px; }
+  body.sidebar-collapsed .main    { margin-left: 52px; }
+  body.sidebar-collapsed .logo-text,
+  body.sidebar-collapsed .logo-sub,
+  body.sidebar-collapsed .nav-label,
+  body.sidebar-collapsed .sidebar-stats { opacity: 0; pointer-events: none; }
+  body.sidebar-collapsed .nav-item { justify-content: center; padding: 10px 0; }
+  body.sidebar-collapsed .nav-dot  { width: 8px; height: 8px; }
+  body.sidebar-collapsed .sidebar-toggle { justify-content: center; }
+
+  .sidebar-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px 10px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    width: 100%;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+  .sidebar-toggle:hover { color: var(--text); }
+  .sidebar-toggle svg { flex-shrink: 0; transition: transform 0.25s; }
+  body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
+
   .logo {
-    padding: 28px 24px 20px;
+    padding: 20px 24px 16px;
     border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .logo-text {
@@ -54,6 +88,7 @@
     font-size: 20px;
     font-weight: 800;
     letter-spacing: -0.5px;
+    transition: opacity 0.2s;
   }
 
   .logo-text span { color: var(--accent); }
@@ -64,9 +99,10 @@
     margin-top: 3px;
     text-transform: uppercase;
     letter-spacing: 1px;
+    transition: opacity 0.2s;
   }
 
-  .nav { padding: 16px 12px; flex: 1; }
+  .nav { padding: 12px 8px; flex: 1; overflow: hidden; }
 
   .nav-item {
     display: flex;
@@ -77,8 +113,9 @@
     cursor: pointer;
     font-size: 14px;
     color: var(--muted);
-    transition: all 0.15s;
+    transition: background 0.15s, color 0.15s, padding 0.25s, justify-content 0.25s;
     margin-bottom: 2px;
+    white-space: nowrap;
   }
 
   .nav-item:hover { background: var(--surface2); color: var(--text); }
@@ -90,11 +127,17 @@
     border-radius: 50%;
     background: var(--border);
     flex-shrink: 0;
+    transition: width 0.25s, height 0.25s;
   }
+
+  .nav-label { transition: opacity 0.2s; }
 
   .sidebar-stats {
     padding: 16px;
     border-top: 1px solid var(--border);
+    transition: opacity 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .stat-pill {
@@ -117,15 +160,20 @@
   /* MAIN */
   .main {
     margin-left: 220px;
-    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: margin-left 0.25s cubic-bezier(0.4,0,0.2,1);
   }
 
   .topbar {
-    padding: 20px 32px;
+    padding: 16px 32px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    flex-shrink: 0;
   }
 
   .page-title {
@@ -134,11 +182,33 @@
     font-weight: 700;
   }
 
-  .content { padding: 32px; }
+  .content {
+    padding: 32px;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  /* Quando o editor está ativo: sem padding, sem scroll no .content */
+  .content:has(#page-editor.active) {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
 
   /* PÁGINAS */
   .page { display: none; }
   .page.active { display: block; }
+
+  /* Editor ocupa 100% da área de conteúdo */
+  #page-editor.active {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
 
   /* INGESTÃO */
   .ingest-tabs {
@@ -484,7 +554,14 @@
   display: grid;
   grid-template-columns: 150px 1fr 230px;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
+}
+.ed-slides-list,
+.ed-canvas-area,
+.ed-props {
+  height: 100%;
+  min-height: 0;
 }
 .ed-slides-list {
   background: var(--surface);
@@ -721,6 +798,12 @@
 <body>
 
 <div class="sidebar">
+  <button class="sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <line x1="2" y1="4" x2="14" y2="4"/><line x1="2" y1="8" x2="14" y2="8"/><line x1="2" y1="12" x2="14" y2="12"/>
+    </svg>
+    <span class="nav-label">Menu</span>
+  </button>
   <div class="logo">
     <div class="logo-text">Leonam<span>OS</span></div>
     <div class="logo-sub">Segundo Cérebro</div>
@@ -728,23 +811,23 @@
   <nav class="nav">
     <div class="nav-item active" onclick="irPara('ingestao', this)">
       <div class="nav-dot"></div>
-      Ingestão
+      <span class="nav-label">Ingestão</span>
     </div>
     <div class="nav-item" onclick="irPara('biblioteca', this)">
       <div class="nav-dot"></div>
-      Biblioteca
+      <span class="nav-label">Biblioteca</span>
     </div>
     <div class="nav-item" onclick="irPara('conteudo', this)">
       <div class="nav-dot"></div>
-      Criar Conteúdo
+      <span class="nav-label">Criar Conteúdo</span>
     </div>
     <div class="nav-item" onclick="irPara('pauta', this)">
       <div class="nav-dot"></div>
-      Pauta & Dados
+      <span class="nav-label">Pauta & Dados</span>
     </div>
     <div class="nav-item" onclick="irPara('editor', this)">
       <div class="nav-dot"></div>
-      Editor Carrossel
+      <span class="nav-label">Editor Carrossel</span>
     </div>
   </nav>
   <div class="sidebar-stats">
@@ -1197,6 +1280,13 @@ let buscaAtual = '';
 let modalId = null;
 
 // NAVEGAÇÃO
+function toggleSidebar() {
+  document.body.classList.toggle('sidebar-collapsed');
+  localStorage.setItem('sidebarCollapsed', document.body.classList.contains('sidebar-collapsed'));
+}
+// Restaura estado salvo
+if (localStorage.getItem('sidebarCollapsed') === 'true') document.body.classList.add('sidebar-collapsed');
+
 function irPara(pagina, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
