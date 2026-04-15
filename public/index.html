@@ -464,6 +464,10 @@
       <div class="nav-dot"></div>
       Criar Conteúdo
     </div>
+    <div class="nav-item" onclick="irPara('pauta', this)">
+      <div class="nav-dot"></div>
+      Pauta & Dados
+    </div>
   </nav>
   <div class="sidebar-stats">
     <div class="stat-pill">
@@ -656,6 +660,89 @@
       </div>
     </div>
 
+    <!-- PÁGINA: PAUTA & DADOS -->
+    <div class="page" id="page-pauta">
+
+      <!-- TENDÊNCIAS -->
+      <div style="margin-bottom:32px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Pautas quentes agora</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Google News filtrado pela sua linha editorial + ângulo sugerido</div>
+          </div>
+          <button class="btn btn-primary" onclick="buscarTendencias()" id="btn-tendencias">⚡ Buscar tendências</button>
+        </div>
+        <div id="status-tendencias" class="status-box" style="display:none"></div>
+        <div id="resultado-tendencias" style="display:none">
+          <div id="sugestoes-tendencias" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;white-space:pre-wrap;font-size:14px;line-height:1.8;color:var(--text)"></div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);margin-bottom:32px"></div>
+
+      <!-- SUGESTÃO DE TEMAS -->
+      <div style="margin-bottom:32px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Sugestão de temas</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Baseado na sua linha editorial, vault e dados do Substack</div>
+          </div>
+          <button class="btn btn-primary" onclick="sugerirTemas()" id="btn-sugestao">🧠 Sugerir temas</button>
+        </div>
+        <div class="form-group" style="margin-bottom:12px">
+          <textarea id="ctx-sugestao" placeholder="Opcional: contexto adicional (evento recente, ideia que surgiu, pauta que você quer explorar...)" style="min-height:70px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;resize:vertical"></textarea>
+        </div>
+        <div id="status-sugestao" class="status-box" style="display:none"></div>
+        <div id="resultado-sugestao" style="display:none">
+          <div id="sugestoes-temas" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;white-space:pre-wrap;font-size:14px;line-height:1.8;color:var(--text)"></div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);margin-bottom:32px"></div>
+
+      <!-- SUBSTACK DATA -->
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Dados do Substack</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Importe o CSV de métricas → análise editorial automática</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <label class="btn btn-ghost" style="cursor:pointer">
+              📊 Importar CSV
+              <input type="file" id="substack-csv" accept=".csv" style="display:none" onchange="importarSubstack(this)">
+            </label>
+            <button class="btn btn-primary" onclick="carregarMetricas()" id="btn-metricas">Ver análise</button>
+          </div>
+        </div>
+
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px;font-size:12px;color:var(--muted);line-height:1.6">
+          <strong style="color:var(--text)">Como exportar do Substack:</strong> Dashboard → Settings → Exports → Posts → Download CSV
+        </div>
+
+        <div id="status-substack" class="status-box" style="display:none"></div>
+
+        <div id="resultado-substack" style="display:none">
+          <div id="insights-substack" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;white-space:pre-wrap;font-size:14px;line-height:1.8;color:var(--text);margin-bottom:16px"></div>
+          <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:12px">Todos os posts</div>
+          <div id="tabela-substack" style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border);color:var(--muted)">
+                  <th style="text-align:left;padding:8px 12px;font-weight:500">Título</th>
+                  <th style="text-align:center;padding:8px 12px;font-weight:500">Abertura</th>
+                  <th style="text-align:center;padding:8px 12px;font-weight:500">Clique</th>
+                  <th style="text-align:center;padding:8px 12px;font-weight:500">Views</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-substack"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 </div>
 
@@ -690,8 +777,13 @@ function irPara(pagina, el) {
   document.getElementById('page-' + pagina).classList.add('active');
   el.classList.add('active');
 
-  const titulos = { ingestao: 'Ingestão de Conhecimento', biblioteca: 'Biblioteca de Convicções' };
-  document.getElementById('page-title').textContent = titulos[pagina];
+  const titulos = {
+    ingestao: 'Ingestão de Conhecimento',
+    biblioteca: 'Biblioteca de Convicções',
+    conteudo: 'Criar Conteúdo',
+    pauta: 'Pauta & Dados'
+  };
+  document.getElementById('page-title').textContent = titulos[pagina] || '';
 
   if (pagina === 'biblioteca') carregarInsights();
 }
@@ -1303,6 +1395,152 @@ async function gerarConteudo() {
     setStatus('conteudo', 'error', 'Servidor offline.');
   }
   btn.disabled = false;
+}
+
+// ─── PAUTA & DADOS ────────────────────────────────────────────────────────────
+
+async function buscarTendencias() {
+  const btn = document.getElementById('btn-tendencias');
+  btn.disabled = true;
+  btn.textContent = 'Buscando...';
+  const statusEl = document.getElementById('status-tendencias');
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box loading';
+  statusEl.textContent = 'Buscando pautas no Google News e gerando ângulos...';
+
+  try {
+    const r = await fetch(`${API}/api/tendencias`);
+    const data = await r.json();
+    statusEl.style.display = 'none';
+    if (data.ok) {
+      document.getElementById('resultado-tendencias').style.display = 'block';
+      document.getElementById('sugestoes-tendencias').textContent = data.sugestoes;
+    } else {
+      statusEl.style.display = 'block';
+      statusEl.className = 'status-box error';
+      statusEl.textContent = 'Erro: ' + (data.erro || 'desconhecido');
+    }
+  } catch (e) {
+    statusEl.style.display = 'block';
+    statusEl.className = 'status-box error';
+    statusEl.textContent = 'Servidor offline.';
+  }
+  btn.disabled = false;
+  btn.textContent = '⚡ Buscar tendências';
+}
+
+async function sugerirTemas() {
+  const btn = document.getElementById('btn-sugestao');
+  btn.disabled = true;
+  btn.textContent = 'Gerando...';
+  const statusEl = document.getElementById('status-sugestao');
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box loading';
+  statusEl.textContent = 'Cruzando vault + dados do Substack + linha editorial...';
+  const contexto = document.getElementById('ctx-sugestao').value.trim();
+
+  try {
+    const r = await fetch(`${API}/api/sugestao-temas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contexto })
+    });
+    const data = await r.json();
+    statusEl.style.display = 'none';
+    if (data.ok) {
+      document.getElementById('resultado-sugestao').style.display = 'block';
+      document.getElementById('sugestoes-temas').textContent = data.sugestoes;
+    } else {
+      statusEl.style.display = 'block';
+      statusEl.className = 'status-box error';
+      statusEl.textContent = 'Erro: ' + (data.erro || 'desconhecido');
+    }
+  } catch (e) {
+    statusEl.style.display = 'block';
+    statusEl.className = 'status-box error';
+    statusEl.textContent = 'Servidor offline.';
+  }
+  btn.disabled = false;
+  btn.textContent = '🧠 Sugerir temas';
+}
+
+async function importarSubstack(input) {
+  if (!input.files[0]) return;
+  const statusEl = document.getElementById('status-substack');
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box loading';
+  statusEl.textContent = 'Importando CSV...';
+
+  const fd = new FormData();
+  fd.append('csv', input.files[0]);
+
+  try {
+    const r = await fetch(`${API}/api/substack/importar`, { method: 'POST', body: fd });
+    const data = await r.json();
+    if (data.ok) {
+      statusEl.className = 'status-box success';
+      statusEl.textContent = `✓ ${data.importados} posts importados. Clique em "Ver análise".`;
+    } else {
+      statusEl.className = 'status-box error';
+      statusEl.textContent = 'Erro: ' + (data.erro || 'desconhecido');
+    }
+  } catch (e) {
+    statusEl.className = 'status-box error';
+    statusEl.textContent = 'Servidor offline.';
+  }
+  input.value = '';
+}
+
+async function carregarMetricas() {
+  const btn = document.getElementById('btn-metricas');
+  btn.disabled = true;
+  btn.textContent = 'Analisando...';
+  const statusEl = document.getElementById('status-substack');
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box loading';
+  statusEl.textContent = 'Gerando análise editorial...';
+
+  try {
+    const r = await fetch(`${API}/api/substack/metricas`);
+    const data = await r.json();
+    statusEl.style.display = 'none';
+
+    if (data.ok && data.posts && data.posts.length > 0) {
+      document.getElementById('resultado-substack').style.display = 'block';
+      if (data.insights) {
+        document.getElementById('insights-substack').textContent = data.insights;
+      }
+
+      const tbody = document.getElementById('tbody-substack');
+      tbody.innerHTML = '';
+      for (const p of data.posts) {
+        const cor = p.taxa_abertura >= (parseFloat(data.mediaAbertura) + 5) ? 'var(--success)'
+          : p.taxa_abertura <= (parseFloat(data.mediaAbertura) - 5) ? 'var(--danger)'
+          : 'var(--text)';
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid var(--border)';
+        tr.innerHTML = `
+          <td style="padding:8px 12px;color:var(--text)">${p.titulo}</td>
+          <td style="padding:8px 12px;text-align:center;color:${cor};font-weight:600">${p.taxa_abertura ? p.taxa_abertura.toFixed(1) + '%' : '—'}</td>
+          <td style="padding:8px 12px;text-align:center;color:var(--muted)">${p.taxa_clique ? p.taxa_clique.toFixed(1) + '%' : '—'}</td>
+          <td style="padding:8px 12px;text-align:center;color:var(--muted)">${p.visualizacoes || '—'}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    } else {
+      statusEl.style.display = 'block';
+      statusEl.className = 'status-box error';
+      statusEl.textContent = data.posts?.length === 0
+        ? 'Nenhum dado do Substack ainda. Importe o CSV primeiro.'
+        : 'Erro: ' + (data.erro || 'desconhecido');
+    }
+  } catch (e) {
+    statusEl.style.display = 'block';
+    statusEl.className = 'status-box error';
+    statusEl.textContent = 'Servidor offline.';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Ver análise';
 }
 </script>
 

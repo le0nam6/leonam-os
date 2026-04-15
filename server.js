@@ -861,4 +861,220 @@ app.post('/api/migrar', async (req, res) => {
   } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
+// ─── TENDÊNCIAS & SUGESTÃO DE TEMAS ──────────────────────────────────────────
+
+app.get('/api/tendencias', async (req, res) => {
+  const buscas = [
+    'branding+marca+pessoal+creator',
+    'marketing+digital+criativo+freelancer',
+    'inteligência+artificial+criadores+conteúdo',
+    'design+negócios+agência',
+    'empreendedorismo+posicionamento+brasil'
+  ];
+
+  const noticias = [];
+  for (const termo of buscas) {
+    try {
+      const url = `https://news.google.com/rss/search?q=${termo}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
+      const r = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
+      const items = r.data.match(/<item>([\s\S]*?)<\/item>/g) || [];
+      for (const item of items.slice(0, 4)) {
+        const titulo = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1]?.trim();
+        const link = item.match(/<link\/>(.*?)<\/item>/)?.[1]?.trim() || item.match(/<link>(.*?)<\/link>/)?.[1]?.trim();
+        const data = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1]?.trim();
+        if (titulo && titulo.length > 10) noticias.push({ titulo, link, data, categoria: termo.split('+')[0] });
+      }
+    } catch (e) {}
+  }
+
+  // Remove duplicatas por título similar
+  const unicos = noticias.filter((n, i, arr) => arr.findIndex(x => x.titulo.slice(0, 30) === n.titulo.slice(0, 30)) === i);
+
+  if (unicos.length === 0) return res.json({ ok: true, noticias: [], sugestoes: 'Sem tendências disponíveis no momento.' });
+
+  // Claude filtra e sugere ângulos no estilo do Leonam
+  const prompt = `Você é o assistente editorial do Leonam Alves — estrategista de conteúdo para criativos, designers e freelancers no Brasil.
+
+Linha editorial: marketing de posicionamento, marca pessoal, precificação, gestão de negócios criativos, IA aplicada, copywriting.
+
+Pautas quentes do momento:
+${unicos.slice(0, 20).map((n, i) => `${i + 1}. ${n.titulo}`).join('\n')}
+
+Selecione as 6 pautas mais relevantes para a linha editorial do Leonam.
+Para cada uma, entregue:
+
+PAUTA: [título limpo, sem nome de veículo]
+TIPO: newsletter ou carrossel
+ÂNGULO: [uma frase — perspectiva contraintuitiva que o Leonam tomaria. Direto, sem verbo "Descubra" ou "Aprenda"]
+GANCHO: [primeira linha do conteúdo — começa com situação concreta, nunca com pergunta ao leitor]
+
+Sem explicações. Só o formato acima, 6 vezes.`;
+
+  try {
+    const sugestoes = await chamarClaude(prompt);
+    res.json({ ok: true, noticias: unicos.slice(0, 20), sugestoes });
+  } catch (e) {
+    res.json({ ok: true, noticias: unicos, sugestoes: 'Erro ao gerar sugestões.' });
+  }
+});
+
+app.post('/api/sugestao-temas', async (req, res) => {
+  const { contexto } = req.body;
+  try {
+    // Busca temas já cobertos no vault para não repetir
+    const { data: recentes } = await supabase
+      .from('insights')
+      .select('titulo, tipo')
+      .order('criado_em', { ascending: false })
+      .limit(30);
+
+    // Busca métricas do Substack para informar o que performa
+    const { data: metricas } = await supabase
+      .from('substack_posts')
+      .select('titulo, taxa_abertura, taxa_clique')
+      .order('taxa_abertura', { ascending: false })
+      .limit(10);
+
+    const historicoVault = (recentes || []).map(n => `- ${n.titulo}`).join('\n');
+    const topPerformers = metricas && metricas.length > 0
+      ? `\nTEMAS QUE MAIS ABRIRAM NO SUBSTACK:\n${metricas.map(m => `- "${m.titulo}" (${m.taxa_abertura}% abertura)`).join('\n')}`
+      : '';
+    const ctxExtra = contexto ? `\nCONTEXTO ADICIONAL: ${contexto}` : '';
+
+    const prompt = `Você é o diretor editorial do Leonam Alves.
+
+LINHA EDITORIAL: marketing de posicionamento, marca pessoal para criativos, precificação, copywriting, IA aplicada a negócios criativos, gestão de freelancers e agências pequenas.
+
+TEMAS RECENTES NO VAULT (evitar repetir):
+${historicoVault || 'Nenhum disponível'}
+${topPerformers}${ctxExtra}
+
+Gere 8 sugestões de temas originais. Para cada um:
+
+TEMA: [título direto — não genérico, com ângulo específico]
+TIPO: newsletter ou carrossel
+ÂNGULO: [perspectiva contraintuitiva — 1 frase]
+POR QUÊ AGORA: [1 frase — relevância para o momento]
+
+Priorize temas que:
+- Contradizem o senso comum do mercado criativo
+- Têm uma virada lógica inesperada
+- Conectam criatividade com negócios e dinheiro
+
+Sem introdução. Só o formato, 8 vezes.`;
+
+    const sugestoes = await chamarClaude(prompt);
+    res.json({ ok: true, sugestoes });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+// ─── SUBSTACK DATA ────────────────────────────────────────────────────────────
+
+app.post('/api/substack/importar', upload.single('csv'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ erro: 'Arquivo CSV não enviado' });
+  try {
+    const texto = fs.readFileSync(req.file.path, 'utf8');
+    try { fs.unlinkSync(req.file.path); } catch (e) {}
+
+    const linhas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    if (linhas.length < 2) return res.status(400).json({ erro: 'CSV vazio ou inválido' });
+
+    // Parse CSV respeitando aspas
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (const char of line) {
+        if (char === '"') { inQuotes = !inQuotes; continue; }
+        if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; continue; }
+        current += char;
+      }
+      result.push(current.trim());
+      return result;
+    }
+
+    const headers = parseCSVLine(linhas[0]).map(h => h.toLowerCase().replace(/\s+/g, '_'));
+    const posts = [];
+
+    for (let i = 1; i < linhas.length; i++) {
+      const cols = parseCSVLine(linhas[i]);
+      const row = {};
+      headers.forEach((h, idx) => { row[h] = cols[idx] || ''; });
+
+      const titulo = row.title || row.titulo || row.subject || row.email_subject || '';
+      if (!titulo) continue;
+
+      const taxaAbertura = parseFloat(row.open_rate || row.taxa_abertura || row.opens_rate || 0) * (row.open_rate > 1 ? 1 : 100);
+      const taxaClique = parseFloat(row.click_rate || row.taxa_clique || row.clicks_rate || 0) * (row.click_rate > 1 ? 1 : 100);
+
+      posts.push({
+        titulo,
+        url: row.web_url || row.url || row.post_url || '',
+        publicado_em: row.published_at || row.date || row.publicado_em || null,
+        aberturas: parseInt(row.opens || row.aberturas || 0) || 0,
+        cliques: parseInt(row.clicks || row.cliques || 0) || 0,
+        taxa_abertura: isNaN(taxaAbertura) ? 0 : Math.min(taxaAbertura, 100),
+        taxa_clique: isNaN(taxaClique) ? 0 : Math.min(taxaClique, 100),
+        visualizacoes: parseInt(row.views || row.visualizacoes || 0) || 0,
+      });
+    }
+
+    if (posts.length === 0) return res.status(400).json({ erro: 'Nenhum post identificado no CSV' });
+
+    // Upsert no Supabase (cria tabela se não existir via insert simples)
+    let importados = 0;
+    for (const post of posts) {
+      try {
+        await supabase.from('substack_posts').upsert(post, { onConflict: 'titulo' });
+        importados++;
+      } catch (e) {}
+    }
+
+    res.json({ ok: true, importados, total: posts.length });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
+app.get('/api/substack/metricas', async (req, res) => {
+  try {
+    const { data: posts, error } = await supabase
+      .from('substack_posts')
+      .select('*')
+      .order('taxa_abertura', { ascending: false });
+
+    if (error) throw new Error(error.message);
+    if (!posts || posts.length === 0) return res.json({ ok: true, posts: [], insights: null });
+
+    const melhores = posts.slice(0, 5);
+    const piores = [...posts].sort((a, b) => a.taxa_abertura - b.taxa_abertura).slice(0, 3);
+    const mediaAbertura = (posts.reduce((s, p) => s + (p.taxa_abertura || 0), 0) / posts.length).toFixed(1);
+
+    const prompt = `Você é o analista de dados editorial do Leonam Alves.
+
+DADOS DO SUBSTACK (${posts.length} newsletters analisadas):
+Média de abertura: ${mediaAbertura}%
+
+TOP 5 — MAIOR TAXA DE ABERTURA:
+${melhores.map(p => `- "${p.titulo}" → ${p.taxa_abertura}% abertura / ${p.taxa_clique}% clique`).join('\n')}
+
+PIORES 3 — MENOR TAXA DE ABERTURA:
+${piores.map(p => `- "${p.titulo}" → ${p.taxa_abertura}% abertura`).join('\n')}
+
+Entregue uma análise editorial direta:
+1. O que os títulos/temas com maior abertura têm em comum? (padrão de ângulo, promessa, formato)
+2. O que os piores têm em comum? (onde perde a atenção do leitor antes de abrir)
+3. Três sugestões de temas baseadas no padrão de sucesso — com título já elaborado
+
+Máximo 250 palavras. Sem papo de coach. Direto ao ponto.`;
+
+    const insights = await chamarClaude(prompt);
+    res.json({ ok: true, posts, insights, mediaAbertura });
+  } catch (e) {
+    res.status(500).json({ erro: e.message });
+  }
+});
+
 app.listen(PORT, () => console.log(`\n✓ Leonam OS rodando em http://localhost:${PORT}\n`));
