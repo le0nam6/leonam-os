@@ -114,7 +114,7 @@ async function chamarGemini(prompt, tentativas = 3) {
 
 async function chamarClaude(prompt) {
   const msg = await anthropic.messages.create({
-    model: 'claude-3-5-haiku-20241022',
+    model: 'claude-3-haiku-20240307',
     max_tokens: 4096,
     messages: [{ role: 'user', content: prompt }],
   });
