@@ -447,12 +447,12 @@ async function buscarNotasVault(tema) {
     if (embedding) {
       const { data } = await supabase.rpc('match_insights', {
         query_embedding: embedding,
-        match_count: 15
+        match_count: 8
       });
       if (data && data.length > 0) {
         return data.map(n => ({
           arquivo: n.arquivo_obsidian || 'nota',
-          conteudo: n.conteudo.slice(0, 3000)
+          conteudo: n.conteudo.slice(0, 1200)
         }));
       }
     }
