@@ -863,6 +863,107 @@ app.post('/api/migrar', async (req, res) => {
 
 // ─── TENDÊNCIAS & SUGESTÃO DE TEMAS ──────────────────────────────────────────
 
+// Pesquisa aprofundada de pauta: cobertura de mídia, PAA, relevância editorial
+app.get('/api/pesquisa-tema', async (req, res) => {
+  const q = req.query.q;
+  if (!q) return res.status(400).json({ erro: 'Parâmetro q obrigatório' });
+
+  const resultado = { tema: q };
+
+  // 1. Google News — contagem de portais e artigos recentes
+  try {
+    const newsUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
+    const newsR = await axios.get(newsUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
+    const items = newsR.data.match(/<item>([\s\S]*?)<\/item>/g) || [];
+    const artigos = items.slice(0, 12).map(item => {
+      const titulo = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1]?.trim();
+      const fonte = (item.match(/<source[^>]*url="[^"]*"[^>]*>(.*?)<\/source>/))?.[1]?.trim()
+        || (item.match(/<source>(.*?)<\/source>/))?.[1]?.trim()
+        || titulo?.split(' - ').pop()?.trim() || 'Portal';
+      const dataStr = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1]?.trim();
+      return { titulo, fonte, dataStr };
+    }).filter(a => a.titulo);
+    resultado.artigos = artigos;
+    resultado.totalPortais = artigos.length;
+    resultado.fontes = [...new Set(artigos.map(a => a.fonte).filter(Boolean))].slice(0, 8);
+  } catch (e) {
+    resultado.artigos = [];
+    resultado.totalPortais = 0;
+    resultado.fontes = [];
+  }
+
+  // 2. Google Autocomplete — perguntas que as pessoas fazem (proxy para PAA)
+  const perguntas = new Set();
+  const prefixos = ['como ', 'por que ', 'o que é ', 'qual ', 'quando ', 'quem '];
+  for (const prefix of prefixos) {
+    try {
+      const autoUrl = `https://suggestqueries.google.com/complete/search?q=${encodeURIComponent(prefix + q)}&hl=pt-BR&gl=BR&output=json&client=firefox`;
+      const autoR = await axios.get(autoUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 5000 });
+      let data = autoR.data;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch (e) {}
+      }
+      if (Array.isArray(data) && Array.isArray(data[1])) {
+        data[1].slice(0, 4).forEach(s => perguntas.add(s));
+      }
+    } catch (e) {}
+  }
+  // Termos relacionados genéricos também
+  try {
+    const autoUrl = `https://suggestqueries.google.com/complete/search?q=${encodeURIComponent(q)}&hl=pt-BR&gl=BR&output=json&client=firefox`;
+    const autoR = await axios.get(autoUrl, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 5000 });
+    let data = autoR.data;
+    if (typeof data === 'string') { try { data = JSON.parse(data); } catch (e) {} }
+    if (Array.isArray(data) && Array.isArray(data[1])) {
+      data[1].slice(0, 5).forEach(s => perguntas.add(s));
+    }
+  } catch (e) {}
+
+  resultado.perguntas = [...perguntas].slice(0, 10);
+
+  // 3. Claude — análise editorial completa
+  const prompt = `Você é o diretor editorial e estrategista de SEO do Leonam Alves.
+
+TEMA PESQUISADO: "${q}"
+
+LINHA EDITORIAL DO LEONAM: marketing de posicionamento, marca pessoal para criativos, precificação, copywriting, IA aplicada, gestão de freelancers e agências no Brasil.
+
+COBERTURA DA MÍDIA: ${resultado.totalPortais} artigos encontrados nos últimos dias
+PORTAIS COBRINDO: ${resultado.fontes.join(', ') || 'dados não disponíveis'}
+TÍTULOS RECENTES:
+${resultado.artigos.slice(0, 6).map(a => `- ${a.titulo} (${a.fonte})`).join('\n') || 'Sem artigos recentes'}
+
+PERGUNTAS QUE AS PESSOAS BUSCAM SOBRE ESSE TEMA:
+${resultado.perguntas.length > 0 ? resultado.perguntas.map(p => `- ${p}`).join('\n') : 'Dados não disponíveis'}
+
+Entregue a análise no formato abaixo. Sem introdução, sem "claro que", sem "certamente".
+
+POR QUE FAZ SENTIDO PARA O LEONAM:
+[2-3 frases diretas — sobreposição específica com a audiência de criativos e freelancers. Cite o contexto do mercado brasileiro.]
+
+VOLUME E MOMENTO:
+[Avalie com base na cobertura de mídia: esse tema está aquecendo, no pico ou saindo de moda? Por quê? Seja honesto se não há dados suficientes.]
+
+PERGUNTA-CHAVE PARA INDEXAR NO GOOGLE:
+[Das perguntas acima, qual o Leonam deveria responder explicitamente no conteúdo para ter chance de aparecer no "People Also Ask"? Por quê essa especificamente?]
+
+ÂNGULO CONTRAINTUITIVO:
+[Uma frase — perspectiva que contradiz o que a maioria dos portais está cobrindo ou o senso comum do mercado criativo]
+
+GANCHO DE ABERTURA:
+[Primeira linha do conteúdo — situação concreta na 3ª pessoa, nunca começa com "Você"]
+
+TIPO RECOMENDADO: newsletter ou carrossel — e por quê em 1 frase`;
+
+  try {
+    resultado.analise = await chamarClaude(prompt);
+  } catch (e) {
+    resultado.analise = 'Erro ao gerar análise: ' + e.message;
+  }
+
+  res.json({ ok: true, ...resultado });
+});
+
 app.get('/api/tendencias', async (req, res) => {
   const buscas = [
     'branding+marca+pessoal+creator',

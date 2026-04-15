@@ -663,12 +663,41 @@
     <!-- PÁGINA: PAUTA & DADOS -->
     <div class="page" id="page-pauta">
 
+      <!-- PESQUISA APROFUNDADA DE PAUTA -->
+      <div style="margin-bottom:32px">
+        <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px">Pesquisar pauta</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">Portais cobrindo, perguntas do Google (PAA), por que faz sentido, ângulo e gancho</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="input-pesquisa-pauta" placeholder="Ex: marca pessoal para designers, precificação criativa, IA no marketing..." style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none" onkeydown="if(event.key==='Enter')pesquisarPauta()">
+          <button class="btn btn-primary" onclick="pesquisarPauta()" id="btn-pesquisa-pauta">🔍 Pesquisar</button>
+        </div>
+        <div id="status-pesquisa-pauta" class="status-box" style="display:none"></div>
+        <div id="resultado-pesquisa-pauta" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Portais cobrindo</div>
+              <div id="pp-portais" style="font-size:28px;font-weight:700;font-family:'Syne',sans-serif;color:var(--accent)"></div>
+              <div id="pp-fontes" style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5"></div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px">
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Perguntas que as pessoas fazem (PAA)</div>
+              <div id="pp-perguntas" style="font-size:13px;color:var(--text);line-height:1.7"></div>
+            </div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;white-space:pre-wrap;font-size:14px;line-height:1.8;color:var(--text);margin-bottom:12px" id="pp-analise"></div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px;color:var(--muted)">Notícias recentes sobre o tema</div>
+          <div id="pp-noticias" style="display:flex;flex-direction:column;gap:6px"></div>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid var(--border);margin-bottom:32px"></div>
+
       <!-- TENDÊNCIAS -->
       <div style="margin-bottom:32px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
           <div>
             <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Pautas quentes agora</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px">Google News filtrado pela sua linha editorial + ângulo sugerido</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Google News filtrado pela linha editorial + ângulo e gancho prontos</div>
           </div>
           <button class="btn btn-primary" onclick="buscarTendencias()" id="btn-tendencias">⚡ Buscar tendências</button>
         </div>
@@ -1398,6 +1427,69 @@ async function gerarConteudo() {
 }
 
 // ─── PAUTA & DADOS ────────────────────────────────────────────────────────────
+
+async function pesquisarPauta() {
+  const q = document.getElementById('input-pesquisa-pauta').value.trim();
+  if (!q) return;
+  const btn = document.getElementById('btn-pesquisa-pauta');
+  btn.disabled = true;
+  btn.textContent = 'Pesquisando...';
+  const statusEl = document.getElementById('status-pesquisa-pauta');
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box loading';
+  statusEl.textContent = 'Buscando portais, perguntas do Google e gerando análise editorial...';
+  document.getElementById('resultado-pesquisa-pauta').style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/api/pesquisa-tema?q=${encodeURIComponent(q)}`);
+    const data = await r.json();
+    statusEl.style.display = 'none';
+
+    if (data.ok) {
+      document.getElementById('resultado-pesquisa-pauta').style.display = 'block';
+
+      // Portais
+      document.getElementById('pp-portais').textContent = data.totalPortais || '0';
+      document.getElementById('pp-fontes').textContent = (data.fontes || []).join(' · ') || 'Sem dados';
+
+      // Perguntas PAA
+      const perguntasEl = document.getElementById('pp-perguntas');
+      if (data.perguntas && data.perguntas.length > 0) {
+        perguntasEl.innerHTML = data.perguntas.map(p =>
+          `<div style="padding:4px 0;border-bottom:1px solid var(--border);font-size:12px">🔍 ${p}</div>`
+        ).join('');
+      } else {
+        perguntasEl.textContent = 'Nenhuma pergunta encontrada';
+      }
+
+      // Análise Claude
+      document.getElementById('pp-analise').textContent = data.analise || '';
+
+      // Notícias recentes
+      const noticiasEl = document.getElementById('pp-noticias');
+      if (data.artigos && data.artigos.length > 0) {
+        noticiasEl.innerHTML = data.artigos.slice(0, 6).map(a =>
+          `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+            <div style="font-size:13px;color:var(--text);line-height:1.4">${a.titulo}</div>
+            <div style="font-size:11px;color:var(--muted);white-space:nowrap;margin-top:2px">${a.fonte}</div>
+          </div>`
+        ).join('');
+      } else {
+        noticiasEl.innerHTML = '<div style="font-size:13px;color:var(--muted)">Nenhuma notícia recente encontrada</div>';
+      }
+    } else {
+      statusEl.style.display = 'block';
+      statusEl.className = 'status-box error';
+      statusEl.textContent = 'Erro: ' + (data.erro || 'desconhecido');
+    }
+  } catch (e) {
+    statusEl.style.display = 'block';
+    statusEl.className = 'status-box error';
+    statusEl.textContent = 'Servidor offline.';
+  }
+  btn.disabled = false;
+  btn.textContent = '🔍 Pesquisar';
+}
 
 async function buscarTendencias() {
   const btn = document.getElementById('btn-tendencias');
