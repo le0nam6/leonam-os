@@ -979,7 +979,7 @@ function renderizarGrid(insights) {
     const tipoClass = { nota: 'tipo-nota', livro: 'tipo-livro', youtube: 'tipo-youtube' }[i.tipo] || 'tipo-nota';
     const tipoLabel = { nota: 'Nota', livro: 'Livro', youtube: 'YouTube' }[i.tipo] || i.tipo;
     const data = new Date(i.criado_em).toLocaleDateString('pt-BR');
-    const preview = i.conteudo.replace(/##[^\n]*/g, '').replace(/\*\*[^*]*\*\*/g, '').trim().slice(0, 120);
+    const preview = limparConteudo(i.conteudo).slice(0, 120);
 
     return `
       <div class="insight-card">
@@ -1038,9 +1038,21 @@ async function verInsight(id) {
 
   modalId = id;
   document.getElementById('modal-titulo').textContent = insight.titulo;
-  document.getElementById('modal-conteudo').textContent = insight.conteudo;
+  document.getElementById('modal-conteudo').textContent = limparConteudo(insight.conteudo);
   document.getElementById('modal-exportar').onclick = () => { exportarInsight(id); fecharModal(); };
   document.getElementById('modal-overlay').classList.add('show');
+}
+
+function limparConteudo(texto) {
+  if (!texto) return '';
+  return texto
+    .replace(/^---[\s\S]*?---\n?/m, '')           // remove frontmatter YAML
+    .replace(/\*\*Origem:\*\*[^\n]*/g, '')         // remove Origem:
+    .replace(/\*\*Relacionado:\*\*[^\n]*/g, '')    // remove Relacionado:
+    .replace(/\[\[([^\]]+)\]\]/g, '$1')            // [[link]] → link
+    .replace(/^#+\s*/gm, '')                       // remove ## títulos
+    .replace(/\n{3,}/g, '\n\n')                    // limpa linhas extras
+    .trim();
 }
 
 function fecharModal(e) {
