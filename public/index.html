@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leonam OS</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0c0c0f;
@@ -454,7 +454,6 @@
   padding-bottom: 20px;
   border-bottom: 1px solid var(--border);
 }
-.template-btns { display: flex; gap: 8px; }
 .template-btn {
   padding: 8px 14px;
   border-radius: 6px;
@@ -514,12 +513,70 @@
   opacity: 0.7;
 }
 .slide-text {
-  font-family: 'Syne', sans-serif;
   font-weight: 700;
   line-height: 1.35;
   outline: none;
   min-height: 40px;
   word-break: break-word;
+}
+.tpl-editor-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 20px;
+}
+.tpl-editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.tpl-editor-colors {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.tpl-field label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 5px;
+}
+.tpl-field input[type="text"],
+.tpl-field select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+}
+.tpl-field input[type="color"] {
+  width: 100%;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+  background: var(--surface2);
+}
+.tpl-field input[type="range"] {
+  width: 100%;
+  margin-top: 9px;
+  accent-color: var(--accent);
+}
+.template-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
 }
 .slide-num {
   position: absolute;
@@ -943,18 +1000,65 @@
 <div class="page" id="page-editor">
 
   <div class="editor-topbar">
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">Template</div>
-      <div class="template-btns">
-        <button class="template-btn active" onclick="aplicarTemplate('noite', this)">🌙 Noite</button>
-        <button class="template-btn" onclick="aplicarTemplate('dia', this)">☀️ Dia</button>
-        <button class="template-btn" onclick="aplicarTemplate('gradiente', this)">✨ Gradiente</button>
+    <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">Template</div>
+        <button class="ctrl-btn" style="width:auto;padding:4px 12px;font-size:11px;flex:none" onclick="toggleTemplateEditor()">+ Criar</button>
       </div>
+      <div class="template-btns" id="template-btns"></div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0">
       <button class="btn btn-ghost" onclick="toggleImport()">📥 Importar texto</button>
       <button class="btn btn-ghost" onclick="exportarTodos()" id="btn-exportar-todos" disabled>⬇ Exportar ZIP</button>
       <button class="btn btn-primary" onclick="abrirInstagram()" id="btn-postar" disabled>📱 Postar</button>
+    </div>
+  </div>
+
+  <!-- CRIADOR DE TEMPLATE -->
+  <div id="template-editor-panel" class="tpl-editor-panel" style="display:none">
+    <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:14px">Criar template personalizado</div>
+    <div class="tpl-editor-grid">
+      <div class="tpl-field">
+        <label>Nome</label>
+        <input id="ct-nome" type="text" placeholder="Meu Template">
+      </div>
+      <div class="tpl-field">
+        <label>Emoji</label>
+        <input id="ct-emoji" type="text" placeholder="🎨" maxlength="2">
+      </div>
+      <div class="tpl-field">
+        <label>Fonte</label>
+        <select id="ct-font">
+          <option value="'Syne', sans-serif">Syne (Geométrica)</option>
+          <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
+          <option value="'Inter', sans-serif">Inter (Minimal)</option>
+          <option value="'DM Sans', sans-serif">DM Sans</option>
+          <option value="'Playfair Display', serif">Playfair Display (Serif)</option>
+          <option value="'Bebas Neue', cursive">Bebas Neue (Display)</option>
+        </select>
+      </div>
+    </div>
+    <div class="tpl-editor-colors">
+      <div class="tpl-field">
+        <label>Fundo</label>
+        <input id="ct-bg" type="color" value="#0c0c0f">
+      </div>
+      <div class="tpl-field">
+        <label>Texto</label>
+        <input id="ct-text" type="color" value="#e8e8f0">
+      </div>
+      <div class="tpl-field">
+        <label>Label / Destaque</label>
+        <input id="ct-label" type="color" value="#7c6af7">
+      </div>
+      <div class="tpl-field">
+        <label>Overlay escuro</label>
+        <input id="ct-overlay" type="range" min="0" max="0.8" step="0.05" value="0.4">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="salvarTemplate()">Salvar template</button>
+      <button class="btn btn-ghost" onclick="toggleTemplateEditor()">Cancelar</button>
     </div>
   </div>
 
@@ -1912,30 +2016,89 @@ async function carregarMetricas() {
 
 const TEMPLATES = {
   noite: {
+    nome: '🌙 Noite',
     bg: '#0c0c0f',
     overlay: 'rgba(0,0,0,0.55)',
     textColor: '#e8e8f0',
     labelColor: '#7c6af7',
     numColor: '#6b6b80',
     fontSize: '22px',
+    fontFamily: "'Syne', sans-serif",
   },
   dia: {
+    nome: '☀️ Dia',
     bg: '#f8f8fc',
     overlay: 'rgba(255,255,255,0.6)',
     textColor: '#1a1a2e',
     labelColor: '#7c6af7',
     numColor: '#aaaacc',
     fontSize: '22px',
+    fontFamily: "'Syne', sans-serif",
   },
   gradiente: {
+    nome: '✨ Gradiente',
     bg: 'linear-gradient(145deg, #1a1035 0%, #2d1b69 60%, #0f0820 100%)',
     overlay: 'rgba(10,5,30,0.45)',
     textColor: '#ffffff',
     labelColor: '#f7a26a',
     numColor: 'rgba(255,255,255,0.4)',
     fontSize: '22px',
-  }
+    fontFamily: "'Syne', sans-serif",
+  },
+  laranja: {
+    nome: '🔥 Laranja',
+    bg: '#110800',
+    overlay: 'rgba(0,0,0,0.35)',
+    textColor: '#fff5e6',
+    labelColor: '#f7a26a',
+    numColor: 'rgba(247,162,106,0.45)',
+    fontSize: '22px',
+    fontFamily: "'Space Grotesk', sans-serif",
+  },
+  minimal: {
+    nome: '🤍 Minimal',
+    bg: '#ffffff',
+    overlay: 'rgba(0,0,0,0)',
+    textColor: '#111111',
+    labelColor: '#888888',
+    numColor: '#cccccc',
+    fontSize: '20px',
+    fontFamily: "'Inter', sans-serif",
+  },
+  editorial: {
+    nome: '📰 Editorial',
+    bg: '#f5f0e8',
+    overlay: 'rgba(0,0,0,0)',
+    textColor: '#1a1208',
+    labelColor: '#8b6914',
+    numColor: '#c4a96e',
+    fontSize: '24px',
+    fontFamily: "'Playfair Display', serif",
+  },
+  neon: {
+    nome: '⚡ Neon',
+    bg: '#02040f',
+    overlay: 'rgba(0,0,0,0.2)',
+    textColor: '#e8e8ff',
+    labelColor: '#00ffcc',
+    numColor: 'rgba(0,255,204,0.35)',
+    fontSize: '22px',
+    fontFamily: "'Bebas Neue', cursive",
+  },
+  roxo: {
+    nome: '🟣 Roxo',
+    bg: 'linear-gradient(160deg, #2a1a5e 0%, #150d33 100%)',
+    overlay: 'rgba(0,0,0,0.15)',
+    textColor: '#f0eeff',
+    labelColor: '#c4b5fd',
+    numColor: 'rgba(196,181,253,0.5)',
+    fontSize: '22px',
+    fontFamily: "'Space Grotesk', sans-serif",
+  },
 };
+
+// Mescla templates customizados salvos
+Object.assign(TEMPLATES, JSON.parse(localStorage.getItem('customTemplates') || '{}'));
 
 let editorSlides = [];
 let editorTemplate = 'noite';
@@ -1962,7 +2125,7 @@ function parseSlides(texto) {
   }
   for (let i = 0; i < labels.length; i++) {
     const txt = (parts[i + 1] || '').replace(/LEGENDA SUGERIDA[\s\S]*/i, '').trim();
-    slides.push({ label: labels[i], texto: txt, bgColor: '', bgImage: '', textColor: '', fontSize: '' });
+    slides.push({ label: labels[i], texto: txt, bgColor: '', bgImage: '', textColor: '', fontSize: '', fontFamily: '' });
   }
   return slides;
 }
@@ -1989,13 +2152,27 @@ function renderSlides() {
 
   const tpl = TEMPLATES[editorTemplate];
 
+  const FONT_OPTIONS = [
+    { value: "'Syne', sans-serif", label: 'Syne' },
+    { value: "'Space Grotesk', sans-serif", label: 'Space Grotesk' },
+    { value: "'Inter', sans-serif", label: 'Inter' },
+    { value: "'DM Sans', sans-serif", label: 'DM Sans' },
+    { value: "'Playfair Display', serif", label: 'Playfair Display' },
+    { value: "'Bebas Neue', cursive", label: 'Bebas Neue' },
+  ];
+
   editorSlides.forEach((slide, i) => {
     const bgColor = slide.bgColor || tpl.bg;
     const textColor = slide.textColor || tpl.textColor;
     const fontSize = slide.fontSize || tpl.fontSize;
+    const fontFamily = slide.fontFamily || tpl.fontFamily || "'Syne', sans-serif";
     const bgStyle = slide.bgImage
       ? `background-image: url('${slide.bgImage}'); background-size: cover; background-position: center;`
       : (bgColor.includes('gradient') ? `background: ${bgColor};` : `background-color: ${bgColor};`);
+
+    const fontOpts = FONT_OPTIONS.map(f =>
+      `<option value="${f.value}" ${fontFamily === f.value ? 'selected' : ''}>${f.label}</option>`
+    ).join('');
 
     const wrapper = document.createElement('div');
     wrapper.className = 'slide-wrapper';
@@ -2006,7 +2183,7 @@ function renderSlides() {
         <div class="slide-overlay" id="sov-${i}" style="background: ${tpl.overlay};"></div>
         <div class="slide-content">
           <div class="slide-label" id="slabel-${i}" style="color: ${tpl.labelColor};">${slide.label}</div>
-          <div class="slide-text" id="st-${i}" contenteditable="true" style="color: ${textColor}; font-size: ${fontSize};">${slide.texto}</div>
+          <div class="slide-text" id="st-${i}" contenteditable="true" style="color: ${textColor}; font-size: ${fontSize}; font-family: ${fontFamily};">${slide.texto}</div>
           <div class="slide-num" id="snum-${i}" style="color: ${tpl.numColor};">${i + 1}/${editorTotal}</div>
         </div>
       </div>
@@ -2031,6 +2208,9 @@ function renderSlides() {
           </select>
           <button class="ctrl-btn" onclick="exportarSlide(${i})">⬇ PNG</button>
         </div>
+        <div class="ctrl-row">
+          <select style="flex:1" onchange="setFont(${i}, this.value)">${fontOpts}</select>
+        </div>
       </div>
     `;
     scroll.appendChild(wrapper);
@@ -2040,11 +2220,87 @@ function renderSlides() {
   document.getElementById('btn-postar').disabled = false;
 }
 
-function aplicarTemplate(nome, btn) {
+function aplicarTemplate(nome) {
   editorTemplate = nome;
-  document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
+  renderTemplateBtns();
   if (editorSlides.length > 0) renderSlides();
+}
+
+function setFont(i, fontFamily) {
+  editorSlides[i].fontFamily = fontFamily;
+  document.getElementById(`st-${i}`).style.fontFamily = fontFamily;
+}
+
+function renderTemplateBtns() {
+  const container = document.getElementById('template-btns');
+  if (!container) return;
+  container.innerHTML = '';
+  Object.entries(TEMPLATES).forEach(([key, tpl]) => {
+    const btn = document.createElement('button');
+    btn.className = 'template-btn' + (key === editorTemplate ? ' active' : '');
+    btn.textContent = tpl.nome || key;
+    btn.onclick = () => aplicarTemplate(key);
+    if (tpl.isCustom) {
+      const wrap = document.createElement('span');
+      wrap.style.cssText = 'display:inline-flex;align-items:center;gap:2px';
+      wrap.appendChild(btn);
+      const del = document.createElement('button');
+      del.className = 'template-btn';
+      del.style.cssText = 'padding:4px 7px;color:var(--danger);border-color:transparent;font-size:11px';
+      del.title = 'Deletar template';
+      del.textContent = '✕';
+      del.onclick = (e) => { e.stopPropagation(); deletarTemplate(key); };
+      wrap.appendChild(del);
+      container.appendChild(wrap);
+    } else {
+      container.appendChild(btn);
+    }
+  });
+}
+
+function toggleTemplateEditor() {
+  const panel = document.getElementById('template-editor-panel');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+function salvarTemplate() {
+  const nome = document.getElementById('ct-nome').value.trim();
+  if (!nome) { toast('Dê um nome para o template', 'error'); return; }
+  const emoji = document.getElementById('ct-emoji').value.trim() || '🎨';
+  const key = 'custom_' + nome.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+  if (key === 'custom_') { toast('Nome inválido', 'error'); return; }
+  const alpha = parseFloat(document.getElementById('ct-overlay').value);
+  const tpl = {
+    nome: emoji + ' ' + nome,
+    bg: document.getElementById('ct-bg').value,
+    overlay: `rgba(0,0,0,${alpha})`,
+    textColor: document.getElementById('ct-text').value,
+    labelColor: document.getElementById('ct-label').value,
+    numColor: 'rgba(150,150,150,0.5)',
+    fontSize: '22px',
+    fontFamily: document.getElementById('ct-font').value,
+    isCustom: true,
+  };
+  TEMPLATES[key] = tpl;
+  const customs = JSON.parse(localStorage.getItem('customTemplates') || '{}');
+  customs[key] = tpl;
+  localStorage.setItem('customTemplates', JSON.stringify(customs));
+  renderTemplateBtns();
+  aplicarTemplate(key);
+  document.getElementById('template-editor-panel').style.display = 'none';
+  document.getElementById('ct-nome').value = '';
+  document.getElementById('ct-emoji').value = '';
+  toast('Template "' + nome + '" salvo!');
+}
+
+function deletarTemplate(key) {
+  if (!confirm('Deletar este template?')) return;
+  delete TEMPLATES[key];
+  const customs = JSON.parse(localStorage.getItem('customTemplates') || '{}');
+  delete customs[key];
+  localStorage.setItem('customTemplates', JSON.stringify(customs));
+  if (editorTemplate === key) aplicarTemplate('noite');
+  else renderTemplateBtns();
 }
 
 function setBgColor(i, cor) {
@@ -2202,6 +2458,9 @@ function abrirInstagram() {
   exportarTodos();
   setTimeout(() => window.open('https://www.instagram.com/', '_blank'), 500);
 }
+
+// Init
+renderTemplateBtns();
 </script>
 
 </body>
