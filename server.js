@@ -630,7 +630,7 @@ REGRAS ABSOLUTAS:
 - Tamanho: 600-800 palavras — sem exceção${contextoTotal}`;
     }
 
-    const conteudo = await chamarGroq(prompt);
+    const conteudo = tipo === 'carrossel' ? await chamarGemini(prompt) : await chamarGroq(prompt);
     const notasUsadas = notas.map(n => n.arquivo);
     res.json({ ok: true, conteudo, notasUsadas, tema, tipo });
   } catch (e) {
