@@ -1086,7 +1086,6 @@ app.post('/api/substack/importar', upload.single('csv'), async (req, res) => {
     const linhas = texto.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     if (linhas.length < 2) return res.status(400).json({ erro: 'CSV vazio ou inválido' });
 
-    // Parse CSV respeitando aspas
     function parseCSVLine(line) {
       const result = [];
       let current = '';
@@ -1108,36 +1107,54 @@ app.post('/api/substack/importar', upload.single('csv'), async (req, res) => {
       const row = {};
       headers.forEach((h, idx) => { row[h] = cols[idx] || ''; });
 
-      const titulo = row.title || row.titulo || row.subject || row.email_subject || '';
+      const titulo = row.title || row.titulo || row.subject || row.email_subject || row.post_title || '';
       if (!titulo) continue;
 
-      const taxaAbertura = parseFloat(row.open_rate || row.taxa_abertura || row.opens_rate || 0) * (row.open_rate > 1 ? 1 : 100);
-      const taxaClique = parseFloat(row.click_rate || row.taxa_clique || row.clicks_rate || 0) * (row.click_rate > 1 ? 1 : 100);
+      // open_rate do Substack vem como decimal (0.45 = 45%) ou percentual (45)
+      const rawAbertura = parseFloat(row.open_rate || row.taxa_abertura || 0);
+      const rawClique   = parseFloat(row.click_rate || row.taxa_clique || 0);
+      const taxaAbertura = rawAbertura <= 1 ? rawAbertura * 100 : rawAbertura;
+      const taxaClique   = rawClique <= 1   ? rawClique * 100   : rawClique;
 
       posts.push({
         titulo,
-        url: row.web_url || row.url || row.post_url || '',
-        publicado_em: row.published_at || row.date || row.publicado_em || null,
-        aberturas: parseInt(row.opens || row.aberturas || 0) || 0,
-        cliques: parseInt(row.clicks || row.cliques || 0) || 0,
-        taxa_abertura: isNaN(taxaAbertura) ? 0 : Math.min(taxaAbertura, 100),
-        taxa_clique: isNaN(taxaClique) ? 0 : Math.min(taxaClique, 100),
-        visualizacoes: parseInt(row.views || row.visualizacoes || 0) || 0,
+        url:          row.web_url || row.url || row.post_url || '',
+        publicado_em: row.published_at || row.date || row.publish_date || null,
+        aberturas:    parseInt(row.opens || row.unique_opens || 0) || 0,
+        cliques:      parseInt(row.clicks || row.unique_clicks || 0) || 0,
+        taxa_abertura: isNaN(taxaAbertura) ? 0 : parseFloat(Math.min(taxaAbertura, 100).toFixed(2)),
+        taxa_clique:   isNaN(taxaClique)   ? 0 : parseFloat(Math.min(taxaClique, 100).toFixed(2)),
+        visualizacoes: parseInt(row.views || row.email_sends || 0) || 0,
       });
     }
 
-    if (posts.length === 0) return res.status(400).json({ erro: 'Nenhum post identificado no CSV' });
-
-    // Upsert no Supabase (cria tabela se não existir via insert simples)
-    let importados = 0;
-    for (const post of posts) {
-      try {
-        await supabase.from('substack_posts').upsert(post, { onConflict: 'titulo' });
-        importados++;
-      } catch (e) {}
+    if (posts.length === 0) {
+      return res.status(400).json({
+        erro: 'Nenhum post identificado no CSV',
+        colunas_detectadas: headers,
+        dica: 'Exporte via Substack → Dashboard → Settings → Exports → Posts'
+      });
     }
 
-    res.json({ ok: true, importados, total: posts.length });
+    // Batch insert — deletar existentes e reinserir (mais confiável que upsert com schema cache)
+    const { error: delErr } = await supabase.from('substack_posts').delete().neq('id', 0);
+    if (delErr && delErr.message.includes('schema cache')) {
+      return res.status(500).json({
+        erro: 'Schema cache desatualizado',
+        dica: 'Vá em Supabase → Settings → API → clique em "Reload schema" e tente novamente'
+      });
+    }
+
+    const { error: insErr } = await supabase.from('substack_posts').insert(posts);
+    if (insErr) {
+      return res.status(500).json({
+        erro: insErr.message,
+        posts_detectados: posts.length,
+        colunas_detectadas: headers
+      });
+    }
+
+    res.json({ ok: true, importados: posts.length, total: posts.length, colunas: headers });
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
@@ -1180,6 +1197,65 @@ Máximo 250 palavras. Sem papo de coach. Direto ao ponto.`;
     res.json({ ok: true, posts, insights, mediaAbertura });
   } catch (e) {
     res.status(500).json({ erro: e.message });
+  }
+});
+
+// ─── GERAÇÃO DE IMAGEM PARA CARROSSEL ─────────────────────────────────────────
+
+app.post('/api/imagem/gerar', async (req, res) => {
+  const { prompt } = req.body;
+  if (!prompt) return res.status(400).json({ erro: 'prompt obrigatório' });
+
+  const promptFull = prompt + ', professional marketing design, Instagram post, vertical 4:5, high quality, clean typography';
+
+  // 1. Tenta Gemini Imagen 3
+  try {
+    const r = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_KEY}`,
+      { instances: [{ prompt: promptFull }], parameters: { sampleCount: 1, aspectRatio: '4:5' } },
+      { headers: { 'Content-Type': 'application/json' }, timeout: 30000 }
+    );
+    const b64 = r.data?.predictions?.[0]?.bytesBase64Encoded;
+    if (b64) {
+      return res.json({ ok: true, imagem: `data:image/png;base64,${b64}`, fonte: 'gemini-imagen' });
+    }
+  } catch (e) {
+    console.log('Imagen 3 falhou:', e.message);
+  }
+
+  // 2. Tenta Gemini 2.0 Flash image generation
+  try {
+    const r = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${GEMINI_KEY}`,
+      {
+        contents: [{ parts: [{ text: promptFull }] }],
+        generationConfig: { responseModalities: ['IMAGE'] }
+      },
+      { headers: { 'Content-Type': 'application/json' }, timeout: 30000 }
+    );
+    const parts = r.data?.candidates?.[0]?.content?.parts || [];
+    const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
+    if (imgPart) {
+      const mime = imgPart.inlineData.mimeType;
+      const b64 = imgPart.inlineData.data;
+      return res.json({ ok: true, imagem: `data:${mime};base64,${b64}`, fonte: 'gemini-flash' });
+    }
+  } catch (e) {
+    console.log('Gemini Flash image falhou:', e.message);
+  }
+
+  // 3. Fallback: Pollinations.ai
+  try {
+    const seed = Math.floor(Math.random() * 1000000);
+    const encoded = encodeURIComponent(promptFull);
+    const url = `https://image.pollinations.ai/prompt/${encoded}?width=1080&height=1350&nologo=true&seed=${seed}`;
+    const r = await axios.get(url, { responseType: 'arraybuffer', timeout: 45000 });
+    const b64 = Buffer.from(r.data).toString('base64');
+    const mime = r.headers['content-type'] || 'image/jpeg';
+    return res.json({ ok: true, imagem: `data:${mime};base64,${b64}`, fonte: 'pollinations' });
+  } catch (e) {
+    console.log('Pollinations falhou:', e.message);
+    return res.status(500).json({ ok: false, erro: 'Todas as fontes de imagem falharam: ' + e.message });
   }
 });
 

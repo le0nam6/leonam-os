@@ -442,7 +442,166 @@
   }
 
   .modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
+
+/* EDITOR CARROSSEL */
+.editor-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.template-btns { display: flex; gap: 8px; }
+.template-btn {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.template-btn.active { border-color: var(--accent); color: var(--accent); background: var(--surface2); }
+.slides-scroll {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+}
+.slide-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.slide-canvas {
+  width: 300px;
+  height: 375px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+.slide-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: background 0.2s;
+}
+.slide-overlay {
+  position: absolute;
+  inset: 0;
+}
+.slide-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 20px;
+}
+.slide-label {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+.slide-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  line-height: 1.35;
+  outline: none;
+  min-height: 40px;
+  word-break: break-word;
+}
+.slide-num {
+  position: absolute;
+  bottom: 14px;
+  right: 16px;
+  font-size: 10px;
+  opacity: 0.5;
+}
+.slide-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 300px;
+}
+.ctrl-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.ctrl-row input[type="color"] {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 2px;
+  background: var(--surface);
+}
+.ctrl-row select {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: var(--text);
+  font-size: 12px;
+}
+.ctrl-btn {
+  flex: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+}
+.ctrl-btn:hover { background: var(--surface2); }
+.editor-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--muted);
+  font-size: 14px;
+  gap: 12px;
+}
+.import-area {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.slide-gen-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  z-index: 10;
+  font-size: 13px;
+  color: white;
+}
 </style>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
@@ -467,6 +626,10 @@
     <div class="nav-item" onclick="irPara('pauta', this)">
       <div class="nav-dot"></div>
       Pauta & Dados
+    </div>
+    <div class="nav-item" onclick="irPara('editor', this)">
+      <div class="nav-dot"></div>
+      Editor Carrossel
     </div>
   </nav>
   <div class="sidebar-stats">
@@ -775,6 +938,46 @@
   </div>
 </div>
 
+<!-- PÁGINA: EDITOR CARROSSEL -->
+<div class="page" id="page-editor">
+
+  <div class="editor-topbar">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">Template</div>
+      <div class="template-btns">
+        <button class="template-btn active" onclick="aplicarTemplate('noite', this)">🌙 Noite</button>
+        <button class="template-btn" onclick="aplicarTemplate('dia', this)">☀️ Dia</button>
+        <button class="template-btn" onclick="aplicarTemplate('gradiente', this)">✨ Gradiente</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" onclick="toggleImport()">📥 Importar texto</button>
+      <button class="btn btn-ghost" onclick="exportarTodos()" id="btn-exportar-todos" disabled>⬇ Exportar ZIP</button>
+      <button class="btn btn-primary" onclick="abrirInstagram()" id="btn-postar" disabled>📱 Postar</button>
+    </div>
+  </div>
+
+  <div class="import-area" id="import-area" style="display:none">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Cole o texto do carrossel gerado (formato <strong>**SLIDE X — FUNÇÃO**</strong>)</div>
+    <textarea id="import-texto" style="width:100%;min-height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical" placeholder="**SLIDE 1 — GANCHO**&#10;texto...&#10;&#10;**SLIDE 2 — SEGUNDA CHANCE**&#10;texto..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-primary" onclick="importarTexto()">Carregar slides</button>
+      <button class="btn btn-ghost" onclick="toggleImport()">Cancelar</button>
+    </div>
+  </div>
+
+  <div id="editor-empty" class="editor-empty">
+    <div style="font-size:32px">🎨</div>
+    <div>Nenhum carrossel carregado</div>
+    <button class="btn btn-primary" onclick="toggleImport()">📥 Importar texto do carrossel</button>
+  </div>
+
+  <div class="slides-scroll" id="slides-scroll" style="display:none"></div>
+
+  <div id="status-editor" class="status-box" style="display:none;margin-top:16px"></div>
+
+</div>
+
 <!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="fecharModal(event)">
   <div class="modal">
@@ -810,7 +1013,8 @@ function irPara(pagina, el) {
     ingestao: 'Ingestão de Conhecimento',
     biblioteca: 'Biblioteca de Convicções',
     conteudo: 'Criar Conteúdo',
-    pauta: 'Pauta & Dados'
+    pauta: 'Pauta & Dados',
+    editor: 'Editor de Carrossel'
   };
   document.getElementById('page-title').textContent = titulos[pagina] || '';
 
@@ -1460,6 +1664,9 @@ async function gerarConteudo() {
         document.getElementById('notas-usadas').textContent = 'Notas usadas: ' + data.notasUsadas.join(', ');
       }
       document.getElementById('resultado-conteudo').style.display = 'block';
+      if (data.tipo === 'carrossel' || tipoGerado === 'carrossel') {
+        localStorage.setItem('ultimoCarrossel', data.conteudo);
+      }
     } else {
       setStatus('conteudo', 'error', 'Erro: ' + data.erro);
     }
@@ -1676,6 +1883,301 @@ async function carregarMetricas() {
   }
   btn.disabled = false;
   btn.textContent = 'Ver análise';
+}
+
+// ─── EDITOR DE CARROSSEL ──────────────────────────────────────────────────────
+
+const TEMPLATES = {
+  noite: {
+    bg: '#0c0c0f',
+    overlay: 'rgba(0,0,0,0.55)',
+    textColor: '#e8e8f0',
+    labelColor: '#7c6af7',
+    numColor: '#6b6b80',
+    fontSize: '22px',
+  },
+  dia: {
+    bg: '#f8f8fc',
+    overlay: 'rgba(255,255,255,0.6)',
+    textColor: '#1a1a2e',
+    labelColor: '#7c6af7',
+    numColor: '#aaaacc',
+    fontSize: '22px',
+  },
+  gradiente: {
+    bg: 'linear-gradient(145deg, #1a1035 0%, #2d1b69 60%, #0f0820 100%)',
+    overlay: 'rgba(10,5,30,0.45)',
+    textColor: '#ffffff',
+    labelColor: '#f7a26a',
+    numColor: 'rgba(255,255,255,0.4)',
+    fontSize: '22px',
+  }
+};
+
+let editorSlides = [];
+let editorTemplate = 'noite';
+let editorTotal = 0;
+
+function toggleImport() {
+  const area = document.getElementById('import-area');
+  area.style.display = area.style.display === 'none' ? 'block' : 'none';
+  // Tenta carregar do localStorage (gerado pelo criador de conteúdo)
+  const salvo = localStorage.getItem('ultimoCarrossel');
+  if (salvo && area.style.display === 'block') {
+    document.getElementById('import-texto').value = salvo;
+  }
+}
+
+function parseSlides(texto) {
+  const slides = [];
+  const regex = /\*\*SLIDE\s+(\d+)\s*[—–-]\s*([^*]+)\*\*/g;
+  const parts = texto.split(/\*\*SLIDE\s+\d+\s*[—–-][^*]+\*\*/);
+  const labels = [];
+  let m;
+  while ((m = regex.exec(texto)) !== null) {
+    labels.push(`SLIDE ${m[1]} — ${m[2].trim()}`);
+  }
+  for (let i = 0; i < labels.length; i++) {
+    const txt = (parts[i + 1] || '').replace(/LEGENDA SUGERIDA[\s\S]*/i, '').trim();
+    slides.push({ label: labels[i], texto: txt, bgColor: '', bgImage: '', textColor: '', fontSize: '' });
+  }
+  return slides;
+}
+
+function importarTexto() {
+  const texto = document.getElementById('import-texto').value.trim();
+  if (!texto) return;
+  editorSlides = parseSlides(texto);
+  if (editorSlides.length === 0) {
+    alert('Nenhum slide encontrado. Use o formato **SLIDE 1 — GANCHO** texto...');
+    return;
+  }
+  editorTotal = editorSlides.length;
+  document.getElementById('import-area').style.display = 'none';
+  renderSlides();
+}
+
+function renderSlides() {
+  const scroll = document.getElementById('slides-scroll');
+  const empty = document.getElementById('editor-empty');
+  empty.style.display = 'none';
+  scroll.style.display = 'flex';
+  scroll.innerHTML = '';
+
+  const tpl = TEMPLATES[editorTemplate];
+
+  editorSlides.forEach((slide, i) => {
+    const bgColor = slide.bgColor || tpl.bg;
+    const textColor = slide.textColor || tpl.textColor;
+    const fontSize = slide.fontSize || tpl.fontSize;
+    const bgStyle = slide.bgImage
+      ? `background-image: url('${slide.bgImage}'); background-size: cover; background-position: center;`
+      : (bgColor.includes('gradient') ? `background: ${bgColor};` : `background-color: ${bgColor};`);
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'slide-wrapper';
+    wrapper.id = `swrap-${i}`;
+    wrapper.innerHTML = `
+      <div class="slide-canvas" id="sc-${i}" style="${bgStyle}">
+        <div class="slide-bg" id="sbg-${i}" style="${bgStyle}"></div>
+        <div class="slide-overlay" id="sov-${i}" style="background: ${tpl.overlay};"></div>
+        <div class="slide-content">
+          <div class="slide-label" id="slabel-${i}" style="color: ${tpl.labelColor};">${slide.label}</div>
+          <div class="slide-text" id="st-${i}" contenteditable="true" style="color: ${textColor}; font-size: ${fontSize};">${slide.texto}</div>
+          <div class="slide-num" id="snum-${i}" style="color: ${tpl.numColor};">${i + 1}/${editorTotal}</div>
+        </div>
+      </div>
+
+      <div class="slide-controls">
+        <div class="ctrl-row">
+          <input type="color" title="Cor do fundo" value="${slide.bgColor || '#0c0c0f'}" onchange="setBgColor(${i}, this.value)">
+          <button class="ctrl-btn" onclick="promptGerarImagem(${i})">🎨 Gerar imagem</button>
+          <label class="ctrl-btn" style="cursor:pointer">
+            📷 Upload
+            <input type="file" accept="image/*" style="display:none" onchange="uploadImagem(${i}, this)">
+          </label>
+        </div>
+        <div class="ctrl-row">
+          <input type="color" title="Cor do texto" value="${slide.textColor || '#e8e8f0'}" onchange="setTextColor(${i}, this.value)">
+          <select onchange="setFontSize(${i}, this.value)">
+            <option ${fontSize === '16px' ? 'selected' : ''}>16px</option>
+            <option ${fontSize === '18px' ? 'selected' : ''}>18px</option>
+            <option ${!['16px','18px','26px','32px'].includes(fontSize) ? 'selected' : ''}>22px</option>
+            <option ${fontSize === '26px' ? 'selected' : ''}>26px</option>
+            <option ${fontSize === '32px' ? 'selected' : ''}>32px</option>
+          </select>
+          <button class="ctrl-btn" onclick="exportarSlide(${i})">⬇ PNG</button>
+        </div>
+      </div>
+    `;
+    scroll.appendChild(wrapper);
+  });
+
+  document.getElementById('btn-exportar-todos').disabled = false;
+  document.getElementById('btn-postar').disabled = false;
+}
+
+function aplicarTemplate(nome, btn) {
+  editorTemplate = nome;
+  document.querySelectorAll('.template-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (editorSlides.length > 0) renderSlides();
+}
+
+function setBgColor(i, cor) {
+  editorSlides[i].bgColor = cor;
+  editorSlides[i].bgImage = '';
+  const canvas = document.getElementById(`sc-${i}`);
+  const bg = document.getElementById(`sbg-${i}`);
+  canvas.style.backgroundColor = cor;
+  canvas.style.backgroundImage = '';
+  bg.style.backgroundColor = cor;
+  bg.style.backgroundImage = '';
+}
+
+function setTextColor(i, cor) {
+  editorSlides[i].textColor = cor;
+  document.getElementById(`st-${i}`).style.color = cor;
+}
+
+function setFontSize(i, size) {
+  editorSlides[i].fontSize = size;
+  document.getElementById(`st-${i}`).style.fontSize = size;
+}
+
+function uploadImagem(i, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const url = e.target.result;
+    editorSlides[i].bgImage = url;
+    editorSlides[i].bgColor = '';
+    const canvas = document.getElementById(`sc-${i}`);
+    const bg = document.getElementById(`sbg-${i}`);
+    const style = `url('${url}')`;
+    canvas.style.backgroundImage = style;
+    canvas.style.backgroundSize = 'cover';
+    bg.style.backgroundImage = style;
+    bg.style.backgroundSize = 'cover';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function promptGerarImagem(i) {
+  const texto = document.getElementById(`st-${i}`).textContent;
+  const prompt = window.prompt('Descreva a imagem de fundo (em inglês ou português):', `abstract background for: ${texto.slice(0, 60)}`);
+  if (!prompt) return;
+  await gerarImagemSlide(i, prompt);
+}
+
+async function gerarImagemSlide(i, prompt) {
+  const canvas = document.getElementById(`sc-${i}`);
+
+  // Mostra overlay de loading
+  const overlay = document.createElement('div');
+  overlay.className = 'slide-gen-overlay';
+  overlay.innerHTML = '<span class="spinner"></span> Gerando...';
+  overlay.id = `gen-overlay-${i}`;
+  canvas.appendChild(overlay);
+
+  try {
+    const r = await fetch(`${API}/api/imagem/gerar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt })
+    });
+    const data = await r.json();
+    if (data.ok && data.imagem) {
+      editorSlides[i].bgImage = data.imagem;
+      editorSlides[i].bgColor = '';
+      const bgStyle = `url('${data.imagem}')`;
+      canvas.style.backgroundImage = bgStyle;
+      canvas.style.backgroundSize = 'cover';
+      canvas.style.backgroundPosition = 'center';
+      const bg = document.getElementById(`sbg-${i}`);
+      if (bg) { bg.style.backgroundImage = bgStyle; bg.style.backgroundSize = 'cover'; }
+    } else {
+      alert('Erro: ' + (data.erro || 'geração falhou'));
+    }
+  } catch (e) {
+    alert('Erro ao gerar imagem: ' + e.message);
+  } finally {
+    const ol = document.getElementById(`gen-overlay-${i}`);
+    if (ol) ol.remove();
+  }
+}
+
+async function exportarSlide(i) {
+  const canvas = document.getElementById(`sc-${i}`);
+  const statusEl = document.getElementById('status-editor');
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box loading';
+  statusEl.textContent = `Exportando slide ${i + 1}...`;
+
+  try {
+    const cvs = await html2canvas(canvas, {
+      scale: 3.6, // 300px × 3.6 = 1080px
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: null,
+      logging: false,
+    });
+    const link = document.createElement('a');
+    link.download = `slide-${i + 1}-${editorSlides[i].label.split('—')[0].trim().replace(/\s+/g, '-').toLowerCase()}.png`;
+    link.href = cvs.toDataURL('image/png');
+    link.click();
+    statusEl.className = 'status-box success';
+    statusEl.textContent = `✓ Slide ${i + 1} exportado.`;
+  } catch (e) {
+    statusEl.className = 'status-box error';
+    statusEl.textContent = 'Erro ao exportar: ' + e.message;
+  }
+}
+
+async function exportarTodos() {
+  if (!editorSlides.length) return;
+  const btn = document.getElementById('btn-exportar-todos');
+  btn.disabled = true;
+  const statusEl = document.getElementById('status-editor');
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box loading';
+
+  const zip = new JSZip();
+  const pasta = zip.folder('carrossel');
+
+  for (let i = 0; i < editorSlides.length; i++) {
+    statusEl.textContent = `Exportando ${i + 1}/${editorSlides.length}...`;
+    const canvas = document.getElementById(`sc-${i}`);
+    try {
+      const cvs = await html2canvas(canvas, {
+        scale: 3.6,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+        logging: false,
+      });
+      const base64 = cvs.toDataURL('image/png').split(',')[1];
+      pasta.file(`slide-${String(i + 1).padStart(2, '0')}.png`, base64, { base64: true });
+    } catch (e) {
+      console.error('Erro slide', i, e);
+    }
+  }
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const link = document.createElement('a');
+  link.download = 'carrossel-leonam.zip';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+
+  statusEl.className = 'status-box success';
+  statusEl.textContent = `✓ ZIP com ${editorSlides.length} slides baixado.`;
+  btn.disabled = false;
+}
+
+function abrirInstagram() {
+  exportarTodos();
+  setTimeout(() => window.open('https://www.instagram.com/', '_blank'), 500);
 }
 </script>
 
