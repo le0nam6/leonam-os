@@ -599,35 +599,33 @@ ${estiloBase}
 Escreva uma edição da Newsletter do Leonam (Substack) sobre: "${tema}"
 Ângulo: ${angulo || 'estratégico'}
 
-ESTRUTURA OBRIGATÓRIA:
+ESTRUTURA OBRIGATÓRIA (máximo 3 subtítulos, 600-800 palavras):
 
 ☕ Mentoria matinal • [X] min de leitura
 
-[Saudação curta: "Bom dia!" ou similar]
+Bom dia!
 
-[LEAD — 2-3 parágrafos curtos que abrem com situação concreta ou pergunta direta. Apresenta a tese sem rodeios. O leitor precisa reconhecer a situação imediatamente.]
+[ABERTURA — OBRIGATÓRIO: comece com uma situação específica e concreta que o leitor já viveu, ou uma observação direta sobre algo que acontece no mercado. NÃO use "Já se perguntou...", NÃO use perguntas retóricas genéricas. Exemplo de abertura certa: "Semana passada um cliente me mandou mensagem às 22h: 'como eu falo que minha agência mudou sem parecer desesperado?'" — a tese surge naturalmente desta situação. 2-3 parágrafos curtos.]
 
-## [Subtítulo como afirmação provocativa]
-[Desenvolvimento. Parágrafos de 1-3 linhas. Alterna entre explicação, exemplo pessoal e → conclusões.]
+## [Subtítulo 1 — afirmação provocativa, não tópico descritivo]
+[Desenvolvimento em profundidade. 3-5 parágrafos. Use experiência pessoal real, dado concreto ou caso específico. As frases de impacto devem surgir do argumento — não serem jogadas aleatoriamente.]
 
-## [Segundo subtítulo]
-[Desenvolvimento. Pode incluir lista com → ou dados concretos.]
+## [Subtítulo 2 — a virada ou o paradoxo]
+[O ponto que contradiz o senso comum. 2-4 parágrafos. Aqui o leitor entende por que o caminho óbvio está errado.]
 
-## [Terceiro subtítulo]
-[Desenvolvimento. Inclui pelo menos uma experiência pessoal real do Leonam, extraída das notas do vault.]
-
-## [Subtítulo final — atividade prática ou exercício concreto]
-[Conclusão com algo que o leitor pode fazer hoje. Uma pergunta, um exercício de 10 minutos, ou um framework de diagnóstico.]
+## [Subtítulo 3 — exercício prático concreto]
+[NÃO termine com "pergunte a si mesmo" genérico. Dê uma atividade com prazo e critério claro. Exemplo: "Pega os 3 últimos posts que você publicou e identifica qual deles você teria postado há 2 anos sem mudar nada. Esse é seu ponto de partida para entender onde sua marca ainda não se mexeu."]
 
 [Assinatura: "Bom dia, Leo" ou "Um abraço, Leonam"]
 
 REGRAS ABSOLUTAS:
-- Português brasileiro fluido, artigos corretos (o, a, os, as, um, uma)
+- Máximo 3 subtítulos — prefira profundidade a variedade de tópicos
 - Parágrafos de 1-3 linhas — nunca blocos longos
-- Sem bullet points em excesso — prefira prosa com → para marcar conclusões
-- Sem linguagem de coach, sem motivação vazia, sem metáforas forçadas
+- Frases de impacto surgem do argumento, não são inseridas aleatoriamente
+- Sem bullet points numerados — prefira prosa com → para conclusões
+- Sem linguagem de coach, sem motivação vazia, sem "jornada", "ecossistema"
 - Use o conhecimento e opiniões reais do Leonam extraídos das notas do vault
-- Tamanho: 600-800 palavras — sem exceção${contextoTotal}`;
+- 600-800 palavras — sem exceção${contextoTotal}`;
     }
 
     const conteudo = tipo === 'carrossel' ? await chamarGemini(prompt) : await chamarGroq(prompt);
