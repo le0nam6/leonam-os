@@ -496,13 +496,13 @@
       <!-- DOCX -->
       <div class="ingest-panel active" id="panel-docx">
         <div class="form-group">
-          <label>Arquivo .docx da reunião</label>
+          <label>Arquivos .docx de reunião</label>
           <div class="upload-zone" id="docx-zone" onclick="document.getElementById('docx-input').click()">
             <div class="upload-icon">📄</div>
-            <div class="upload-text"><strong>Clique para selecionar</strong> ou arraste o .docx aqui</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:8px" id="docx-nome"></div>
+            <div class="upload-text"><strong>Clique para selecionar</strong> ou arraste um ou mais .docx aqui</div>
           </div>
-          <input type="file" id="docx-input" accept=".docx" style="display:none" onchange="selecionarDocx(this)">
+          <input type="file" id="docx-input" accept=".docx" multiple style="display:none" onchange="selecionarDocx(this)">
+          <div id="docx-lista" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
         </div>
         <button class="btn btn-primary" id="btn-docx" onclick="ingerirDocx()" disabled>
           Extrair convicções
@@ -1059,13 +1059,31 @@ async function atualizarStats() {
 }
 
 // DOCX
-let docxFile = null;
+let docxFiles = [];
+
+function renderizarListaDocx() {
+  const lista = document.getElementById('docx-lista');
+  lista.innerHTML = docxFiles.map((f, i) =>
+    `<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px">
+      <span style="font-size:13px">📄 ${f.name}</span>
+      <span style="font-size:11px;color:var(--muted);cursor:pointer" onclick="removerDocx(${i})">✕</span>
+    </div>`
+  ).join('');
+  document.getElementById('btn-docx').disabled = docxFiles.length === 0;
+}
+
+function removerDocx(i) {
+  docxFiles.splice(i, 1);
+  renderizarListaDocx();
+}
+
 function selecionarDocx(input) {
-  const f = input.files[0];
-  if (!f) return;
-  docxFile = f;
-  document.getElementById('docx-nome').textContent = '📄 ' + f.name;
-  document.getElementById('btn-docx').disabled = false;
+  const novos = Array.from(input.files).filter(f => f.name.endsWith('.docx'));
+  if (!novos.length) return;
+  // Adiciona sem duplicar por nome
+  novos.forEach(f => { if (!docxFiles.find(x => x.name === f.name)) docxFiles.push(f); });
+  renderizarListaDocx();
+  input.value = '';
 }
 
 const docxZone = document.getElementById('docx-zone');
@@ -1075,42 +1093,55 @@ if (docxZone) {
   docxZone.addEventListener('drop', e => {
     e.preventDefault();
     docxZone.classList.remove('dragging');
-    const f = e.dataTransfer.files[0];
-    if (f && f.name.endsWith('.docx')) {
-      docxFile = f;
-      document.getElementById('docx-nome').textContent = '📄 ' + f.name;
-      document.getElementById('btn-docx').disabled = false;
-    } else {
-      toast('Só aceita arquivos .docx', 'error');
-    }
+    const novos = Array.from(e.dataTransfer.files).filter(f => f.name.endsWith('.docx'));
+    if (novos.length === 0) { toast('Só aceita arquivos .docx', 'error'); return; }
+    novos.forEach(f => { if (!docxFiles.find(x => x.name === f.name)) docxFiles.push(f); });
+    renderizarListaDocx();
   });
 }
 
 async function ingerirDocx() {
-  if (!docxFile) return;
+  if (!docxFiles.length) return;
   const btn = document.getElementById('btn-docx');
   btn.disabled = true;
-  setStatus('docx', 'loading', '<span class="spinner"></span>Processando reunião...');
 
-  const formData = new FormData();
-  formData.append('arquivo', docxFile);
+  let totalConvicoes = 0;
+  const erros = [];
 
-  try {
-    const res = await fetch(`${API}/api/ingerir/docx`, { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.ok) {
-      setStatus('docx', 'success', `✓ <strong>${data.origem}</strong> processado!<br>${data.convicoes.length} convicção(ões) extraída(s) e salva(s) na biblioteca.`);
-      docxFile = null;
-      document.getElementById('docx-input').value = '';
-      document.getElementById('docx-nome').textContent = '';
-      atualizarStats();
-    } else {
-      setStatus('docx', 'error', 'Erro: ' + data.erro);
+  for (let i = 0; i < docxFiles.length; i++) {
+    const f = docxFiles[i];
+    setStatus('docx', 'loading', `<span class="spinner"></span>Processando ${i + 1}/${docxFiles.length}: <strong>${f.name}</strong>...`);
+
+    const formData = new FormData();
+    formData.append('arquivo', f);
+
+    try {
+      const res = await fetch(`${API}/api/ingerir/docx`, { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.ok) {
+        totalConvicoes += data.convicoes?.length || 0;
+      } else {
+        erros.push(`${f.name}: ${data.erro}`);
+      }
+    } catch (e) {
+      erros.push(`${f.name}: servidor offline`);
     }
-  } catch (e) {
-    setStatus('docx', 'error', 'Servidor offline.');
   }
-  btn.disabled = false;
+
+  // Resultado final
+  if (erros.length === 0) {
+    setStatus('docx', 'success', `✓ ${docxFiles.length} arquivo(s) processado(s) — <strong>${totalConvicoes}</strong> convicções extraídas e salvas na biblioteca.`);
+  } else if (totalConvicoes > 0) {
+    setStatus('docx', 'success', `✓ ${docxFiles.length - erros.length} processado(s), ${erros.length} com erro.<br>${totalConvicoes} convicções salvas.<br><small>${erros.join(' | ')}</small>`);
+  } else {
+    setStatus('docx', 'error', 'Erro: ' + erros.join(' | '));
+  }
+
+  docxFiles = [];
+  renderizarListaDocx();
+  document.getElementById('docx-input').value = '';
+  atualizarStats();
+  btn.disabled = true;
 }
 
 // CRIAR CONTEÚDO
