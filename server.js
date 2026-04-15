@@ -1029,12 +1029,16 @@ app.post('/api/sugestao-temas', async (req, res) => {
       .order('criado_em', { ascending: false })
       .limit(30);
 
-    // Busca métricas do Substack para informar o que performa
-    const { data: metricas } = await supabase
-      .from('substack_posts')
-      .select('titulo, taxa_abertura, taxa_clique')
-      .order('taxa_abertura', { ascending: false })
-      .limit(10);
+    // Busca métricas do Substack para informar o que performa (opcional — ignora erro se tabela não existir)
+    let metricas = null;
+    try {
+      const { data: m } = await supabase
+        .from('substack_posts')
+        .select('titulo, taxa_abertura, taxa_clique')
+        .order('taxa_abertura', { ascending: false })
+        .limit(10);
+      metricas = m;
+    } catch (e) {}
 
     const historicoVault = (recentes || []).map(n => `- ${n.titulo}`).join('\n');
     const topPerformers = metricas && metricas.length > 0
@@ -1146,7 +1150,8 @@ app.get('/api/substack/metricas', async (req, res) => {
       .select('*')
       .order('taxa_abertura', { ascending: false });
 
-    if (error) throw new Error(error.message);
+    // Tabela ainda não existe ou sem dados — retorna vazio sem travar
+    if (error) return res.json({ ok: true, posts: [], insights: null, aviso: 'Tabela ainda sendo configurada. Recarregue o schema cache no Supabase → Settings → API.' });
     if (!posts || posts.length === 0) return res.json({ ok: true, posts: [], insights: null });
 
     const melhores = posts.slice(0, 5);
