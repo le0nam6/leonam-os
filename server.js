@@ -40,6 +40,17 @@ function sanitizar(nome) {
   return nome.replace(/[/\\?%*:|"<>]/g, '-').slice(0, 80);
 }
 
+function limparNota(conteudo) {
+  return conteudo
+    .replace(/^---[\s\S]*?---\n?/m, '')          // remove frontmatter YAML
+    .replace(/\*\*Origem:\*\*[^\n]*/g, '')        // remove campo Origem
+    .replace(/\*\*Relacionado:\*\*[^\n]*/g, '')   // remove campo Relacionado
+    .replace(/\[\[([^\]]+)\]\]/g, '$1')           // [[link]] → link
+    .replace(/^#+\s*/gm, '')                      // remove ## títulos
+    .replace(/\n{3,}/g, '\n\n')                   // limpa linhas extras
+    .trim();
+}
+
 // ─── EMBEDDINGS ───────────────────────────────────────────────────────────────
 
 async function gerarEmbedding(texto) {
@@ -452,7 +463,7 @@ async function buscarNotasVault(tema) {
       if (data && data.length > 0) {
         return data.map(n => ({
           arquivo: n.arquivo_obsidian || 'nota',
-          conteudo: n.conteudo.slice(0, 1200)
+          conteudo: limparNota(n.conteudo).slice(0, 1200)
         }));
       }
     }
@@ -628,7 +639,7 @@ REGRAS ABSOLUTAS:
 - 600-800 palavras — sem exceção${contextoTotal}`;
     }
 
-    const conteudo = tipo === 'carrossel' ? await chamarGemini(prompt) : await chamarGroq(prompt);
+    const conteudo = await chamarGemini(prompt);
     const notasUsadas = notas.map(n => n.arquivo);
     res.json({ ok: true, conteudo, notasUsadas, tema, tipo });
   } catch (e) {
