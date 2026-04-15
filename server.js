@@ -603,40 +603,80 @@ ${contextoTotal.slice(0, 6000)}
 `;
 
     } else {
-      prompt = `Você é o ghostwriter do Leonam Alves. Escreva no estilo dele com precisão.
+      prompt = `Você é o ghostwriter do Leonam Alves. Sua única tarefa é replicar o estilo exato dele.
 
 ${estiloBase}
 
-Escreva uma edição da Newsletter do Leonam (Substack) sobre: "${tema}"
-Ângulo: ${angulo || 'estratégico'}
+════════════════════════════════
+EXEMPLO REAL DE NEWSLETTER DO LEONAM
+(Estude o padrão. Replique a estrutura. Não copie o tema.)
+════════════════════════════════
 
-ESTRUTURA OBRIGATÓRIA (máximo 3 subtítulos, 600-800 palavras):
-
-☕ Mentoria matinal • [X] min de leitura
+☕ Mentoria matinal • 5 min de leitura
 
 Bom dia!
 
-[ABERTURA — OBRIGATÓRIO: comece com uma situação específica e concreta que o leitor já viveu, ou uma observação direta sobre algo que acontece no mercado. NÃO use "Já se perguntou...", NÃO use perguntas retóricas genéricas. Exemplo de abertura certa: "Semana passada um cliente me mandou mensagem às 22h: 'como eu falo que minha agência mudou sem parecer desesperado?'" — a tese surge naturalmente desta situação. 2-3 parágrafos curtos.]
+Um cliente me ligou na semana passada com uma pergunta direta:
 
-## [Subtítulo 1 — afirmação provocativa, não tópico descritivo]
-[Desenvolvimento em profundidade. 3-5 parágrafos. Use experiência pessoal real, dado concreto ou caso específico. As frases de impacto devem surgir do argumento — não serem jogadas aleatoriamente.]
+"Leonam, a gente mudou o posicionamento da agência. Faz sentido fazer um post anunciando a nova fase?"
 
-## [Subtítulo 2 — a virada ou o paradoxo]
-[O ponto que contradiz o senso comum. 2-4 parágrafos. Aqui o leitor entende por que o caminho óbvio está errado.]
+Eu perguntei: quando você muda de ideia sobre algo na sua vida pessoal, você manda comunicado para os seus amigos?
 
-## [Subtítulo 3 — exercício prático concreto]
-[NÃO termine com "pergunte a si mesmo" genérico. Dê uma atividade com prazo e critério claro. Exemplo: "Pega os 3 últimos posts que você publicou e identifica qual deles você teria postado há 2 anos sem mudar nada. Esse é seu ponto de partida para entender onde sua marca ainda não se mexeu."]
+Ele ficou quieto por uns três segundos. Depois disse: "entendi o ponto."
 
-[Assinatura: "Bom dia, Leo" ou "Um abraço, Leonam"]
+Esse é o erro que a maioria das marcas comete quando decide se reposicionar.
 
-REGRAS ABSOLUTAS:
-- Máximo 3 subtítulos — prefira profundidade a variedade de tópicos
-- Parágrafos de 1-3 linhas — nunca blocos longos
-- Frases de impacto surgem do argumento, não são inseridas aleatoriamente
-- Sem bullet points numerados — prefira prosa com → para conclusões
-- Sem linguagem de coach, sem motivação vazia, sem "jornada", "ecossistema"
-- Use o conhecimento e opiniões reais do Leonam extraídos das notas do vault
-- 600-800 palavras — sem exceção${contextoTotal}`;
+## Reposicionamento não é lançamento
+
+Quando uma marca decide mudar de direção, o instinto é comunicar. "Nova fase." "Agora somos diferentes." "Mudamos."
+
+Esse anúncio cria um problema imediato: você promete uma transformação que precisa existir em todos os pontos de contato — produto, atendimento, comunicação, preço — e raramente está.
+
+O mercado vai comparar o que você prometeu com o que ele experiencia. E a conta quase sempre não fecha.
+
+**Reposicionamento de marca é silencioso — nunca declarado como ruptura.**
+
+A Cimed não publicou um post "agora somos jovens e inovadores." Eles simplesmente passaram a ser. Colabs com a Fini, identidade visual reformulada, comunicação com um tom diferente. O mercado percebeu. Ninguém precisou ser avisado.
+
+## O sinal de que está funcionando
+
+Você sabe que seu reposicionamento deu certo quando o mercado começa a te chamar pelo novo ângulo — sem que você tenha pedido.
+
+Quando os clientes que chegam já chegam esperando o que você decidiu entregar. Quando as indicações batem com o posicionamento que você construiu nos últimos meses em silêncio.
+
+Isso não acontece em semanas. Acontece em ciclos de 6 a 12 meses de comportamento consistente.
+
+→ **Quem percebe é o mercado. Quem anuncia cria expectativa que a execução raramente sustenta.**
+
+## Faça isso hoje
+
+Pega os últimos 3 meses de conteúdo, atendimento e proposta que você entregou.
+
+Lê tudo como se fosse um estranho que nunca te viu.
+
+Pergunta: essa sequência de comportamento aponta para alguma direção clara? Ou ela poderia pertencer a qualquer agência genérica do mercado?
+
+Se a resposta for "qualquer um poderia ter feito isso", o problema não é o posicionamento que você declarou. É o que você está, de fato, fazendo.
+
+Um abraço,
+Leo
+
+════════════════════════════════
+AGORA ESCREVA A NEWSLETTER
+════════════════════════════════
+
+Tema: "${tema}"
+Ângulo: ${angulo || 'estratégico'}
+
+Siga EXATAMENTE o mesmo padrão do exemplo:
+1. ABERTURA: situação concreta vivida por cliente ou pelo Leonam — sem perguntas retóricas, sem "você já se perguntou", sem "imagine que..."
+2. 3 SUBTÍTULOS MÁXIMO — com desenvolvimento real, não tópicos rasos
+3. EXERCÍCIO FINAL: ação específica com critério claro, não "pergunte a si mesmo"
+4. 600-800 palavras — sem exceção
+5. Use as notas do vault abaixo para extrair opiniões e cases reais do Leonam
+
+NOTAS DO VAULT:
+${contextoTotal.slice(0, 5000)}`;
     }
 
     const conteudo = await chamarGemini(prompt);
