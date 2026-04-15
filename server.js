@@ -561,15 +561,15 @@ IDENTIDADE DO AUTOR:
 Leonam Alves é estrategista de conteúdo baseado em São Luís, Maranhão. Ajuda criativos, designers e freelancers a entenderem a lógica de negócios para construírem carreiras e negócios sustentáveis. Tom: direto, realista, pragmático. Sem metáforas forçadas, sem linguagem "technocêntrica", sem papo motivacional vazio.
 
 ESTILO DE ESCRITA (obrigatório replicar):
-- Abre sempre com uma situação concreta que o leitor já viveu, ou uma pergunta direta. Sem introdução longa.
+- Abre SEMPRE com uma situação concreta narrada na 3ª pessoa: um cliente que ligou, uma conversa real, um caso que aconteceu. PROIBIDO abrir com pergunta ao leitor. PROIBIDO: "Você já se sentiu...", "Você já se perguntou...", "Imagine que...", "E se você...". Sem introdução longa.
 - Parágrafos curtos: 1 a 3 linhas. Nunca blocos pesados.
 - Frases de impacto em linha própria: "Isso é exatamente o oposto da verdade.", "Gargalos não são promovidos.", "Atenção é barata. Confiança é cara."
 - Usa → para marcar conclusões ou viradas de lógica
 - Bold (**) em frases que o leitor vai querer sublinhar
 - Subtítulos como afirmações provocativas, não como tópicos descritivos. Ex: "O paradoxo da indispensabilidade" em vez de "Como funciona X"
-- Usa experiências pessoais reais: "Quando comecei minha eugência em 2021...", "Eu já. Muitas vezes.", "Aprendi isso da forma difícil."
-- Nunca usa: "fosso incopiável", "oceano de ruído digital", "jornada", "ecossistema", "sinergias", "impacto positivo", frases de coach
-- ANALOGIAS: máximo UMA por peça. Evitar as desgastadas do mercado de marketing: caçador/fazendeiro, terreno alugado, construir casa na areia, plantar sementes, maratona vs sprint. Se usar analogia, construir a partir de uma situação concreta e específica — não de imagens genéricas de "negócios"
+- Tom pessoal direto, mas não fabricar histórias. Use os casos e opiniões das notas do vault — não invente experiências.
+- Nunca usa: "fosso incopiável", "oceano de ruído digital", "jornada", "ecossistema", "sinergias", "impacto positivo", frases de coach, "fundamental", "essencial", "é importante"
+- ANALOGIAS: máximo UMA por peça. Evitar as desgastadas: caçador/fazendeiro, terreno alugado, construir casa na areia, plantar sementes, maratona vs sprint
 - Assina como "Leo" ou "Leonam" no final
 - Tamanho da newsletter: ☕ Mentoria matinal • 5-7 min de leitura`;
 
@@ -679,12 +679,12 @@ AGORA ESCREVA A NEWSLETTER
 Tema: "${tema}"
 Ângulo: ${angulo || 'estratégico'}
 
-Siga EXATAMENTE o mesmo padrão do exemplo:
-1. ABERTURA: situação concreta vivida por cliente ou pelo Leonam — sem perguntas retóricas, sem "você já se perguntou", sem "imagine que..."
-2. 3 SUBTÍTULOS MÁXIMO — com desenvolvimento real, não tópicos rasos
-3. EXERCÍCIO FINAL: ação específica com critério claro, não "pergunte a si mesmo"
-4. 600-800 palavras — sem exceção
-5. Use as notas do vault abaixo para extrair opiniões e cases reais do Leonam
+REGRAS ABSOLUTAS — qualquer violação invalida o output:
+1. ABERTURA OBRIGATÓRIA: começa com diálogo real ou situação narrada na 3ª pessoa (ex: "Um cliente me ligou...", "Ontem um designer me mandou uma mensagem..."). PROIBIDO começar com qualquer variação de "Você já...". PROIBIDO começar com pergunta ao leitor.
+2. EXATAMENTE 3 seções com subtítulo — nem 2, nem 4, nem 5. Três.
+3. EXERCÍCIO FINAL (última seção): ação com verbo no imperativo e critério objetivamente verificável. PROIBIDO "pergunte a si mesmo", "reflita sobre", "pense em".
+4. 600-800 palavras — conte antes de enviar.
+5. Use as notas do vault para extrair argumentos e cases. NÃO cole trechos literais das notas — use as ideias, reescreva com voz do Leonam.
 
 NOTAS DO VAULT:
 ${contextoTotal.slice(0, 5000)}`;
