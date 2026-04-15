@@ -552,103 +552,43 @@ ESTILO DE ESCRITA (obrigatório replicar):
 - Tamanho da newsletter: ☕ Mentoria matinal • 5-7 min de leitura`;
 
     if (tipo === 'carrossel') {
-      prompt = `Você é o ghostwriter do Leonam Alves. Sua única função agora é escrever um carrossel de Instagram que soa EXATAMENTE como ele — não como uma IA tentando imitar um humano.
+      prompt = `Você é o ghostwriter do Leonam Alves. Escreva um carrossel de Instagram no estilo dele.
 
 ${estiloBase}
 
-═══════════════════════════════════════
-EXEMPLOS REAIS DOS CARROSSÉIS DO LEONAM
-(Aprenda o padrão. Replique a profundidade. Não copie o tema.)
-═══════════════════════════════════════
-
-EXEMPLO 1 — "O fim dos designers?" (9 slides)
-Tema: Contrariano sobre IA e design
-Padrão: Hook com nome real → valida parcialmente o argumento do adversário → identifica a falha lógica central → paradoxo que inverte a conclusão → aplica para o leitor → CTA de salvamento
-
-SLIDE 1: Edson Castro usou IA por 30 minutos e decretou o fim de uma profissão inteira. / Ele acertou o dado. E errou completamente a conclusão.
-SLIDE 2: Todo mês aparece um vídeo novo no YouTube: "A IA matou o design." / É sempre a mesma pessoa, com o mesmo erro de raciocínio, usando um nome diferente.
-SLIDE 3: O argumento parece lógico na superfície: / "Qualquer um faz um flyer em 10 segundos. Para que pagar designer?" / Só que esse raciocínio tem uma falha que destrói a conclusão inteira. / Ele confunde execução com profissão.
-SLIDE 4: A parte que eles acertaram: o designer que cobrava R$ 100 por "logo + cartão + panfleto sem pensar" está em maus lençóis, sim. / Mas pelo mesmo raciocínio: a calculadora matou os contadores. O Word matou os escritores. / O que muda não é se a profissão existe. É onde o valor dela mora.
-SLIDE 5: Aqui está o dado que eles ignoram completamente: / A IA funciona por probabilidade estatística. Ela aprende o padrão mais comum e reproduz o padrão mais comum. / Resultado: quanto mais gente usa IA para criar, mais tudo fica igual. / Existe até nome para isso: AI Slop.
-SLIDE 6: E aqui está a conclusão que ninguém está tirando: / Quanto mais o mercado se enche de AI Slop, mais raro e valioso se torna o design que comunica algo de verdade. / O mercado criou a dor. E entregou junto o argumento de contratação para o designer que entendeu o jogo.
-SLIDE 7: Não é o designer que está em risco. / É o profissional que sempre foi operador de ferramenta e se convenceu de que isso era design. / Se o seu diferencial era "eu sei usar Illustrator e você não", você nunca foi designer estratégico. / Você era commodity. E commodity sempre foi substituível.
-SLIDE 8: Enquanto todo mundo declara o fim do design, os designers que entenderam a mudança estão cobrando mais. / Usam IA para entregar em 2 dias o que antes levava 2 semanas. E direcionam o tempo restante para o que só eles fazem: pensar, questionar, posicionar e decidir. / O mercado não perdeu o designer. Perdeu o gargalo operacional.
-SLIDE 9 (CTA): Se esse raciocínio fez sentido para você, salva esse post. / Na próxima vez que alguém mandar um vídeo apocalíptico sobre o fim do design, você já tem a resposta.
-
----
-
-EXEMPLO 2 — "Toguro x Cimed" (15 slides)
-Tema: Análise estratégica de caso real de marca
-Padrão: Gancho com situação real acontecendo → agitação do problema estrutural → desconstrução conceitual com nomenclatura técnica (Aaker, marca humana, marca de comunidade) → funil completo → empatia com o personagem → confusão fatal → aplicação para o leitor → reversão de status → CTA com automação de DM
-
-Slide 1 hook: A Cimed está oferecendo um contrato milionário para o Toguro. / E ele está hesitando porque não quer colocar o próprio nome no produto. / Isso não é crítica. É a lição de arquitetura de marca que a maioria dos criativos vai repetir na própria carreira.
-Slides do meio: define conceitos com precisão técnica (Marca Humana, Marca de Comunidade, Framework de Aaker), constrói funil visual com setas, usa dado (71% dos consumidores) com fonte implícita, humaniza o personagem antes de criticar.
-CTA: Comente MARCA aqui embaixo. Você recebe o material direto no DM.
-
----
-
-EXEMPLO 3 — "Filho do Piseiro" (17 slides)
-Tema: Engenharia de fenômeno viral + negócios no forró
-Padrão: Dado específico que surpreende → problema estrutural do mercado (artistas que somem em 18 meses) → diagnóstico da diferença → 4 chaves analisadas uma por uma → comparação com pares (Safadão, Gusttavo, Xand, Tarcísio, Felipe) → perigo que vem depois do sucesso → reversão de status com dado financeiro → aplicação universal → CTA de compartilhamento
-
-Destaques de estilo: "Lendas não vendem desodorante na terça-feira à tarde. Os heróis humanos em quem confiamos, sim." / "A autenticidade abre a porta. A engenharia de negócios é o que você constrói do outro lado dela."
-
----
-
-EXEMPLO 4 — "Zeroum Bet" (20 slides)
-Tema: Arquitetura de marketing de empresa polêmica
-Padrão: Dado contraditório no hook (investigação federal + crescimento de 1000%) → drawflow visual completo em 3 camadas → análise de cada canal (influencer, polêmica, esporte, mídia física) → comparativo tabular com modelo tradicional → conclusão sistêmica → aplicação com 3 perguntas diretas → CTA de DM
-
-Destaques de estilo: usa diagramas ASCII para mostrar fluxos → "Uma empresa que compra mídia vs uma que compra ativos." → ROI composto como conceito central
-
-═══════════════════════════════════════
-O QUE APRENDER COM ESSES EXEMPLOS:
-═══════════════════════════════════════
-
-1. CASOS REAIS COM NOMES: Leonam nunca fala de "uma empresa" — ele fala de Toguro, Gusttavo Lima, Edson Castro, Zeroum Bet. Especificidade dá autoridade.
-
-2. PROFUNDIDADE ANALÍTICA: Cada carrossel tem um framework interno (Aaker, funil de 3 camadas, nível de consciência). Não é opinião — é análise estruturada.
-
-3. EMPATIA ANTES DA CRÍTICA: Antes de apontar o erro, ele valida a lógica do personagem. "Toguro não está errado em querer proteger a Mansão." Isso cria confiança.
-
-4. DADOS ESPECÍFICOS CONTEXTUALIZADOS: "R$ 31 milhões em 20 dias", "11 milhões de acessos/mês", "71% dos consumidores". Números sem fonte — mas críveis porque são contextualizados.
-
-5. SLIDES LONGOS QUANDO NECESSÁRIO: Diferente do formato telegráfico padrão, Leonam escreve slides com 4-6 linhas quando o argumento precisa. Cada slide é completo — não fragmentado.
-
-6. CTA COM MECANISMO: "Comente MARCA", "Salva esse post", "Compartilha nos stories" — nunca "Me siga". O CTA tem uma razão de existir.
-
-7. REVERSÃO DE STATUS: O penúltimo slide sempre inverte quem está na posição de poder. O leitor sai sentindo que aprendeu algo que poucos sabem.
-
-═══════════════════════════════════════
-AGORA: CRIE O CARROSSEL
-═══════════════════════════════════════
+PADRÕES DOS CARROSSÉIS DO LEONAM:
+1. HOOK com nome real e situação concreta (ex: "A Cimed ofereceu um contrato milionário para o Toguro.")
+2. Valida parcialmente o argumento oposto antes de destruí-lo
+3. Identifica a falha lógica central com precisão — não é opinião, é análise
+4. Paradoxo que inverte a conclusão óbvia
+5. Dados específicos contextualizados (números reais, nomes reais)
+6. Slides de 3-6 linhas quando o argumento precisa — não fragmentado
+7. Penúltimo slide inverte quem está na posição de poder (reversão de status)
+8. CTA com mecanismo: "Comente MARCA", "Salva esse post" — nunca "Me siga"
 
 Tema: "${tema}"
 Ângulo: ${angulo || 'contraintuitivo — questione uma crença que o mercado aceita como verdade'}
 
-ANTES DE ESCREVER, decida:
-- Qual caso real ou nome específico posso usar como âncora?
-- Qual é a crença errada que vou destruir?
-- Qual é a virada lógica que o leitor não esperava?
-- Quantos slides esse argumento precisa? (mínimo 8, máximo 17 — use o número certo para o argumento, não o mais fácil)
+Decida antes de escrever:
+- Qual caso real ou nome específico usar como âncora?
+- Qual é a crença errada a destruir?
+- Qual é a virada lógica inesperada?
+- Quantos slides o argumento precisa? (mínimo 8, máximo 15)
 
 FORMATO DE SAÍDA:
----
-**SLIDE 1 — GANCHO ABSOLUTO**
+**SLIDE 1 — GANCHO**
 [texto]
 
-**SLIDE 2 — SEGUNDA CHANCE ALGORÍTMICA**
+**SLIDE 2 — SEGUNDA CHANCE**
 [texto]
 
-[continue com os slides, nomeando cada um com sua função: AGITAÇÃO, CONTEXTO, DESCONSTRUÇÃO, PARADOXO, VIRADA, APLICAÇÃO, REVERSÃO DE STATUS, CTA]
+[continue nomeando cada slide pela função: AGITAÇÃO, CONTEXTO, DESCONSTRUÇÃO, PARADOXO, VIRADA, APLICAÇÃO, REVERSÃO DE STATUS, CTA]
 
----
 LEGENDA SUGERIDA:
-[legenda para o post]
----
+[legenda]
 
-USE O CONHECIMENTO DO VAULT E O CONTEXTO EXTERNO FORNECIDO:
-${contextoTotal}
+CONHECIMENTO DO VAULT:
+${contextoTotal.slice(0, 6000)}
 `;
 
     } else {
