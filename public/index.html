@@ -443,82 +443,143 @@
 
   .modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
 
-/* EDITOR CARROSSEL */
-.editor-topbar {
+/* EDITOR CARROSSEL — FABRIC.JS */
+#page-editor.active {
+  display: flex;
+  flex-direction: column;
+  margin: -32px;
+  height: calc(100vh - 72px);
+  overflow: hidden;
+}
+.ed-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-}
-.template-btn {
+  gap: 3px;
   padding: 8px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.tb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.1s;
+}
+.tb-btn:hover { background: var(--surface2); border-color: var(--border); }
+.tb-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tb-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.tb-sep { width: 1px; height: 22px; background: var(--border); margin: 0 3px; flex-shrink: 0; }
+.ed-main {
+  display: grid;
+  grid-template-columns: 150px 1fr 230px;
+  flex: 1;
+  overflow: hidden;
+}
+.ed-slides-list {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ed-canvas-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #07070b;
+  overflow: auto;
+  padding: 24px;
+}
+.ed-canvas-area canvas { border-radius: 4px; box-shadow: 0 8px 40px rgba(0,0,0,0.6); }
+.ed-props {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 14px;
+}
+.slide-thumb-item {
+  width: 128px;
+  height: 160px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  background: #1a1a2e;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+.slide-thumb-item:hover { border-color: var(--border); }
+.slide-thumb-item.active { border-color: var(--accent); }
+.slide-thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.slide-thumb-num {
+  position: absolute; bottom: 3px; left: 5px;
+  font-size: 9px; color: rgba(255,255,255,0.55);
+  background: rgba(0,0,0,0.5); border-radius: 3px; padding: 1px 4px;
+}
+.slide-thumb-del {
+  position: absolute; top: 3px; right: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(248,113,113,0.85); color: #fff;
+  font-size: 10px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: 0; transition: opacity 0.15s;
+  border: none; line-height: 1;
+}
+.slide-thumb-item:hover .slide-thumb-del { opacity: 1; }
+.props-section { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.props-section:last-child { border-bottom: none; margin-bottom: 0; }
+.props-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; }
+.props-row { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+.props-row:last-child { margin-bottom: 0; }
+.props-input {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 5px; padding: 4px 7px; color: var(--text);
+  font-size: 12px; font-family: 'DM Sans', sans-serif; outline: none; min-width: 0;
+}
+.props-select {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 5px; padding: 4px 7px; color: var(--text); font-size: 12px; outline: none;
+}
+.props-color {
+  width: 28px; height: 28px; border: 1px solid var(--border);
+  border-radius: 5px; cursor: pointer; padding: 2px;
+  background: var(--surface2); flex-shrink: 0;
+}
+.props-btn {
+  flex: 1; padding: 5px 6px; border-radius: 5px;
+  border: 1px solid var(--border); background: var(--surface2);
+  color: var(--text); font-size: 11px; cursor: pointer; text-align: center;
+  font-family: 'DM Sans', sans-serif; white-space: nowrap;
+}
+.props-btn:hover { background: var(--surface); }
+.props-dim { font-size: 10px; color: var(--muted); flex-shrink: 0; width: 12px; }
+.no-select-msg { color: var(--muted); font-size: 12px; text-align: center; padding-top: 32px; line-height: 1.7; }
+.template-btn {
+  padding: 5px 10px;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .template-btn.active { border-color: var(--accent); color: var(--accent); background: var(--surface2); }
-.slides-scroll {
-  display: flex;
-  gap: 20px;
-  overflow-x: auto;
-  padding-bottom: 16px;
-}
-.slide-wrapper {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.slide-canvas {
-  width: 300px;
-  height: 375px;
-  border-radius: 10px;
-  overflow: hidden;
-  position: relative;
-  cursor: pointer;
-  border: 1px solid var(--border);
-}
-.slide-bg {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  transition: background 0.2s;
-}
-.slide-overlay {
-  position: absolute;
-  inset: 0;
-}
-.slide-content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 24px 20px;
-}
-.slide-label {
-  font-size: 9px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-  opacity: 0.7;
-}
-.slide-text {
-  font-weight: 700;
-  line-height: 1.35;
-  outline: none;
-  min-height: 40px;
-  word-break: break-word;
-}
 .tpl-editor-panel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -578,86 +639,83 @@
   gap: 6px;
   max-width: 100%;
 }
-.slide-num {
-  position: absolute;
-  bottom: 14px;
-  right: 16px;
-  font-size: 10px;
-  opacity: 0.5;
-}
-.slide-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 300px;
-}
-.ctrl-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-.ctrl-row input[type="color"] {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  cursor: pointer;
-  padding: 2px;
-  background: var(--surface);
-}
-.ctrl-row select {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px 8px;
-  color: var(--text);
-  font-size: 12px;
-}
-.ctrl-btn {
-  flex: 1;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 12px;
-  cursor: pointer;
-  text-align: center;
-  white-space: nowrap;
-}
-.ctrl-btn:hover { background: var(--surface2); }
-.editor-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 200px;
-  color: var(--muted);
-  font-size: 14px;
-  gap: 12px;
-}
 .import-area {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 16px;
-  margin-bottom: 20px;
+  padding: 14px;
+  margin: 0 0 0 0;
 }
-.slide-gen-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.6);
+.template-btns {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 10px;
-  z-index: 10;
-  font-size: 13px;
-  color: white;
+  flex-wrap: wrap;
+  gap: 5px;
 }
+
+/* Slide thumbnails */
+.thumb-num {
+  position: absolute; bottom: 3px; left: 5px;
+  font-size: 9px; color: rgba(255,255,255,0.55);
+  background: rgba(0,0,0,0.5); border-radius: 3px; padding: 1px 4px;
+  pointer-events: none;
+}
+.thumb-preview { display: block; width: 100%; height: 100%; object-fit: cover; }
+.thumb-del {
+  position: absolute; top: 3px; right: 3px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(248,113,113,0.85); color: #fff;
+  font-size: 10px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; opacity: 0; transition: opacity 0.15s;
+  border: none; line-height: 1; padding: 0;
+}
+.slide-thumb-item:hover .thumb-del { opacity: 1; }
+
+/* Props panel groups */
+.props-group {
+  margin-bottom: 14px; padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.props-group:last-child { border-bottom: none; margin-bottom: 0; }
+.props-btn.danger { color: var(--danger); border-color: var(--danger); }
+.props-btn.danger:hover { background: rgba(248,113,113,0.1); }
+.props-row label { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.props-row input[type="color"] {
+  width: 28px; height: 28px; border: 1px solid var(--border);
+  border-radius: 5px; cursor: pointer; padding: 2px;
+  background: var(--surface2); flex-shrink: 0;
+}
+.props-row input[type="number"],
+.props-row input[type="text"] {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 5px; padding: 4px 6px; color: var(--text);
+  font-size: 12px; font-family: 'DM Sans', sans-serif; outline: none;
+}
+.props-row select {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 5px; padding: 4px 6px; color: var(--text); font-size: 12px; outline: none;
+}
+.props-row input[type="range"] { accent-color: var(--accent); flex: 1; }
+
+/* History cards */
+.hist-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 6px;
+}
+.hist-meta { display: flex; align-items: center; justify-content: space-between; }
+.hist-tipo {
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--accent); font-weight: 700; font-family: 'Syne', sans-serif;
+}
+.hist-data { font-size: 11px; color: var(--muted); }
+.hist-tema { font-size: 14px; font-weight: 600; font-family: 'Syne', sans-serif; }
+.hist-angulo { font-size: 12px; color: var(--muted); font-style: italic; }
+.hist-preview {
+  font-size: 12px; color: var(--text-dim, #aaa); line-height: 1.5;
+  white-space: pre-wrap; max-height: 80px; overflow: hidden;
+}
+.hist-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
 </style>
-<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
@@ -849,6 +907,26 @@
         </div>
         <div id="conteudo-output" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;white-space:pre-wrap;font-size:14px;line-height:1.7;color:var(--text);max-height:600px;overflow-y:auto"></div>
       </div>
+
+      <!-- HISTÓRICO DE COPIES -->
+      <div style="margin-top:40px;border-top:1px solid var(--border);padding-top:28px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">Histórico de copies</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Cada geração é salva aqui e usada automaticamente como referência no próximo</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="filtro-historico" onchange="carregarHistorico()" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-size:12px;outline:none">
+              <option value="todos">Todos</option>
+              <option value="carrossel">Carrosséis</option>
+              <option value="substack">Substack</option>
+            </select>
+          </div>
+        </div>
+        <div id="status-historico" class="status-box" style="display:none"></div>
+        <div id="grid-historico" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
+      </div>
+
     </div>
 
     <!-- PÁGINA: BIBLIOTECA -->
@@ -999,87 +1077,98 @@
 <!-- PÁGINA: EDITOR CARROSSEL -->
 <div class="page" id="page-editor">
 
-  <div class="editor-topbar">
-    <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:0">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">Template</div>
-        <button class="ctrl-btn" style="width:auto;padding:4px 12px;font-size:11px;flex:none" onclick="toggleTemplateEditor()">+ Criar</button>
-      </div>
-      <div class="template-btns" id="template-btns"></div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0">
-      <button class="btn btn-ghost" onclick="toggleImport()">📥 Importar texto</button>
-      <button class="btn btn-ghost" onclick="exportarTodos()" id="btn-exportar-todos" disabled>⬇ Exportar ZIP</button>
-      <button class="btn btn-primary" onclick="abrirInstagram()" id="btn-postar" disabled>📱 Postar</button>
-    </div>
+  <!-- TOOLBAR -->
+  <div class="ed-toolbar">
+    <!-- Adicionar elementos -->
+    <button class="tb-btn" onclick="edAddText()" title="Adicionar caixa de texto">T Texto</button>
+    <button class="tb-btn" onclick="edAddLabel()" title="Adicionar etiqueta [ FUNÇÃO ]">[ Label ]</button>
+    <button class="tb-btn" onclick="edAddImage()" title="Adicionar imagem">🖼 Imagem</button>
+    <button class="tb-btn" onclick="edAddRect()" title="Retângulo">▬ Rect</button>
+    <button class="tb-btn" onclick="edAddCircle()" title="Círculo">● Círculo</button>
+    <button class="tb-btn" onclick="edAddSlideNum()" title="Número do slide">1/N</button>
+    <div class="tb-sep"></div>
+    <!-- Fundo -->
+    <button class="tb-btn" onclick="document.getElementById('bg-color-pick').click()" title="Cor de fundo">🎨 Fundo</button>
+    <input id="bg-color-pick" type="color" value="#0c0c0f" style="display:none" oninput="edSetBgColor(this.value)">
+    <button class="tb-btn" onclick="edSetBgImage()" title="Imagem de fundo">🖼 Bg img</button>
+    <button class="tb-btn" onclick="edGerarImagem()" title="Gerar imagem com IA">✦ Gerar bg</button>
+    <div class="tb-sep"></div>
+    <!-- Templates -->
+    <span style="font-size:11px;color:var(--muted);flex-shrink:0">Template:</span>
+    <div class="template-btns" id="template-btns" style="flex-wrap:nowrap;overflow-x:auto;max-width:260px;padding-bottom:2px"></div>
+    <button class="tb-btn" onclick="toggleTemplateEditor()" title="Criar template">+ Criar</button>
+    <div class="tb-sep"></div>
+    <!-- Import -->
+    <button class="tb-btn" onclick="toggleImport()">📥 Importar</button>
+    <div class="tb-sep"></div>
+    <!-- Export -->
+    <button class="tb-btn" onclick="exportCurrentSlide()">⬇ PNG</button>
+    <button class="tb-btn" id="btn-export-zip" onclick="exportAllSlides()" disabled>📁 ZIP todos</button>
+    <button class="tb-btn" onclick="abrirInstagram()">📱 Instagram</button>
   </div>
 
-  <!-- CRIADOR DE TEMPLATE -->
-  <div id="template-editor-panel" class="tpl-editor-panel" style="display:none">
-    <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:14px">Criar template personalizado</div>
+  <!-- PAINEL CRIADOR DE TEMPLATE (colapsável) -->
+  <div id="template-editor-panel" class="tpl-editor-panel" style="display:none;margin:0;border-radius:0;border-left:none;border-right:none;border-top:none">
+    <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:12px">Criar template personalizado</div>
     <div class="tpl-editor-grid">
+      <div class="tpl-field"><label>Nome</label><input id="ct-nome" type="text" placeholder="Meu Template"></div>
+      <div class="tpl-field"><label>Emoji</label><input id="ct-emoji" type="text" placeholder="🎨" maxlength="2"></div>
       <div class="tpl-field">
-        <label>Nome</label>
-        <input id="ct-nome" type="text" placeholder="Meu Template">
-      </div>
-      <div class="tpl-field">
-        <label>Emoji</label>
-        <input id="ct-emoji" type="text" placeholder="🎨" maxlength="2">
-      </div>
-      <div class="tpl-field">
-        <label>Fonte</label>
+        <label>Fonte padrão</label>
         <select id="ct-font">
-          <option value="'Syne', sans-serif">Syne (Geométrica)</option>
-          <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
-          <option value="'Inter', sans-serif">Inter (Minimal)</option>
-          <option value="'DM Sans', sans-serif">DM Sans</option>
-          <option value="'Playfair Display', serif">Playfair Display (Serif)</option>
-          <option value="'Bebas Neue', cursive">Bebas Neue (Display)</option>
+          <option value="Syne">Syne (Geométrica)</option>
+          <option value="Space Grotesk">Space Grotesk</option>
+          <option value="Inter">Inter (Minimal)</option>
+          <option value="DM Sans">DM Sans</option>
+          <option value="Playfair Display">Playfair Display (Serif)</option>
+          <option value="Bebas Neue">Bebas Neue (Display)</option>
         </select>
       </div>
     </div>
     <div class="tpl-editor-colors">
-      <div class="tpl-field">
-        <label>Fundo</label>
-        <input id="ct-bg" type="color" value="#0c0c0f">
-      </div>
-      <div class="tpl-field">
-        <label>Texto</label>
-        <input id="ct-text" type="color" value="#e8e8f0">
-      </div>
-      <div class="tpl-field">
-        <label>Label / Destaque</label>
-        <input id="ct-label" type="color" value="#7c6af7">
-      </div>
-      <div class="tpl-field">
-        <label>Overlay escuro</label>
-        <input id="ct-overlay" type="range" min="0" max="0.8" step="0.05" value="0.4">
-      </div>
+      <div class="tpl-field"><label>Fundo</label><input id="ct-bg" type="color" value="#0c0c0f"></div>
+      <div class="tpl-field"><label>Texto</label><input id="ct-text" type="color" value="#e8e8f0"></div>
+      <div class="tpl-field"><label>Destaque</label><input id="ct-label" type="color" value="#7c6af7"></div>
+      <div class="tpl-field"><label>Overlay</label><input id="ct-overlay" type="range" min="0" max="0.8" step="0.05" value="0.4"></div>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-primary" onclick="salvarTemplate()">Salvar template</button>
-      <button class="btn btn-ghost" onclick="toggleTemplateEditor()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarTemplate()">Salvar template</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleTemplateEditor()">Cancelar</button>
     </div>
   </div>
 
-  <div class="import-area" id="import-area" style="display:none">
-    <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Cole o texto do carrossel gerado (formato <strong>**SLIDE X — FUNÇÃO**</strong>)</div>
-    <textarea id="import-texto" style="width:100%;min-height:120px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical" placeholder="**SLIDE 1 — GANCHO**&#10;texto...&#10;&#10;**SLIDE 2 — SEGUNDA CHANCE**&#10;texto..."></textarea>
-    <div style="display:flex;gap:8px;margin-top:10px">
-      <button class="btn btn-primary" onclick="importarTexto()">Carregar slides</button>
-      <button class="btn btn-ghost" onclick="toggleImport()">Cancelar</button>
+  <!-- PAINEL IMPORTAR TEXTO (colapsável) -->
+  <div class="import-area" id="import-area" style="display:none;border-radius:0;border-left:none;border-right:none;border-top:none">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Cole o texto gerado (formato <strong>**SLIDE X — FUNÇÃO**</strong>)</div>
+    <textarea id="import-texto" style="width:100%;min-height:100px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical" placeholder="**SLIDE 1 — GANCHO**&#10;texto...&#10;&#10;**SLIDE 2 — CONTEXTO**&#10;texto..."></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary btn-sm" onclick="importarTextoNoEditor()">Carregar slides</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleImport()">Cancelar</button>
     </div>
   </div>
 
-  <div id="editor-empty" class="editor-empty">
-    <div style="font-size:32px">🎨</div>
-    <div>Nenhum carrossel carregado</div>
-    <button class="btn btn-primary" onclick="toggleImport()">📥 Importar texto do carrossel</button>
+  <!-- LAYOUT PRINCIPAL: lista de slides | canvas | propriedades -->
+  <div class="ed-main">
+
+    <!-- LISTA DE SLIDES -->
+    <div class="ed-slides-list" id="slides-list">
+      <button class="tb-btn" onclick="edAddSlide()" style="width:100%;justify-content:center;font-size:11px;border:1px dashed var(--border);margin-bottom:4px">+ Slide</button>
+    </div>
+
+    <!-- CANVAS FABRIC.JS -->
+    <div class="ed-canvas-area">
+      <canvas id="main-canvas"></canvas>
+    </div>
+
+    <!-- PAINEL DE PROPRIEDADES -->
+    <div class="ed-props">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:12px">Propriedades</div>
+      <div id="props-content"><div class="no-select-msg">Clique em um elemento<br>para editar</div></div>
+    </div>
+
   </div>
 
-  <div class="slides-scroll" id="slides-scroll" style="display:none"></div>
-
-  <div id="status-editor" class="status-box" style="display:none;margin-top:16px"></div>
+  <div id="status-editor" class="status-box" style="display:none;position:fixed;bottom:20px;right:260px;z-index:200;min-width:240px"></div>
 
 </div>
 
@@ -1124,6 +1213,8 @@ function irPara(pagina, el) {
   document.getElementById('page-title').textContent = titulos[pagina] || '';
 
   if (pagina === 'biblioteca') carregarInsights();
+  if (pagina === 'conteudo') carregarHistorico();
+  if (pagina === 'editor') requestAnimationFrame(() => initFabricEditor());
 }
 
 function abrirTab(tab, el) {
@@ -1786,21 +1877,17 @@ async function gerarConteudo() {
 }
 
 function abrirNoEditor() {
-  // Navega para o editor e carrega automaticamente o último carrossel
   const navItem = document.querySelector('[onclick*="editor"]');
   irPara('editor', navItem);
-  // Carrega o texto salvo e faz o parse
   const salvo = localStorage.getItem('ultimoCarrossel');
   if (salvo) {
-    editorSlides = parseSlides(salvo);
-    if (editorSlides.length > 0) {
-      editorTotal = editorSlides.length;
-      renderSlides();
-      return;
-    }
+    setTimeout(() => {
+      document.getElementById('import-texto').value = salvo;
+      importarTextoNoEditor();
+    }, 200);
+  } else {
+    setTimeout(() => toggleImport(), 200);
   }
-  // Fallback: abre o import modal
-  toggleImport();
 }
 
 // ─── PAUTA & DADOS ────────────────────────────────────────────────────────────
@@ -2012,105 +2099,500 @@ async function carregarMetricas() {
   btn.textContent = 'Ver análise';
 }
 
-// ─── EDITOR DE CARROSSEL ──────────────────────────────────────────────────────
+// ─── EDITOR DE CARROSSEL (FABRIC.JS) ─────────────────────────────────────────
+
+const CANVAS_W = 360;
+const CANVAS_H = 450;
+const EXPORT_MULT = 3; // → 1080 × 1350 px
 
 const TEMPLATES = {
-  noite: {
-    nome: '🌙 Noite',
-    bg: '#0c0c0f',
-    overlay: 'rgba(0,0,0,0.55)',
-    textColor: '#e8e8f0',
-    labelColor: '#7c6af7',
-    numColor: '#6b6b80',
-    fontSize: '22px',
-    fontFamily: "'Syne', sans-serif",
-  },
-  dia: {
-    nome: '☀️ Dia',
-    bg: '#f8f8fc',
-    overlay: 'rgba(255,255,255,0.6)',
-    textColor: '#1a1a2e',
-    labelColor: '#7c6af7',
-    numColor: '#aaaacc',
-    fontSize: '22px',
-    fontFamily: "'Syne', sans-serif",
-  },
-  gradiente: {
-    nome: '✨ Gradiente',
-    bg: 'linear-gradient(145deg, #1a1035 0%, #2d1b69 60%, #0f0820 100%)',
-    overlay: 'rgba(10,5,30,0.45)',
-    textColor: '#ffffff',
-    labelColor: '#f7a26a',
-    numColor: 'rgba(255,255,255,0.4)',
-    fontSize: '22px',
-    fontFamily: "'Syne', sans-serif",
-  },
-  laranja: {
-    nome: '🔥 Laranja',
-    bg: '#110800',
-    overlay: 'rgba(0,0,0,0.35)',
-    textColor: '#fff5e6',
-    labelColor: '#f7a26a',
-    numColor: 'rgba(247,162,106,0.45)',
-    fontSize: '22px',
-    fontFamily: "'Space Grotesk', sans-serif",
-  },
-  minimal: {
-    nome: '🤍 Minimal',
-    bg: '#ffffff',
-    overlay: 'rgba(0,0,0,0)',
-    textColor: '#111111',
-    labelColor: '#888888',
-    numColor: '#cccccc',
-    fontSize: '20px',
-    fontFamily: "'Inter', sans-serif",
-  },
-  editorial: {
-    nome: '📰 Editorial',
-    bg: '#f5f0e8',
-    overlay: 'rgba(0,0,0,0)',
-    textColor: '#1a1208',
-    labelColor: '#8b6914',
-    numColor: '#c4a96e',
-    fontSize: '24px',
-    fontFamily: "'Playfair Display', serif",
-  },
-  neon: {
-    nome: '⚡ Neon',
-    bg: '#02040f',
-    overlay: 'rgba(0,0,0,0.2)',
-    textColor: '#e8e8ff',
-    labelColor: '#00ffcc',
-    numColor: 'rgba(0,255,204,0.35)',
-    fontSize: '22px',
-    fontFamily: "'Bebas Neue', cursive",
-  },
-  roxo: {
-    nome: '🟣 Roxo',
-    bg: 'linear-gradient(160deg, #2a1a5e 0%, #150d33 100%)',
-    overlay: 'rgba(0,0,0,0.15)',
-    textColor: '#f0eeff',
-    labelColor: '#c4b5fd',
-    numColor: 'rgba(196,181,253,0.5)',
-    fontSize: '22px',
-    fontFamily: "'Space Grotesk', sans-serif",
-  },
+  noite:     { nome: '🌙 Noite',     bg: '#0c0c0f', textColor: '#e8e8f0', labelColor: '#7c6af7', font: 'Syne' },
+  dia:       { nome: '☀️ Dia',       bg: '#f8f8fc', textColor: '#1a1a2e', labelColor: '#7c6af7', font: 'Syne' },
+  gradiente: { nome: '✨ Gradiente', bg: '#1a1035', textColor: '#ffffff',  labelColor: '#f7a26a', font: 'Syne' },
+  laranja:   { nome: '🔥 Laranja',  bg: '#110800', textColor: '#fff5e6', labelColor: '#f7a26a', font: 'Space Grotesk' },
+  minimal:   { nome: '🤍 Minimal',  bg: '#ffffff', textColor: '#111111', labelColor: '#888888', font: 'Inter' },
+  editorial: { nome: '📰 Editorial',bg: '#f5f0e8', textColor: '#1a1208', labelColor: '#8b6914', font: 'Playfair Display' },
+  neon:      { nome: '⚡ Neon',     bg: '#02040f', textColor: '#e8e8ff', labelColor: '#00ffcc', font: 'Bebas Neue' },
+  roxo:      { nome: '🟣 Roxo',     bg: '#2a1a5e', textColor: '#f0eeff', labelColor: '#c4b5fd', font: 'Space Grotesk' },
 };
-
-// Mescla templates customizados salvos
 Object.assign(TEMPLATES, JSON.parse(localStorage.getItem('customTemplates') || '{}'));
 
-let editorSlides = [];
-let editorTemplate = 'noite';
-let editorTotal = 0;
+let fc = null;          // fabric.Canvas instance
+let edSlides = [];      // [{ json, thumb, bgColor, bgImage }]
+let activeIdx = 0;
+let activeTemplate = 'noite';
 
+// ── Canvas init ──────────────────────────────────────────────────────────────
+function initFabricEditor() {
+  if (fc) return; // already initialised
+  const el = document.getElementById('main-canvas');
+  if (!el) return;
+  fc = new fabric.Canvas('main-canvas', {
+    width: CANVAS_W,
+    height: CANVAS_H,
+    backgroundColor: TEMPLATES[activeTemplate].bg,
+    preserveObjectStacking: true,
+  });
+  fc.on('selection:created', updatePropsPanel);
+  fc.on('selection:updated', updatePropsPanel);
+  fc.on('selection:cleared', updatePropsPanel);
+  fc.on('object:modified', () => { updateThumb(activeIdx); updatePropsPanel(); });
+  fc.on('object:added',    () =>   updateThumb(activeIdx));
+  fc.on('object:removed',  () =>   updateThumb(activeIdx));
+  if (edSlides.length === 0) edAddSlide();
+  renderTemplateBtns();
+}
+
+// ── Slide management ─────────────────────────────────────────────────────────
+function saveCurrentSlide() {
+  if (!fc || edSlides.length === 0) return;
+  edSlides[activeIdx].json    = fc.toJSON(['selectable','evented','name']);
+  edSlides[activeIdx].bgColor = fc.backgroundColor;
+  edSlides[activeIdx].bgImage = fc.backgroundImage ? fc.backgroundImage.getSrc() : '';
+  edSlides[activeIdx].thumb   = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
+  renderThumbItem(activeIdx);
+}
+
+function edAddSlide() {
+  if (fc) saveCurrentSlide();
+  const tpl = TEMPLATES[activeTemplate];
+  const idx = edSlides.length;
+  edSlides.push({ json: null, thumb: '', bgColor: tpl.bg, bgImage: '' });
+
+  // blank canvas
+  if (fc) {
+    fc.clear();
+    fc.backgroundColor = tpl.bg;
+    fc.backgroundImage = null;
+    fc.renderAll();
+  }
+  activeIdx = idx;
+
+  const listEl = document.getElementById('slides-list');
+  const addBtn = listEl.querySelector('button');
+  const item = document.createElement('div');
+  item.className = 'slide-thumb-item active';
+  item.id = `thumb-${idx}`;
+  item.onclick = () => switchToSlide(idx);
+  item.innerHTML = `
+    <div class="thumb-num">${idx + 1}</div>
+    <canvas class="thumb-preview" id="thumb-cv-${idx}" width="72" height="90"></canvas>
+    <button class="thumb-del" onclick="deleteSlide(event,${idx})" title="Deletar slide">✕</button>`;
+  listEl.insertBefore(item, addBtn);
+  updateThumb(idx);
+  updatePropsPanel();
+  document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
+}
+
+function switchToSlide(idx) {
+  if (!fc || idx === activeIdx) return;
+  saveCurrentSlide();
+  activeIdx = idx;
+  document.querySelectorAll('.slide-thumb-item').forEach((el, i) => el.classList.toggle('active', i === idx));
+  const s = edSlides[idx];
+  if (s.json) {
+    fc.loadFromJSON(s.json, () => {
+      fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg;
+      fc.renderAll();
+      updatePropsPanel();
+    });
+  } else {
+    fc.clear();
+    fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg;
+    fc.backgroundImage = null;
+    fc.renderAll();
+    updatePropsPanel();
+  }
+}
+
+function renderThumbItem(idx) {
+  const cv = document.getElementById(`thumb-cv-${idx}`);
+  if (!cv) return;
+  const ctx = cv.getContext('2d');
+  const img = new Image();
+  img.onload = () => ctx.drawImage(img, 0, 0, 72, 90);
+  img.src = edSlides[idx].thumb || '';
+}
+
+function updateThumb(idx) {
+  if (!fc) return;
+  edSlides[idx].thumb = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
+  renderThumbItem(idx);
+}
+
+function deleteSlide(e, idx) {
+  e.stopPropagation();
+  if (edSlides.length <= 1) { toast('O carrossel precisa ter ao menos 1 slide', 'error'); return; }
+  if (!confirm(`Deletar slide ${idx + 1}?`)) return;
+  edSlides.splice(idx, 1);
+  const listEl = document.getElementById('slides-list');
+  const addBtn = listEl.querySelector('button');
+  listEl.querySelectorAll('.slide-thumb-item').forEach(el => el.remove());
+  edSlides.forEach((_, i) => {
+    const item = document.createElement('div');
+    item.className = 'slide-thumb-item' + (i === 0 ? ' active' : '');
+    item.id = `thumb-${i}`;
+    item.onclick = () => switchToSlide(i);
+    item.innerHTML = `
+      <div class="thumb-num">${i + 1}</div>
+      <canvas class="thumb-preview" id="thumb-cv-${i}" width="72" height="90"></canvas>
+      <button class="thumb-del" onclick="deleteSlide(event,${i})" title="Deletar slide">✕</button>`;
+    listEl.insertBefore(item, addBtn);
+    renderThumbItem(i);
+  });
+  const newActive = Math.min(idx, edSlides.length - 1);
+  activeIdx = newActive;
+  const s = edSlides[newActive];
+  if (s.json) {
+    fc.loadFromJSON(s.json, () => { fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg; fc.renderAll(); });
+  } else {
+    fc.clear(); fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg; fc.renderAll();
+  }
+  document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
+}
+
+// ── Toolbar: add elements ────────────────────────────────────────────────────
+function edAddText() {
+  if (!fc) return;
+  const tpl = TEMPLATES[activeTemplate];
+  const t = new fabric.IText('Clique para editar', {
+    left: 30, top: 140,
+    width: CANVAS_W - 60,
+    fontFamily: tpl.font || 'Syne',
+    fontSize: 24,
+    fill: tpl.textColor || '#ffffff',
+    splitByGrapheme: false,
+    name: 'text',
+  });
+  fc.add(t);
+  fc.setActiveObject(t);
+  fc.renderAll();
+}
+
+function edAddLabel() {
+  if (!fc) return;
+  const tpl = TEMPLATES[activeTemplate];
+  const t = new fabric.IText('[ FUNÇÃO ]', {
+    left: 30, top: 40,
+    fontFamily: tpl.font || 'Syne',
+    fontSize: 13,
+    fill: tpl.labelColor || '#7c6af7',
+    fontWeight: '700',
+    charSpacing: 120,
+    name: 'label',
+  });
+  fc.add(t);
+  fc.setActiveObject(t);
+  fc.renderAll();
+}
+
+function edAddImage() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      fabric.Image.fromURL(ev.target.result, img => {
+        const scale = Math.min(CANVAS_W / img.width, CANVAS_H / img.height, 1);
+        img.scale(scale);
+        img.set({ left: (CANVAS_W - img.width * scale) / 2, top: (CANVAS_H - img.height * scale) / 2, name: 'image' });
+        fc.add(img);
+        fc.setActiveObject(img);
+        fc.renderAll();
+      }, { crossOrigin: 'anonymous' });
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function edAddRect() {
+  if (!fc) return;
+  const tpl = TEMPLATES[activeTemplate];
+  const r = new fabric.Rect({ left: 60, top: 80, width: 240, height: 120, fill: 'transparent', stroke: tpl.labelColor || '#7c6af7', strokeWidth: 2, name: 'rect' });
+  fc.add(r); fc.setActiveObject(r); fc.renderAll();
+}
+
+function edAddCircle() {
+  if (!fc) return;
+  const tpl = TEMPLATES[activeTemplate];
+  const c = new fabric.Circle({ left: 130, top: 170, radius: 60, fill: 'transparent', stroke: tpl.labelColor || '#7c6af7', strokeWidth: 2, name: 'circle' });
+  fc.add(c); fc.setActiveObject(c); fc.renderAll();
+}
+
+function edAddSlideNum() {
+  if (!fc) return;
+  const tpl = TEMPLATES[activeTemplate];
+  const total = edSlides.length;
+  const t = new fabric.IText(`${activeIdx + 1}/${total}`, {
+    left: CANVAS_W - 50, top: CANVAS_H - 30,
+    fontFamily: tpl.font || 'Syne',
+    fontSize: 12,
+    fill: tpl.textColor ? tpl.textColor + '88' : '#ffffff88',
+    name: 'slidenum',
+  });
+  fc.add(t); fc.setActiveObject(t); fc.renderAll();
+}
+
+// ── Toolbar: background ──────────────────────────────────────────────────────
+function edSetBgColor(hex) {
+  if (!fc) return;
+  fc.backgroundImage = null;
+  fc.backgroundColor = hex;
+  edSlides[activeIdx].bgColor = hex;
+  edSlides[activeIdx].bgImage = '';
+  fc.renderAll();
+  updateThumb(activeIdx);
+}
+
+function edSetBgImage() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      fabric.Image.fromURL(ev.target.result, img => {
+        const scaleX = CANVAS_W / img.width;
+        const scaleY = CANVAS_H / img.height;
+        img.set({ scaleX, scaleY, originX: 'left', originY: 'top', crossOrigin: 'anonymous' });
+        fc.setBackgroundImage(img, () => { fc.renderAll(); updateThumb(activeIdx); });
+        edSlides[activeIdx].bgImage = ev.target.result;
+        edSlides[activeIdx].bgColor = '';
+      }, { crossOrigin: 'anonymous' });
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+async function edGerarImagem() {
+  const prompt = window.prompt('Descreva a imagem de fundo:', 'abstract dark texture, minimal, premium brand');
+  if (!prompt) return;
+  const statusEl = document.getElementById('status-editor');
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box loading';
+  statusEl.textContent = 'Gerando imagem com IA...';
+  try {
+    const r = await fetch(`${API}/api/imagem/gerar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt }),
+    });
+    const data = await r.json();
+    if (data.ok && data.imagem) {
+      fabric.Image.fromURL(data.imagem, img => {
+        const scaleX = CANVAS_W / img.width;
+        const scaleY = CANVAS_H / img.height;
+        img.set({ scaleX, scaleY, originX: 'left', originY: 'top' });
+        fc.setBackgroundImage(img, () => { fc.renderAll(); updateThumb(activeIdx); });
+        edSlides[activeIdx].bgImage = data.imagem;
+        edSlides[activeIdx].bgColor = '';
+      }, { crossOrigin: 'anonymous' });
+      statusEl.className = 'status-box success';
+      statusEl.textContent = '✓ Imagem gerada!';
+    } else {
+      statusEl.className = 'status-box error';
+      statusEl.textContent = 'Erro: ' + (data.erro || 'falhou');
+    }
+  } catch (err) {
+    statusEl.className = 'status-box error';
+    statusEl.textContent = 'Erro: ' + err.message;
+  }
+}
+
+function edDeleteSelected() {
+  if (!fc) return;
+  const sel = fc.getActiveObjects();
+  if (!sel.length) return;
+  sel.forEach(o => fc.remove(o));
+  fc.discardActiveObject();
+  fc.renderAll();
+}
+
+// ── Properties panel ─────────────────────────────────────────────────────────
+function updatePropsPanel() {
+  const container = document.getElementById('props-content');
+  if (!fc) { container.innerHTML = '<div class="no-select-msg">Editor não iniciado</div>'; return; }
+  const sel = fc.getActiveObject();
+  if (!sel) { container.innerHTML = '<div class="no-select-msg">Clique em um elemento<br>para editar</div>'; return; }
+
+  const isText = sel.type === 'i-text' || sel.type === 'textbox';
+  const isImage = sel.type === 'image';
+  const isShape = sel.type === 'rect' || sel.type === 'circle' || sel.type === 'polygon';
+
+  let html = `<div class="props-group">
+    <div class="props-label">Posição</div>
+    <div class="props-row">
+      <label>X</label><input type="number" value="${Math.round(sel.left)}" oninput="propSet('left',+this.value)" style="width:60px">
+      <label>Y</label><input type="number" value="${Math.round(sel.top)}" oninput="propSet('top',+this.value)" style="width:60px">
+    </div>
+    <div class="props-row">
+      <label>W</label><input type="number" value="${Math.round(sel.getScaledWidth())}" oninput="propSetW(+this.value)" style="width:60px">
+      <label>H</label><input type="number" value="${Math.round(sel.getScaledHeight())}" oninput="propSetH(+this.value)" style="width:60px">
+    </div>
+    <div class="props-row">
+      <label>Rot</label><input type="number" value="${Math.round(sel.angle||0)}" oninput="propSet('angle',+this.value)" style="width:60px">
+      <label>Op</label><input type="range" min="0" max="1" step="0.05" value="${sel.opacity||1}" oninput="propSet('opacity',+this.value)" style="width:70px">
+    </div>
+  </div>`;
+
+  if (isText) {
+    const fonts = ['Syne','Space Grotesk','Inter','DM Sans','Playfair Display','Bebas Neue'];
+    const fontOpts = fonts.map(f => `<option value="${f}" ${sel.fontFamily===f?'selected':''}>${f}</option>`).join('');
+    html += `<div class="props-group">
+      <div class="props-label">Texto</div>
+      <div class="props-row">
+        <label>Cor</label><input type="color" value="${rgbToHex(sel.fill)||'#ffffff'}" oninput="propSet('fill',this.value)">
+        <label>Tam</label><input type="number" value="${sel.fontSize||24}" oninput="propSet('fontSize',+this.value)" style="width:55px">
+      </div>
+      <div class="props-row">
+        <label>Fonte</label>
+        <select oninput="propSet('fontFamily',this.value)" style="flex:1">${fontOpts}</select>
+      </div>
+      <div class="props-row">
+        <label>Espaç</label><input type="number" value="${sel.charSpacing||0}" oninput="propSet('charSpacing',+this.value)" style="width:55px">
+        <label>Linha</label><input type="number" value="${sel.lineHeight||1.16}" step="0.05" oninput="propSet('lineHeight',+this.value)" style="width:55px">
+      </div>
+      <div class="props-row">
+        <label>Peso</label>
+        <select oninput="propSet('fontWeight',this.value)">
+          <option ${sel.fontWeight==='normal'?'selected':''}>normal</option>
+          <option ${sel.fontWeight==='700'?'selected':''} value="700">Bold</option>
+          <option ${sel.fontWeight==='900'?'selected':''} value="900">Black</option>
+        </select>
+        <label>Align</label>
+        <select oninput="propSet('textAlign',this.value)">
+          <option ${sel.textAlign==='left'?'selected':''} value="left">◀</option>
+          <option ${sel.textAlign==='center'?'selected':''} value="center">◆</option>
+          <option ${sel.textAlign==='right'?'selected':''} value="right">▶</option>
+        </select>
+      </div>
+    </div>`;
+  }
+
+  if (isShape) {
+    html += `<div class="props-group">
+      <div class="props-label">Forma</div>
+      <div class="props-row">
+        <label>Preench.</label><input type="color" value="${sel.fill && sel.fill!=='transparent'?rgbToHex(sel.fill):'#000001'}" oninput="propFill(this.value)">
+        <button class="props-btn" onclick="propFill('transparent')">Sem fill</button>
+      </div>
+      <div class="props-row">
+        <label>Borda</label><input type="color" value="${rgbToHex(sel.stroke)||'#7c6af7'}" oninput="propSet('stroke',this.value)">
+        <label>Larg</label><input type="number" value="${sel.strokeWidth||2}" oninput="propSet('strokeWidth',+this.value)" style="width:45px">
+      </div>
+      ${sel.type==='rect'?`<div class="props-row"><label>Raio</label><input type="number" value="${sel.rx||0}" oninput="propSet('rx',+this.value);propSet('ry',+this.value)" style="width:55px"></div>`:''}
+    </div>`;
+  }
+
+  if (isImage) {
+    html += `<div class="props-group">
+      <div class="props-label">Imagem</div>
+      <div class="props-row">
+        <label>Op</label><input type="range" min="0" max="1" step="0.05" value="${sel.opacity||1}" oninput="propSet('opacity',+this.value)" style="width:100%">
+      </div>
+      <div class="props-row" style="flex-wrap:wrap;gap:4px">
+        <button class="props-btn" onclick="propImgFilter('grayscale')">P&B</button>
+        <button class="props-btn" onclick="propImgFilter('sepia')">Sépia</button>
+        <button class="props-btn" onclick="propImgFilter('brightness')">Brilho +</button>
+        <button class="props-btn" onclick="propImgClear()">Sem filtro</button>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="props-group" style="margin-top:auto">
+    <button class="props-btn danger" onclick="edDeleteSelected()" style="width:100%;justify-content:center">🗑 Remover elemento</button>
+    <div class="props-row" style="margin-top:6px;gap:4px">
+      <button class="props-btn" onclick="propLayer('up')" style="flex:1">▲ Cima</button>
+      <button class="props-btn" onclick="propLayer('down')" style="flex:1">▼ Baixo</button>
+      <button class="props-btn" onclick="propLayer('front')" style="flex:1">⤒ Topo</button>
+      <button class="props-btn" onclick="propLayer('back')" style="flex:1">⤓ Fundo</button>
+    </div>
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+function propSet(key, val) {
+  const sel = fc && fc.getActiveObject();
+  if (!sel) return;
+  sel.set(key, val);
+  fc.renderAll();
+  updateThumb(activeIdx);
+}
+
+function propSetW(w) {
+  const sel = fc && fc.getActiveObject();
+  if (!sel) return;
+  sel.set('scaleX', w / sel.width);
+  fc.renderAll(); updateThumb(activeIdx);
+}
+
+function propSetH(h) {
+  const sel = fc && fc.getActiveObject();
+  if (!sel) return;
+  sel.set('scaleY', h / sel.height);
+  fc.renderAll(); updateThumb(activeIdx);
+}
+
+function propFill(val) {
+  const sel = fc && fc.getActiveObject();
+  if (!sel) return;
+  sel.set('fill', val);
+  fc.renderAll(); updateThumb(activeIdx);
+}
+
+function propLayer(dir) {
+  const sel = fc && fc.getActiveObject();
+  if (!sel) return;
+  if (dir === 'up')    fc.bringForward(sel);
+  if (dir === 'down')  fc.sendBackwards(sel);
+  if (dir === 'front') fc.bringToFront(sel);
+  if (dir === 'back')  fc.sendToBack(sel);
+  fc.renderAll(); updateThumb(activeIdx);
+}
+
+function propImgFilter(type) {
+  const sel = fc && fc.getActiveObject();
+  if (!sel || sel.type !== 'image') return;
+  sel.filters = [];
+  if (type === 'grayscale') sel.filters.push(new fabric.Image.filters.Grayscale());
+  if (type === 'sepia')     sel.filters.push(new fabric.Image.filters.Sepia());
+  if (type === 'brightness') sel.filters.push(new fabric.Image.filters.Brightness({ brightness: 0.15 }));
+  sel.applyFilters();
+  fc.renderAll(); updateThumb(activeIdx);
+}
+
+function propImgClear() {
+  const sel = fc && fc.getActiveObject();
+  if (!sel || sel.type !== 'image') return;
+  sel.filters = [];
+  sel.applyFilters();
+  fc.renderAll(); updateThumb(activeIdx);
+}
+
+function rgbToHex(color) {
+  if (!color || color === 'transparent') return '#000000';
+  if (color.startsWith('#')) return color;
+  const m = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (!m) return '#000000';
+  return '#' + [m[1],m[2],m[3]].map(n => (+n).toString(16).padStart(2,'0')).join('');
+}
+
+// ── Import text ───────────────────────────────────────────────────────────────
 function toggleImport() {
   const area = document.getElementById('import-area');
-  area.style.display = area.style.display === 'none' ? 'block' : 'none';
-  // Tenta carregar do localStorage (gerado pelo criador de conteúdo)
-  const salvo = localStorage.getItem('ultimoCarrossel');
-  if (salvo && area.style.display === 'block') {
-    document.getElementById('import-texto').value = salvo;
+  const isHidden = area.style.display === 'none' || area.style.display === '';
+  area.style.display = isHidden ? 'block' : 'none';
+  if (isHidden) {
+    const salvo = localStorage.getItem('ultimoCarrossel');
+    if (salvo) document.getElementById('import-texto').value = salvo;
   }
 }
 
@@ -2120,115 +2602,176 @@ function parseSlides(texto) {
   const parts = texto.split(/\*\*SLIDE\s+\d+\s*[—–-][^*]+\*\*/);
   const labels = [];
   let m;
-  while ((m = regex.exec(texto)) !== null) {
-    labels.push(`SLIDE ${m[1]} — ${m[2].trim()}`);
-  }
+  while ((m = regex.exec(texto)) !== null) labels.push(`SLIDE ${m[1]} — ${m[2].trim()}`);
   for (let i = 0; i < labels.length; i++) {
     const txt = (parts[i + 1] || '').replace(/LEGENDA SUGERIDA[\s\S]*/i, '').trim();
-    slides.push({ label: labels[i], texto: txt, bgColor: '', bgImage: '', textColor: '', fontSize: '', fontFamily: '' });
+    slides.push({ label: labels[i], texto: txt });
   }
   return slides;
 }
 
-function importarTexto() {
+async function importarTextoNoEditor() {
   const texto = document.getElementById('import-texto').value.trim();
   if (!texto) return;
-  editorSlides = parseSlides(texto);
-  if (editorSlides.length === 0) {
-    alert('Nenhum slide encontrado. Use o formato **SLIDE 1 — GANCHO** texto...');
-    return;
-  }
-  editorTotal = editorSlides.length;
+  const parsed = parseSlides(texto);
+  if (!parsed.length) { toast('Nenhum slide encontrado. Use o formato **SLIDE 1 — GANCHO**', 'error'); return; }
+
+  if (!fc) initFabricEditor();
   document.getElementById('import-area').style.display = 'none';
-  renderSlides();
+
+  // clear existing slides
+  edSlides = [];
+  activeIdx = 0;
+  const listEl = document.getElementById('slides-list');
+  const addBtn = listEl.querySelector('button');
+  listEl.querySelectorAll('.slide-thumb-item').forEach(el => el.remove());
+  fc.clear();
+
+  const tpl = TEMPLATES[activeTemplate];
+
+  for (let i = 0; i < parsed.length; i++) {
+    const s = parsed[i];
+    if (i > 0) fc.clear();
+    fc.backgroundColor = tpl.bg;
+    fc.backgroundImage = null;
+
+    // Label
+    fc.add(new fabric.IText(s.label.toUpperCase(), {
+      left: 30, top: 36,
+      fontFamily: tpl.font || 'Syne', fontSize: 11,
+      fill: tpl.labelColor || '#7c6af7',
+      fontWeight: '700', charSpacing: 100,
+      selectable: true, name: 'label',
+    }));
+
+    // Body text
+    fc.add(new fabric.Textbox(s.texto, {
+      left: 30, top: 90,
+      width: CANVAS_W - 60,
+      fontFamily: tpl.font || 'Syne', fontSize: 22,
+      fill: tpl.textColor || '#ffffff',
+      lineHeight: 1.35,
+      splitByGrapheme: false, name: 'text',
+    }));
+
+    // Slide number
+    fc.add(new fabric.IText(`${i + 1}/${parsed.length}`, {
+      left: CANVAS_W - 50, top: CANVAS_H - 28,
+      fontFamily: tpl.font || 'Syne', fontSize: 11,
+      fill: (tpl.textColor || '#ffffff') + '66',
+      selectable: true, name: 'slidenum',
+    }));
+
+    fc.renderAll();
+    const thumb = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
+    const json  = fc.toJSON(['selectable','evented','name']);
+    edSlides.push({ json, thumb, bgColor: tpl.bg, bgImage: '' });
+
+    const item = document.createElement('div');
+    item.className = 'slide-thumb-item' + (i === 0 ? ' active' : '');
+    item.id = `thumb-${i}`;
+    item.onclick = () => switchToSlide(i);
+    item.innerHTML = `
+      <div class="thumb-num">${i + 1}</div>
+      <canvas class="thumb-preview" id="thumb-cv-${i}" width="72" height="90"></canvas>
+      <button class="thumb-del" onclick="deleteSlide(event,${i})" title="Deletar">✕</button>`;
+    listEl.insertBefore(item, addBtn);
+  }
+
+  // re-render all thumbs
+  edSlides.forEach((_, i) => renderThumbItem(i));
+
+  // show slide 0
+  activeIdx = 0;
+  const s0 = edSlides[0];
+  fc.loadFromJSON(s0.json, () => { fc.backgroundColor = s0.bgColor; fc.renderAll(); updatePropsPanel(); });
+  document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
+  toast(`${parsed.length} slides importados!`);
 }
 
-function renderSlides() {
-  const scroll = document.getElementById('slides-scroll');
-  const empty = document.getElementById('editor-empty');
-  empty.style.display = 'none';
-  scroll.style.display = 'flex';
-  scroll.innerHTML = '';
-
-  const tpl = TEMPLATES[editorTemplate];
-
-  const FONT_OPTIONS = [
-    { value: "'Syne', sans-serif", label: 'Syne' },
-    { value: "'Space Grotesk', sans-serif", label: 'Space Grotesk' },
-    { value: "'Inter', sans-serif", label: 'Inter' },
-    { value: "'DM Sans', sans-serif", label: 'DM Sans' },
-    { value: "'Playfair Display', serif", label: 'Playfair Display' },
-    { value: "'Bebas Neue', cursive", label: 'Bebas Neue' },
-  ];
-
-  editorSlides.forEach((slide, i) => {
-    const bgColor = slide.bgColor || tpl.bg;
-    const textColor = slide.textColor || tpl.textColor;
-    const fontSize = slide.fontSize || tpl.fontSize;
-    const fontFamily = slide.fontFamily || tpl.fontFamily || "'Syne', sans-serif";
-    const bgStyle = slide.bgImage
-      ? `background-image: url('${slide.bgImage}'); background-size: cover; background-position: center;`
-      : (bgColor.includes('gradient') ? `background: ${bgColor};` : `background-color: ${bgColor};`);
-
-    const fontOpts = FONT_OPTIONS.map(f =>
-      `<option value="${f.value}" ${fontFamily === f.value ? 'selected' : ''}>${f.label}</option>`
-    ).join('');
-
-    const wrapper = document.createElement('div');
-    wrapper.className = 'slide-wrapper';
-    wrapper.id = `swrap-${i}`;
-    wrapper.innerHTML = `
-      <div class="slide-canvas" id="sc-${i}" style="${bgStyle}">
-        <div class="slide-bg" id="sbg-${i}" style="${bgStyle}"></div>
-        <div class="slide-overlay" id="sov-${i}" style="background: ${tpl.overlay};"></div>
-        <div class="slide-content">
-          <div class="slide-label" id="slabel-${i}" style="color: ${tpl.labelColor};">${slide.label}</div>
-          <div class="slide-text" id="st-${i}" contenteditable="true" style="color: ${textColor}; font-size: ${fontSize}; font-family: ${fontFamily};">${slide.texto}</div>
-          <div class="slide-num" id="snum-${i}" style="color: ${tpl.numColor};">${i + 1}/${editorTotal}</div>
-        </div>
-      </div>
-
-      <div class="slide-controls">
-        <div class="ctrl-row">
-          <input type="color" title="Cor do fundo" value="${slide.bgColor || '#0c0c0f'}" onchange="setBgColor(${i}, this.value)">
-          <button class="ctrl-btn" onclick="promptGerarImagem(${i})">🎨 Gerar imagem</button>
-          <label class="ctrl-btn" style="cursor:pointer">
-            📷 Upload
-            <input type="file" accept="image/*" style="display:none" onchange="uploadImagem(${i}, this)">
-          </label>
-        </div>
-        <div class="ctrl-row">
-          <input type="color" title="Cor do texto" value="${slide.textColor || '#e8e8f0'}" onchange="setTextColor(${i}, this.value)">
-          <select onchange="setFontSize(${i}, this.value)">
-            <option ${fontSize === '16px' ? 'selected' : ''}>16px</option>
-            <option ${fontSize === '18px' ? 'selected' : ''}>18px</option>
-            <option ${!['16px','18px','26px','32px'].includes(fontSize) ? 'selected' : ''}>22px</option>
-            <option ${fontSize === '26px' ? 'selected' : ''}>26px</option>
-            <option ${fontSize === '32px' ? 'selected' : ''}>32px</option>
-          </select>
-          <button class="ctrl-btn" onclick="exportarSlide(${i})">⬇ PNG</button>
-        </div>
-        <div class="ctrl-row">
-          <select style="flex:1" onchange="setFont(${i}, this.value)">${fontOpts}</select>
-        </div>
-      </div>
-    `;
-    scroll.appendChild(wrapper);
-  });
-
-  document.getElementById('btn-exportar-todos').disabled = false;
-  document.getElementById('btn-postar').disabled = false;
+// ── Export ────────────────────────────────────────────────────────────────────
+function exportCurrentSlide() {
+  if (!fc) return;
+  saveCurrentSlide();
+  const dataUrl = fc.toDataURL({ format: 'png', multiplier: EXPORT_MULT });
+  const a = document.createElement('a');
+  a.download = `slide-${activeIdx + 1}.png`;
+  a.href = dataUrl;
+  a.click();
 }
 
+async function exportAllSlides() {
+  if (!edSlides.length) return;
+  saveCurrentSlide();
+  const btn = document.getElementById('btn-export-zip');
+  btn.disabled = true;
+  const statusEl = document.getElementById('status-editor');
+  statusEl.style.display = 'block';
+  statusEl.className = 'status-box loading';
+
+  const zip = new JSZip();
+  const pasta = zip.folder('carrossel');
+
+  // Render each slide in a hidden offscreen canvas
+  const offEl = document.createElement('canvas');
+  offEl.width = CANVAS_W; offEl.height = CANVAS_H;
+  const off = new fabric.StaticCanvas(offEl, { width: CANVAS_W, height: CANVAS_H });
+
+  for (let i = 0; i < edSlides.length; i++) {
+    statusEl.textContent = `Exportando ${i + 1}/${edSlides.length}...`;
+    const s = edSlides[i];
+    await new Promise(resolve => {
+      off.clear();
+      off.backgroundColor = s.bgColor || '#000000';
+      if (s.json) {
+        off.loadFromJSON(s.json, () => {
+          off.renderAll();
+          const b64 = off.toDataURL({ format: 'png', multiplier: EXPORT_MULT }).split(',')[1];
+          pasta.file(`slide-${String(i+1).padStart(2,'0')}.png`, b64, { base64: true });
+          resolve();
+        });
+      } else {
+        off.renderAll();
+        const b64 = off.toDataURL({ format: 'png', multiplier: EXPORT_MULT }).split(',')[1];
+        pasta.file(`slide-${String(i+1).padStart(2,'0')}.png`, b64, { base64: true });
+        resolve();
+      }
+    });
+  }
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.download = 'carrossel-leonam.zip';
+  a.href = URL.createObjectURL(blob);
+  a.click();
+
+  statusEl.className = 'status-box success';
+  statusEl.textContent = `✓ ZIP com ${edSlides.length} slides baixado!`;
+  btn.disabled = false;
+}
+
+function abrirInstagram() {
+  exportAllSlides();
+  setTimeout(() => window.open('https://www.instagram.com/', '_blank'), 800);
+}
+
+// ── Templates ─────────────────────────────────────────────────────────────────
 function aplicarTemplate(nome) {
-  editorTemplate = nome;
+  activeTemplate = nome;
   renderTemplateBtns();
-  if (editorSlides.length > 0) renderSlides();
-}
-
-function setFont(i, fontFamily) {
-  editorSlides[i].fontFamily = fontFamily;
-  document.getElementById(`st-${i}`).style.fontFamily = fontFamily;
+  if (!fc) return;
+  const tpl = TEMPLATES[nome];
+  fc.backgroundColor = tpl.bg;
+  // update default colours on existing text objects
+  fc.getObjects().forEach(obj => {
+    if (obj.name === 'text')    obj.set({ fill: tpl.textColor, fontFamily: tpl.font });
+    if (obj.name === 'label')   obj.set({ fill: tpl.labelColor, fontFamily: tpl.font });
+    if (obj.name === 'slidenum') obj.set({ fill: tpl.textColor + '66', fontFamily: tpl.font });
+  });
+  const pick = document.getElementById('bg-color-pick');
+  if (pick) pick.value = tpl.bg.startsWith('#') ? tpl.bg : '#0c0c0f';
+  fc.renderAll();
+  updateThumb(activeIdx);
 }
 
 function renderTemplateBtns() {
@@ -2237,7 +2780,7 @@ function renderTemplateBtns() {
   container.innerHTML = '';
   Object.entries(TEMPLATES).forEach(([key, tpl]) => {
     const btn = document.createElement('button');
-    btn.className = 'template-btn' + (key === editorTemplate ? ' active' : '');
+    btn.className = 'template-btn' + (key === activeTemplate ? ' active' : '');
     btn.textContent = tpl.nome || key;
     btn.onclick = () => aplicarTemplate(key);
     if (tpl.isCustom) {
@@ -2249,7 +2792,7 @@ function renderTemplateBtns() {
       del.style.cssText = 'padding:4px 7px;color:var(--danger);border-color:transparent;font-size:11px';
       del.title = 'Deletar template';
       del.textContent = '✕';
-      del.onclick = (e) => { e.stopPropagation(); deletarTemplate(key); };
+      del.onclick = e => { e.stopPropagation(); deletarTemplate(key); };
       wrap.appendChild(del);
       container.appendChild(wrap);
     } else {
@@ -2269,16 +2812,12 @@ function salvarTemplate() {
   const emoji = document.getElementById('ct-emoji').value.trim() || '🎨';
   const key = 'custom_' + nome.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
   if (key === 'custom_') { toast('Nome inválido', 'error'); return; }
-  const alpha = parseFloat(document.getElementById('ct-overlay').value);
   const tpl = {
     nome: emoji + ' ' + nome,
     bg: document.getElementById('ct-bg').value,
-    overlay: `rgba(0,0,0,${alpha})`,
     textColor: document.getElementById('ct-text').value,
     labelColor: document.getElementById('ct-label').value,
-    numColor: 'rgba(150,150,150,0.5)',
-    fontSize: '22px',
-    fontFamily: document.getElementById('ct-font').value,
+    font: document.getElementById('ct-font').value,
     isCustom: true,
   };
   TEMPLATES[key] = tpl;
@@ -2299,164 +2838,75 @@ function deletarTemplate(key) {
   const customs = JSON.parse(localStorage.getItem('customTemplates') || '{}');
   delete customs[key];
   localStorage.setItem('customTemplates', JSON.stringify(customs));
-  if (editorTemplate === key) aplicarTemplate('noite');
+  if (activeTemplate === key) aplicarTemplate('noite');
   else renderTemplateBtns();
 }
 
-function setBgColor(i, cor) {
-  editorSlides[i].bgColor = cor;
-  editorSlides[i].bgImage = '';
-  const canvas = document.getElementById(`sc-${i}`);
-  const bg = document.getElementById(`sbg-${i}`);
-  canvas.style.backgroundColor = cor;
-  canvas.style.backgroundImage = '';
-  bg.style.backgroundColor = cor;
-  bg.style.backgroundImage = '';
-}
-
-function setTextColor(i, cor) {
-  editorSlides[i].textColor = cor;
-  document.getElementById(`st-${i}`).style.color = cor;
-}
-
-function setFontSize(i, size) {
-  editorSlides[i].fontSize = size;
-  document.getElementById(`st-${i}`).style.fontSize = size;
-}
-
-function uploadImagem(i, input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const url = e.target.result;
-    editorSlides[i].bgImage = url;
-    editorSlides[i].bgColor = '';
-    const canvas = document.getElementById(`sc-${i}`);
-    const bg = document.getElementById(`sbg-${i}`);
-    const style = `url('${url}')`;
-    canvas.style.backgroundImage = style;
-    canvas.style.backgroundSize = 'cover';
-    bg.style.backgroundImage = style;
-    bg.style.backgroundSize = 'cover';
-  };
-  reader.readAsDataURL(file);
-}
-
-async function promptGerarImagem(i) {
-  const texto = document.getElementById(`st-${i}`).textContent;
-  const prompt = window.prompt('Descreva a imagem de fundo (em inglês ou português):', `abstract background for: ${texto.slice(0, 60)}`);
-  if (!prompt) return;
-  await gerarImagemSlide(i, prompt);
-}
-
-async function gerarImagemSlide(i, prompt) {
-  const canvas = document.getElementById(`sc-${i}`);
-
-  // Mostra overlay de loading
-  const overlay = document.createElement('div');
-  overlay.className = 'slide-gen-overlay';
-  overlay.innerHTML = '<span class="spinner"></span> Gerando...';
-  overlay.id = `gen-overlay-${i}`;
-  canvas.appendChild(overlay);
-
+// ── History (Criar Conteúdo page) ────────────────────────────────────────────
+async function carregarHistorico() {
+  const grid = document.getElementById('grid-historico');
+  if (!grid) return;
+  const tipo = document.getElementById('filtro-historico')?.value || '';
+  grid.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Carregando...</div>';
   try {
-    const r = await fetch(`${API}/api/imagem/gerar`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt })
-    });
+    const r = await fetch(`${API}/api/conteudo/historico?tipo=${tipo}&limit=20`);
     const data = await r.json();
-    if (data.ok && data.imagem) {
-      editorSlides[i].bgImage = data.imagem;
-      editorSlides[i].bgColor = '';
-      const bgStyle = `url('${data.imagem}')`;
-      canvas.style.backgroundImage = bgStyle;
-      canvas.style.backgroundSize = 'cover';
-      canvas.style.backgroundPosition = 'center';
-      const bg = document.getElementById(`sbg-${i}`);
-      if (bg) { bg.style.backgroundImage = bgStyle; bg.style.backgroundSize = 'cover'; }
-    } else {
-      alert('Erro: ' + (data.erro || 'geração falhou'));
+    if (!data.ok || !data.historico.length) {
+      grid.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Nenhum histórico ainda. Gere seu primeiro conteúdo!</div>';
+      return;
     }
+    grid.innerHTML = data.historico.map(h => `
+      <div class="hist-card" id="hc-${h.id}">
+        <div class="hist-meta">
+          <span class="hist-tipo">${h.tipo}</span>
+          <span class="hist-data">${new Date(h.criado_em).toLocaleDateString('pt-BR')}</span>
+        </div>
+        <div class="hist-tema">${h.tema}</div>
+        ${h.angulo ? `<div class="hist-angulo">${h.angulo}</div>` : ''}
+        <div class="hist-preview">${h.conteudo.slice(0, 180)}…</div>
+        <div class="hist-actions">
+          <button class="btn btn-sm btn-ghost" onclick="verHistorico(${h.id})">Ver completo</button>
+          <button class="btn btn-sm btn-primary" onclick="usarHistorico(${h.id})">Usar no editor</button>
+          <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deletarHistorico(${h.id})">✕</button>
+        </div>
+      </div>`).join('');
   } catch (e) {
-    alert('Erro ao gerar imagem: ' + e.message);
-  } finally {
-    const ol = document.getElementById(`gen-overlay-${i}`);
-    if (ol) ol.remove();
+    grid.innerHTML = '<div style="color:var(--muted);font-size:13px">Erro ao carregar histórico.</div>';
   }
 }
 
-async function exportarSlide(i) {
-  const canvas = document.getElementById(`sc-${i}`);
-  const statusEl = document.getElementById('status-editor');
-  statusEl.style.display = 'block';
-  statusEl.className = 'status-box loading';
-  statusEl.textContent = `Exportando slide ${i + 1}...`;
-
-  try {
-    const cvs = await html2canvas(canvas, {
-      scale: 3.6, // 300px × 3.6 = 1080px
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: null,
-      logging: false,
-    });
-    const link = document.createElement('a');
-    link.download = `slide-${i + 1}-${editorSlides[i].label.split('—')[0].trim().replace(/\s+/g, '-').toLowerCase()}.png`;
-    link.href = cvs.toDataURL('image/png');
-    link.click();
-    statusEl.className = 'status-box success';
-    statusEl.textContent = `✓ Slide ${i + 1} exportado.`;
-  } catch (e) {
-    statusEl.className = 'status-box error';
-    statusEl.textContent = 'Erro ao exportar: ' + e.message;
-  }
+async function verHistorico(id) {
+  const r = await fetch(`${API}/api/conteudo/historico?limit=100`);
+  const data = await r.json();
+  if (!data.ok) return;
+  const h = data.historico.find(x => x.id === id);
+  if (!h) return;
+  document.getElementById('modal-titulo').textContent = h.tema;
+  document.getElementById('modal-conteudo').innerHTML = `<pre style="white-space:pre-wrap;font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.6">${h.conteudo}</pre>`;
+  document.getElementById('modal-exportar').style.display = 'none';
+  document.getElementById('modal-overlay').style.display = 'flex';
 }
 
-async function exportarTodos() {
-  if (!editorSlides.length) return;
-  const btn = document.getElementById('btn-exportar-todos');
-  btn.disabled = true;
-  const statusEl = document.getElementById('status-editor');
-  statusEl.style.display = 'block';
-  statusEl.className = 'status-box loading';
-
-  const zip = new JSZip();
-  const pasta = zip.folder('carrossel');
-
-  for (let i = 0; i < editorSlides.length; i++) {
-    statusEl.textContent = `Exportando ${i + 1}/${editorSlides.length}...`;
-    const canvas = document.getElementById(`sc-${i}`);
-    try {
-      const cvs = await html2canvas(canvas, {
-        scale: 3.6,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: null,
-        logging: false,
-      });
-      const base64 = cvs.toDataURL('image/png').split(',')[1];
-      pasta.file(`slide-${String(i + 1).padStart(2, '0')}.png`, base64, { base64: true });
-    } catch (e) {
-      console.error('Erro slide', i, e);
-    }
-  }
-
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const link = document.createElement('a');
-  link.download = 'carrossel-leonam.zip';
-  link.href = URL.createObjectURL(blob);
-  link.click();
-
-  statusEl.className = 'status-box success';
-  statusEl.textContent = `✓ ZIP com ${editorSlides.length} slides baixado.`;
-  btn.disabled = false;
+async function usarHistorico(id) {
+  const r = await fetch(`${API}/api/conteudo/historico?limit=100`);
+  const data = await r.json();
+  if (!data.ok) return;
+  const h = data.historico.find(x => x.id === id);
+  if (!h) return;
+  localStorage.setItem('ultimoCarrossel', h.conteudo);
+  irPara('editor', document.querySelector('[onclick*="editor"]'));
+  setTimeout(() => {
+    document.getElementById('import-texto').value = h.conteudo;
+    importarTextoNoEditor();
+  }, 300);
 }
 
-function abrirInstagram() {
-  exportarTodos();
-  setTimeout(() => window.open('https://www.instagram.com/', '_blank'), 500);
+async function deletarHistorico(id) {
+  if (!confirm('Deletar este item do histórico?')) return;
+  const r = await fetch(`${API}/api/conteudo/historico/${id}`, { method: 'DELETE' });
+  const data = await r.json();
+  if (data.ok) { document.getElementById(`hc-${id}`)?.remove(); toast('Deletado!'); }
+  else toast('Erro ao deletar', 'error');
 }
 
 // Init
