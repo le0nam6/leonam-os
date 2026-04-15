@@ -675,7 +675,9 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'http://localhost:3747';
+const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3747'
+  : 'https://leonam-os-production.up.railway.app';
 let pdfFile = null;
 let tipoAtual = 'todos';
 let buscaAtual = '';
