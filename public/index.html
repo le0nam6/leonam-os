@@ -787,6 +787,7 @@
           <div style="display:flex;gap:8px">
             <button class="btn btn-ghost btn-sm" onclick="copiarConteudo()">Copiar</button>
             <button class="btn btn-ghost btn-sm" onclick="exportarConteudo()">↗ Obsidian</button>
+            <button class="btn btn-primary btn-sm" id="btn-abrir-editor" style="display:none" onclick="abrirNoEditor()">🎨 Editar no Editor</button>
           </div>
         </div>
         <div id="conteudo-output" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;white-space:pre-wrap;font-size:14px;line-height:1.7;color:var(--text);max-height:600px;overflow-y:auto"></div>
@@ -1470,7 +1471,7 @@ async function ingerirPDF() {
 
   let jobId;
   try {
-    const r = await fetch('http://localhost:3747/api/ingerir/pdf/iniciar', { method: 'POST', body: formData });
+    const r = await fetch(`${API}/api/ingerir/pdf/iniciar`, { method: 'POST', body: formData });
     const d = await r.json();
     if (!d.ok) { statusEl.className = 'status-box show error'; statusEl.textContent = 'Erro: ' + d.erro; btn.disabled = false; return; }
     jobId = d.jobId;
@@ -1485,7 +1486,7 @@ async function ingerirPDF() {
   `;
   statusEl.className = 'status-box show loading';
 
-  const es = new EventSource('http://localhost:3747/api/ingerir/pdf/progresso/' + jobId);
+  const es = new EventSource(`${API}/api/ingerir/pdf/progresso/${jobId}`);
 
   es.onmessage = (e) => {
     const d = JSON.parse(e.data);
@@ -1548,7 +1549,7 @@ async function ingerirYoutube() {
   btn.disabled = true;
   setStatus('yt', 'loading', 'Baixando transcrição e gerando notas... isso pode levar 1-2 minutos.');
   try {
-    const res = await fetch('http://localhost:3747/api/ingerir/youtube', {
+    const res = await fetch(`${API}/api/ingerir/youtube`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url })
     });
@@ -1648,7 +1649,7 @@ async function gerarConteudo() {
     if (typeof urlsContexto !== 'undefined' && urlsContexto.length) formData.append('urls', JSON.stringify(urlsContexto));
     if (typeof pdfsContexto !== 'undefined') pdfsContexto.forEach((f, i) => formData.append('pdf_' + i, f));
 
-    const res = await fetch('http://localhost:3747/api/conteudo/gerar', {
+    const res = await fetch(`${API}/api/conteudo/gerar`, {
       method: 'POST',
       body: formData
     });
@@ -1664,8 +1665,12 @@ async function gerarConteudo() {
         document.getElementById('notas-usadas').textContent = 'Notas usadas: ' + data.notasUsadas.join(', ');
       }
       document.getElementById('resultado-conteudo').style.display = 'block';
+      const btnEditor = document.getElementById('btn-abrir-editor');
       if (data.tipo === 'carrossel' || tipoGerado === 'carrossel') {
         localStorage.setItem('ultimoCarrossel', data.conteudo);
+        if (btnEditor) btnEditor.style.display = '';
+      } else {
+        if (btnEditor) btnEditor.style.display = 'none';
       }
     } else {
       setStatus('conteudo', 'error', 'Erro: ' + data.erro);
@@ -1674,6 +1679,24 @@ async function gerarConteudo() {
     setStatus('conteudo', 'error', 'Servidor offline.');
   }
   btn.disabled = false;
+}
+
+function abrirNoEditor() {
+  // Navega para o editor e carrega automaticamente o último carrossel
+  const navItem = document.querySelector('[onclick*="editor"]');
+  irPara('editor', navItem);
+  // Carrega o texto salvo e faz o parse
+  const salvo = localStorage.getItem('ultimoCarrossel');
+  if (salvo) {
+    editorSlides = parseSlides(salvo);
+    if (editorSlides.length > 0) {
+      editorTotal = editorSlides.length;
+      renderSlides();
+      return;
+    }
+  }
+  // Fallback: abre o import modal
+  toggleImport();
 }
 
 // ─── PAUTA & DADOS ────────────────────────────────────────────────────────────
