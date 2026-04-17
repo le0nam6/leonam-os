@@ -170,27 +170,21 @@ body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 .content {
   padding: 28px; flex: 1;
   overflow-y: auto; overflow-x: hidden;
-}
-
-/* Editor ocupa tudo — ativado via classe no body */
-body.editor-active .content {
-  padding: 0; overflow: hidden;
-  display: flex; flex-direction: column;
-}
-body.editor-active #page-editor {
-  display: flex !important;
-  flex-direction: column;
-  flex: 1; min-height: 0; overflow: hidden;
+  position: relative; /* ancora o editor em position:absolute */
 }
 
 /* ─── PAGES ──────────────────────────────────────────────────── */
 .page { display: none; }
 .page.active { display: block; }
 
+/* Editor cobre todo o .content via position absolute — independe de flex chain */
 #page-editor.active {
   display: flex !important;
   flex-direction: column;
-  flex: 1; min-height: 0; overflow: hidden;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 1;
 }
 
 /* ─── FORMS ──────────────────────────────────────────────────── */
@@ -433,6 +427,8 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 .ed-main {
   display: grid; grid-template-columns: 120px 1fr 240px;
   flex: 1; min-height: 0; overflow: hidden;
+  /* garante que o grid preenche o espaço restante */
+  height: 0; /* flex-grow vai esticá-lo */
 }
 
 .ed-slides-list {
