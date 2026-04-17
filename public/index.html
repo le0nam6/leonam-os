@@ -156,7 +156,8 @@ body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 }
 
 .topbar {
-  padding: 13px 28px;
+  height: 52px;
+  padding: 0 28px;
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center;
   justify-content: space-between;
@@ -170,22 +171,27 @@ body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 .content {
   padding: 28px; flex: 1;
   overflow-y: auto; overflow-x: hidden;
-  position: relative; /* ancora o editor em position:absolute */
 }
 
 /* ─── PAGES ──────────────────────────────────────────────────── */
 .page { display: none; }
 .page.active { display: block; }
 
-/* Editor cobre todo o .content via position absolute — independe de flex chain */
+/* Editor: position fixed, cobre viewport abaixo do topbar.
+   Independe de qualquer contexto de layout do pai. */
 #page-editor.active {
   display: flex !important;
   flex-direction: column;
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: 52px;
+  left: 230px;
+  right: 0;
+  bottom: 0;
   overflow: hidden;
-  z-index: 1;
+  z-index: 10;
+  background: var(--bg);
 }
+body.sidebar-collapsed #page-editor.active { left: 54px; }
 
 /* ─── FORMS ──────────────────────────────────────────────────── */
 .form-group { margin-bottom: 20px; }
@@ -427,8 +433,6 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 .ed-main {
   display: grid; grid-template-columns: 120px 1fr 240px;
   flex: 1; min-height: 0; overflow: hidden;
-  /* garante que o grid preenche o espaço restante */
-  height: 0; /* flex-grow vai esticá-lo */
 }
 
 .ed-slides-list {
