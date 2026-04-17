@@ -172,9 +172,15 @@ body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
   overflow-y: auto; overflow-x: hidden;
 }
 
-.content:has(#page-editor.active) {
+/* Editor ocupa tudo — ativado via classe no body */
+body.editor-active .content {
   padding: 0; overflow: hidden;
   display: flex; flex-direction: column;
+}
+body.editor-active #page-editor {
+  display: flex !important;
+  flex-direction: column;
+  flex: 1; min-height: 0; overflow: hidden;
 }
 
 /* ─── PAGES ──────────────────────────────────────────────────── */
@@ -1127,6 +1133,9 @@ function irPara(pagina, el) {
   document.getElementById('page-' + pagina).classList.add('active');
   el.classList.add('active');
 
+  // Toggle body class para layout do editor
+  document.body.classList.toggle('editor-active', pagina === 'editor');
+
   const titulos = {
     ingestao: 'Ingestão de Conhecimento',
     biblioteca: 'Biblioteca de Convicções',
@@ -1138,7 +1147,7 @@ function irPara(pagina, el) {
 
   if (pagina === 'biblioteca') carregarInsights();
   if (pagina === 'conteudo') carregarHistorico();
-  if (pagina === 'editor') requestAnimationFrame(() => initFabricEditor());
+  if (pagina === 'editor') setTimeout(() => initFabricEditor(), 60);
 }
 
 function abrirTab(tab, el) {
@@ -2048,23 +2057,79 @@ let activeTemplate = 'noite';
 
 // ── Canvas init ──────────────────────────────────────────────────────────────
 function initFabricEditor() {
-  if (fc) return; // already initialised
+  if (fc) { fc.renderAll(); return; } // já inicializado — só re-renderiza
   const el = document.getElementById('main-canvas');
-  if (!el) return;
+  if (!el) { console.warn('main-canvas não encontrado'); return; }
+
+  const tpl = TEMPLATES[activeTemplate];
   fc = new fabric.Canvas('main-canvas', {
     width: CANVAS_W,
     height: CANVAS_H,
-    backgroundColor: TEMPLATES[activeTemplate].bg,
+    backgroundColor: tpl.bg,
     preserveObjectStacking: true,
+    selection: true,
   });
+
   fc.on('selection:created', updatePropsPanel);
   fc.on('selection:updated', updatePropsPanel);
   fc.on('selection:cleared', updatePropsPanel);
   fc.on('object:modified', () => { updateThumb(activeIdx); updatePropsPanel(); });
-  fc.on('object:added',    () =>   updateThumb(activeIdx));
-  fc.on('object:removed',  () =>   updateThumb(activeIdx));
-  if (edSlides.length === 0) edAddSlide();
+  fc.on('object:added',    () => updateThumb(activeIdx));
+  fc.on('object:removed',  () => updateThumb(activeIdx));
+
+  // Slide de boas-vindas com conteúdo visível
+  if (edSlides.length === 0) {
+    edSlides.push({ json: null, thumb: '', bgColor: tpl.bg, bgImage: '' });
+    activeIdx = 0;
+
+    // Label
+    fc.add(new fabric.IText('[ GANCHO ]', {
+      left: 30, top: 36,
+      fontFamily: tpl.font || 'Syne', fontSize: 11,
+      fill: tpl.labelColor, fontWeight: '700', charSpacing: 120, name: 'label',
+    }));
+    // Título
+    fc.add(new fabric.Textbox('Clique em qualquer\nelemento para editar', {
+      left: 30, top: 80, width: CANVAS_W - 60,
+      fontFamily: tpl.font || 'Syne', fontSize: 28, fontWeight: '700',
+      fill: tpl.textColor, lineHeight: 1.2, name: 'text',
+    }));
+    // Subtítulo
+    fc.add(new fabric.Textbox('Adicione texto, imagens e formas\nusando a toolbar acima.', {
+      left: 30, top: 210, width: CANVAS_W - 60,
+      fontFamily: tpl.font || 'Syne', fontSize: 14,
+      fill: tpl.textColor + 'aa', lineHeight: 1.5, name: 'text',
+    }));
+    // Número de slide
+    fc.add(new fabric.IText('1/1', {
+      left: CANVAS_W - 46, top: CANVAS_H - 28,
+      fontFamily: tpl.font || 'Syne', fontSize: 11,
+      fill: tpl.textColor + '55', name: 'slidenum',
+    }));
+
+    fc.renderAll();
+
+    // Cria thumbnail e item na lista
+    const thumb = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
+    edSlides[0].json  = fc.toJSON(['selectable','evented','name']);
+    edSlides[0].thumb = thumb;
+
+    const listEl = document.getElementById('slides-list');
+    const addBtn = listEl.querySelector('button');
+    const item = document.createElement('div');
+    item.className = 'slide-thumb-item active';
+    item.id = 'thumb-0';
+    item.onclick = () => switchToSlide(0);
+    item.innerHTML = `
+      <div class="thumb-num">1</div>
+      <canvas class="thumb-preview" id="thumb-cv-0" width="72" height="90"></canvas>
+      <button class="thumb-del" onclick="deleteSlide(event,0)" title="Deletar">✕</button>`;
+    listEl.insertBefore(item, addBtn);
+    renderThumbItem(0);
+  }
+
   renderTemplateBtns();
+  updatePropsPanel();
 }
 
 // ── Slide management ─────────────────────────────────────────────────────────
