@@ -2991,7 +2991,7 @@ async function importarTextoNoEditor() {
 
     // Slide 0 = layout de CAPA; demais = conteúdo padrão
     if (i === 0) {
-      _renderCoverSlide(fc, s, tpl, parsed.length);
+      await _renderCoverSlide(fc, s, tpl, parsed.length);
     } else {
       _renderContentSlide(fc, s, tpl, i, parsed.length);
     }
@@ -3026,90 +3026,107 @@ async function importarTextoNoEditor() {
 }
 
 // ── Cover slide renderer (slide 0 — CAPA/GANCHO) ──────────────
+// Retorna Promise — carrega logo PNG real (bloqueado) no topo
 function _renderCoverSlide(fc, slide, tpl, totalSlides) {
-  // Gradient overlay para simular sombra de foto (funciona mesmo sem imagem)
-  const overlayH = Math.round(CANVAS_H * 0.72);
-  const overlay = new fabric.Rect({
-    left: 0, top: CANVAS_H - overlayH,
-    width: CANVAS_W, height: overlayH,
-    fill: new fabric.Gradient({
-      type: 'linear',
-      gradientUnits: 'pixels',
-      coords: { x1: 0, y1: 0, x2: 0, y2: overlayH },
-      colorStops: [
-        { offset: 0,    color: 'rgba(0,0,0,0)' },
-        { offset: 0.3,  color: 'rgba(0,0,0,0.65)' },
-        { offset: 1,    color: 'rgba(0,0,0,0.97)' }
-      ]
-    }),
-    selectable: false, evented: false, name: 'overlay'
+  return new Promise(resolve => {
+    // Gradient overlay para simular sombra de foto (funciona mesmo sem imagem)
+    const overlayH = Math.round(CANVAS_H * 0.72);
+    const overlay = new fabric.Rect({
+      left: 0, top: CANVAS_H - overlayH,
+      width: CANVAS_W, height: overlayH,
+      fill: new fabric.Gradient({
+        type: 'linear',
+        gradientUnits: 'pixels',
+        coords: { x1: 0, y1: 0, x2: 0, y2: overlayH },
+        colorStops: [
+          { offset: 0,    color: 'rgba(0,0,0,0)' },
+          { offset: 0.3,  color: 'rgba(0,0,0,0.65)' },
+          { offset: 1,    color: 'rgba(0,0,0,0.97)' }
+        ]
+      }),
+      selectable: false, evented: false, name: 'overlay'
+    });
+    fc.add(overlay);
+
+    // ── helper: adiciona os elementos de texto depois do logo ──
+    function _addCoverText() {
+      // Categoria — topo direita (extraída do label do slide)
+      const tag = (slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') || 'ANÁLISE').toUpperCase();
+      fc.add(new fabric.IText(tag, {
+        left: CANVAS_W - 20, top: 22,
+        originX: 'right',
+        fontFamily: 'DM Sans', fontSize: 9,
+        fill: '#ffffff', opacity: 0.42, charSpacing: 120,
+        name: 'cat-tag', selectable: true
+      }));
+
+      // Parsear o texto do slide em: headline, subtítulo e CTA
+      const paras    = slide.texto.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+      const headline = paras[0] || slide.texto;
+      const subParas = paras.slice(1).filter(p => !/^→/.test(p));
+      const subtitle = subParas.join('\n');
+      const cta      = paras.find(p => /^→/.test(p)) || '→ Deslize para entender a lógica.';
+
+      // Posicionamento dinâmico: headline sobe se houver subtítulo
+      const estLines    = Math.ceil(headline.length / 14);
+      const headlineH   = estLines * 34 * 1.2;
+      const ctaH        = 28;
+      const subH        = subtitle ? 50 : 0;
+      const gapBottom   = 20;
+      const headlineTop = Math.max(160, CANVAS_H - headlineH - subH - ctaH - gapBottom);
+
+      // Headline — grande e bold
+      fc.add(new fabric.Textbox(headline.toUpperCase(), {
+        left: 24, top: headlineTop,
+        width: CANVAS_W - 48,
+        fontFamily: tpl.font || 'Syne', fontSize: 34,
+        fill: tpl.textColor || '#ffffff', fontWeight: '800',
+        lineHeight: 1.15,
+        name: 'headline', selectable: true
+      }));
+
+      // Subtítulo (parágrafo 2+)
+      if (subtitle) {
+        fc.add(new fabric.Textbox(subtitle, {
+          left: 24, top: headlineTop + headlineH + 8,
+          width: CANVAS_W - 48,
+          fontFamily: 'DM Sans', fontSize: 13,
+          fill: (tpl.textColor || '#ffffff') + 'bb',
+          lineHeight: 1.45,
+          name: 'subtitle', selectable: true
+        }));
+      }
+
+      // CTA — rodapé
+      fc.add(new fabric.IText(cta, {
+        left: CANVAS_W / 2, top: CANVAS_H - 16,
+        originX: 'center', originY: 'bottom',
+        fontFamily: 'DM Sans', fontSize: 11,
+        fill: tpl.labelColor || '#a78bfa',
+        name: 'cta', selectable: true
+      }));
+
+      resolve();
+    }
+
+    // ── Logo PNG bloqueado no topo ──────────────────────────────
+    fabric.Image.fromURL('/logo-branco.png', logoImg => {
+      if (logoImg && logoImg.width) {
+        const targetW = 120;
+        const s = targetW / logoImg.width;
+        logoImg.set({
+          left: CANVAS_W / 2, top: 18,
+          originX: 'center', originY: 'top',
+          scaleX: s, scaleY: s,
+          name: 'brand', selectable: true, evented: true,
+          _locked: true
+        });
+        fc.add(logoImg);
+      }
+      // Mesmo se falhar no load, continua adicionando o texto
+      _addCoverText();
+    }, { crossOrigin: 'anonymous' });
   });
-  fc.add(overlay);
-
-  // Brand — topo centro (BLOQUEADO — não pode ser deletado)
-  fc.add(new fabric.IText('leonam\u2191alves', {
-    left: CANVAS_W / 2, top: 18,
-    originX: 'center',
-    fontFamily: 'Syne', fontSize: 13,
-    fill: '#ffffff', fontWeight: '600',
-    opacity: 0.88, charSpacing: 20, name: 'brand', selectable: true, _locked: true
-  }));
-
-  // Categoria — topo direita (extraída do label do slide)
-  const tag = (slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') || 'ANÁLISE').toUpperCase();
-  fc.add(new fabric.IText(tag, {
-    left: CANVAS_W - 20, top: 22,
-    originX: 'right',
-    fontFamily: 'DM Sans', fontSize: 9,
-    fill: '#ffffff', opacity: 0.42, charSpacing: 120,
-    name: 'cat-tag', selectable: true
-  }));
-
-  // Parsear o texto do slide em: headline, subtítulo e CTA
-  const paras = slide.texto.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
-  const headline   = paras[0] || slide.texto;
-  const subParas   = paras.slice(1).filter(p => !/^→/.test(p));
-  const subtitle   = subParas.join('\n');
-  const cta        = paras.find(p => /^→/.test(p)) || '→ Deslize para entender a lógica.';
-
-  // Posicionamento dinâmico: headline sobe se houver subtítulo
-  const estLines   = Math.ceil(headline.length / 14); // ~14 chars por linha a 34px
-  const headlineH  = estLines * 34 * 1.2;
-  const ctaH       = 28;
-  const subH       = subtitle ? 50 : 0;
-  const gapBottom  = 20;
-  const headlineTop = Math.max(160, CANVAS_H - headlineH - subH - ctaH - gapBottom);
-
-  // Headline — grande e bold
-  fc.add(new fabric.Textbox(headline.toUpperCase(), {
-    left: 24, top: headlineTop,
-    width: CANVAS_W - 48,
-    fontFamily: tpl.font || 'Syne', fontSize: 34,
-    fill: tpl.textColor || '#ffffff', fontWeight: '800',
-    lineHeight: 1.15,
-    name: 'headline', selectable: true
-  }));
-
-  // Subtítulo (parágrafo 2+)
-  if (subtitle) {
-    fc.add(new fabric.Textbox(subtitle, {
-      left: 24, top: headlineTop + headlineH + 8,
-      width: CANVAS_W - 48,
-      fontFamily: 'DM Sans', fontSize: 13,
-      fill: (tpl.textColor || '#ffffff') + 'bb',
-      lineHeight: 1.45,
-      name: 'subtitle', selectable: true
-    }));
-  }
-
-  // CTA — rodapé
-  fc.add(new fabric.IText(cta, {
-    left: CANVAS_W / 2, top: CANVAS_H - 16,
-    originX: 'center', originY: 'bottom',
-    fontFamily: 'DM Sans', fontSize: 11,
-    fill: tpl.labelColor || '#a78bfa',
-    name: 'cta', selectable: true
-  }));
 }
 
 // ── Content slide renderer — Editorial Bege ────────────────────
