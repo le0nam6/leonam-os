@@ -2401,7 +2401,8 @@ function renderSlideEl(data) {
   const { headline = '', subtitle = '', body = '', isCover, bgColor, bgImage, imgSrc,
           accentColor, username, topicLabel, funcTag = '', idx = 0, total = 1,
           headlineFont, headlineColor, headlineFontSize,
-          bodyFont, bodyColor, bodyFontSize } = data;
+          bodyFont, bodyColor, bodyFontSize,
+          bgPosX = 50, bgPosY = 50, imgPosX = 50, imgPosY = 50 } = data;
 
   const _hFont  = headlineFont  || 'Syne';
   const _hColor = headlineColor || '#ffffff';
@@ -2412,10 +2413,40 @@ function renderSlideEl(data) {
   const el = document.createElement('div');
   el.style.cssText = `width:${CANVAS_W}px;height:${CANVAS_H}px;position:relative;overflow:hidden;background:${bgColor || '#0c0c0f'};font-family:'DM Sans',sans-serif;box-sizing:border-box;flex-shrink:0;`;
 
-  // Background image
+  // Background image — draggable to reposition
   if (bgImage) {
     const bg = document.createElement('div');
-    bg.style.cssText = `position:absolute;inset:0;background:url("${bgImage}") center/cover no-repeat;z-index:0;`;
+    bg.style.cssText = `position:absolute;inset:0;background:url("${bgImage}") ${bgPosX}% ${bgPosY}%/cover no-repeat;z-index:0;cursor:grab;`;
+    let bgDrag = false, bgSX, bgSY, bgSPX, bgSPY;
+    bg.addEventListener('mousedown', e => {
+      if (e.button !== 0) return;
+      bgDrag = true; bgSX = e.clientX; bgSY = e.clientY;
+      bgSPX = edSlides[activeIdx]?.bgPosX ?? 50;
+      bgSPY = edSlides[activeIdx]?.bgPosY ?? 50;
+      bg.style.cursor = 'grabbing';
+      e.stopPropagation(); e.preventDefault();
+      const onMove = ev => {
+        if (!bgDrag) return;
+        const rect = bg.getBoundingClientRect();
+        const nx = Math.max(0, Math.min(100, bgSPX + (bgSX - ev.clientX) / rect.width * 100));
+        const ny = Math.max(0, Math.min(100, bgSPY + (bgSY - ev.clientY) / rect.height * 100));
+        bg.style.backgroundPosition = `${nx}% ${ny}%`;
+        bg._nx = nx; bg._ny = ny;
+      };
+      const onUp = () => {
+        bgDrag = false; bg.style.cursor = 'grab';
+        if (bg._nx !== undefined && edSlides[activeIdx]) {
+          edSlides[activeIdx].bgPosX = bg._nx;
+          edSlides[activeIdx].bgPosY = bg._ny;
+          renderThumbItem(activeIdx);
+          historyPush();
+        }
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
     el.appendChild(bg);
   }
 
@@ -2528,20 +2559,65 @@ function renderSlideEl(data) {
   } else {
     // Área de imagem: se já tem imgSrc mostra inline, senão mostra botões
     if (imgSrc) {
-      // Imagem encaixada no quadrado — clicável para trocar
+      // Imagem encaixada no quadrado — drag para reposicionar, click para trocar
       const imgWrap = document.createElement('div');
-      imgWrap.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;border-radius:12px;overflow:hidden;position:relative;cursor:pointer;`;
+      imgWrap.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;border-radius:12px;overflow:hidden;position:relative;cursor:grab;`;
       const imgEl = document.createElement('img');
       imgEl.src = imgSrc; imgEl.crossOrigin = 'anonymous';
-      imgEl.style.cssText = `width:100%;height:100%;object-fit:cover;display:block;`;
+      imgEl.style.cssText = `width:100%;height:100%;object-fit:cover;object-position:${imgPosX}% ${imgPosY}%;display:block;pointer-events:none;`;
+
+      // Overlay: hint de reposicionamento + botão de troca no canto
       const imgOverlay = document.createElement('div');
-      imgOverlay.style.cssText = `position:absolute;inset:0;background:rgba(0,0,0,0);transition:background 0.15s;display:flex;align-items:center;justify-content:center;opacity:0;font-size:10px;color:#fff;font-family:'DM Sans',sans-serif;letter-spacing:0.05em;`;
-      imgOverlay.textContent = 'Trocar imagem';
-      imgWrap.onmouseenter = () => { imgOverlay.style.background = 'rgba(0,0,0,0.5)'; imgOverlay.style.opacity = '1'; };
-      imgWrap.onmouseleave = () => { imgOverlay.style.background = 'rgba(0,0,0,0)'; imgOverlay.style.opacity = '0'; };
-      imgWrap.onclick = (e) => { e.stopPropagation(); edEscolherImagem(); };
+      imgOverlay.style.cssText = `position:absolute;inset:0;background:rgba(0,0,0,0);transition:background 0.15s;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;`;
+      imgOverlay.innerHTML = `<span style="font-size:10px;color:#fff;font-family:'DM Sans',sans-serif;letter-spacing:0.05em;background:rgba(0,0,0,0.6);padding:4px 10px;border-radius:20px;">↔ Arrasta para reposicionar</span>`;
+
+      const replaceBtn = document.createElement('button');
+      replaceBtn.style.cssText = `position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.2);border-radius:6px;color:#fff;font-size:10px;font-family:'DM Sans',sans-serif;padding:3px 8px;cursor:pointer;opacity:0;transition:opacity 0.15s;`;
+      replaceBtn.textContent = 'Trocar';
+      replaceBtn.onclick = e => { e.stopPropagation(); edEscolherImagem(); };
+
+      imgWrap.onmouseenter = () => { imgOverlay.style.background = 'rgba(0,0,0,0.35)'; imgOverlay.style.opacity = '1'; replaceBtn.style.opacity = '1'; };
+      imgWrap.onmouseleave = () => { imgOverlay.style.background = 'rgba(0,0,0,0)'; imgOverlay.style.opacity = '0'; replaceBtn.style.opacity = '0'; };
+
+      // Drag to reposition
+      let iDrag = false, iSX, iSY, iSPX, iSPY, iMoved = false;
+      imgWrap.addEventListener('mousedown', e => {
+        if (e.button !== 0 || e.target === replaceBtn) return;
+        iDrag = true; iMoved = false;
+        iSX = e.clientX; iSY = e.clientY;
+        iSPX = edSlides[activeIdx]?.imgPosX ?? 50;
+        iSPY = edSlides[activeIdx]?.imgPosY ?? 50;
+        imgWrap.style.cursor = 'grabbing';
+        e.stopPropagation(); e.preventDefault();
+        const onMove = ev => {
+          if (!iDrag) return;
+          iMoved = true;
+          const rect = imgWrap.getBoundingClientRect();
+          const nx = Math.max(0, Math.min(100, iSPX + (iSX - ev.clientX) / rect.width * 100));
+          const ny = Math.max(0, Math.min(100, iSPY + (iSY - ev.clientY) / rect.height * 100));
+          imgEl.style.objectPosition = `${nx}% ${ny}%`;
+          imgEl._nx = nx; imgEl._ny = ny;
+        };
+        const onUp = () => {
+          iDrag = false; imgWrap.style.cursor = 'grab';
+          if (iMoved && imgEl._nx !== undefined && edSlides[activeIdx]) {
+            edSlides[activeIdx].imgPosX = imgEl._nx;
+            edSlides[activeIdx].imgPosY = imgEl._ny;
+            renderThumbItem(activeIdx);
+            historyPush();
+          } else if (!iMoved) {
+            edEscolherImagem(); // click sem arrastar → troca
+          }
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+        };
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      });
+
       imgWrap.appendChild(imgEl);
       imgWrap.appendChild(imgOverlay);
+      imgWrap.appendChild(replaceBtn);
       layer.appendChild(imgWrap);
     } else {
       // Placeholder com dois botões: gerar com IA ou subir do computador
