@@ -2523,14 +2523,37 @@ function renderSlideEl(data) {
       sub.textContent = subtitle; layer.appendChild(sub);
     }
   } else {
-    // Image placeholder — clicável para gerar com IA
+    // Image placeholder — dois botões: gerar com IA ou subir do computador
     const imgBox = document.createElement('div');
-    imgBox.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.18);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:22px;color:rgba(255,255,255,0.35);cursor:pointer;transition:border-color 0.15s,background 0.15s;`;
-    imgBox.title = 'Clique para gerar imagem com IA';
-    imgBox.innerHTML = '<span>🎨</span><span style="font-size:10px;letter-spacing:0.05em;font-family:\'DM Sans\',sans-serif">Gerar imagem</span>';
-    imgBox.onmouseenter = () => { imgBox.style.background = 'rgba(255,255,255,0.06)'; imgBox.style.borderColor = 'rgba(124,106,247,0.5)'; };
-    imgBox.onmouseleave = () => { imgBox.style.background = 'rgba(255,255,255,0.03)'; imgBox.style.borderColor = 'rgba(255,255,255,0.18)'; };
-    imgBox.onclick = () => edGerarImagem();
+    imgBox.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.18);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;`;
+
+    const imgBoxLabel = document.createElement('div');
+    imgBoxLabel.style.cssText = `font-size:10px;letter-spacing:0.07em;color:rgba(255,255,255,0.25);font-family:'DM Sans',sans-serif;text-transform:uppercase;`;
+    imgBoxLabel.textContent = 'Imagem do slide';
+    imgBox.appendChild(imgBoxLabel);
+
+    const imgBoxBtns = document.createElement('div');
+    imgBoxBtns.style.cssText = `display:flex;gap:8px;`;
+
+    // Botão IA
+    const btnIA = document.createElement('button');
+    btnIA.style.cssText = `display:flex;align-items:center;gap:5px;background:rgba(124,106,247,0.18);border:1px solid rgba(124,106,247,0.4);border-radius:8px;padding:7px 12px;font-size:11px;color:#c4b5fd;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;`;
+    btnIA.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="#c4b5fd"/></svg> Gerar com IA`;
+    btnIA.onmouseenter = () => { btnIA.style.background = 'rgba(124,106,247,0.3)'; btnIA.style.borderColor = 'rgba(124,106,247,0.7)'; };
+    btnIA.onmouseleave = () => { btnIA.style.background = 'rgba(124,106,247,0.18)'; btnIA.style.borderColor = 'rgba(124,106,247,0.4)'; };
+    btnIA.onclick = (e) => { e.stopPropagation(); edGerarImagem(); };
+
+    // Botão Upload
+    const btnUp = document.createElement('button');
+    btnUp.style.cssText = `display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:7px 12px;font-size:11px;color:rgba(255,255,255,0.55);font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;`;
+    btnUp.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="rgba(255,255,255,0.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Subir foto`;
+    btnUp.onmouseenter = () => { btnUp.style.background = 'rgba(255,255,255,0.08)'; btnUp.style.borderColor = 'rgba(255,255,255,0.3)'; btnUp.style.color = '#fff'; };
+    btnUp.onmouseleave = () => { btnUp.style.background = 'rgba(255,255,255,0.04)'; btnUp.style.borderColor = 'rgba(255,255,255,0.15)'; btnUp.style.color = 'rgba(255,255,255,0.55)'; };
+    btnUp.onclick = (e) => { e.stopPropagation(); edUploadImagem(); };
+
+    imgBoxBtns.appendChild(btnIA);
+    imgBoxBtns.appendChild(btnUp);
+    imgBox.appendChild(imgBoxBtns);
     layer.appendChild(imgBox);
 
     const hLen = headline.replace(/\*/g, '').length;
@@ -2745,14 +2768,19 @@ function edSetBgImage() {
 }
 
 async function edGerarImagem() {
-  const prompt = window.prompt('Descreva a imagem de fundo:', 'abstract dark texture, minimal, premium brand');
-  if (!prompt) return;
+  const slide = edSlides[activeIdx];
+  if (!slide) return;
+  // Monta prompt automático a partir do conteúdo do slide — sem dialog
+  const h = (slide.headline || '').replace(/\*/g, '').slice(0, 100);
+  const b = (slide.body || slide.subtitle || '').replace(/\*/g, '').slice(0, 60);
+  const autoPrompt = `${h}${b ? ', ' + b : ''}, editorial photograph, dark moody studio lighting, no text`;
+
   const statusEl = document.getElementById('status-editor');
   statusEl.style.display = 'block';
   statusEl.className = 'status-box loading';
-  statusEl.textContent = '⟳ Gerando imagem com IA (direto do navegador)...';
+  statusEl.textContent = '⟳ Gerando imagem com IA...';
   try {
-    const dataUrl = await gerarImagemClientSide(prompt);
+    const dataUrl = await gerarImagemClientSide(autoPrompt);
     edSlides[activeIdx].bgImage = dataUrl;
     mountActiveSlide(true);
     renderThumbItem(activeIdx);
@@ -2764,6 +2792,23 @@ async function edGerarImagem() {
     statusEl.className = 'status-box error';
     statusEl.textContent = 'Erro: ' + err.message;
   }
+}
+
+function edUploadImagem() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      edSlides[activeIdx].bgImage = ev.target.result;
+      mountActiveSlide(true);
+      renderThumbItem(activeIdx);
+      historyPush();
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
 }
 
 // ── Properties panel ──────────────────────────────────────────────────────────
