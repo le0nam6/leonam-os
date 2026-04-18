@@ -13,10 +13,13 @@ CREATE TABLE IF NOT EXISTS insights (
   embedding VECTOR(3072)
 );
 
--- 3. Índice para busca vetorial eficiente
-CREATE INDEX IF NOT EXISTS insights_embedding_idx
-  ON insights USING ivfflat (embedding vector_cosine_ops)
-  WITH (lists = 100);
+-- 3. Índice para busca vetorial
+-- ivfflat tem limite de 2000 dimensões; text-embedding-3-large usa 3072.
+-- Para datasets pequenos (~milhares de itens) a busca sequencial é suficiente.
+-- Se migrar para embeddings de 1536 dims no futuro, descomentar abaixo:
+-- CREATE INDEX IF NOT EXISTS insights_embedding_idx
+--   ON insights USING ivfflat (embedding vector_cosine_ops)
+--   WITH (lists = 100);
 
 -- 4. Função de busca semântica
 CREATE OR REPLACE FUNCTION match_insights(
@@ -53,5 +56,17 @@ AS $$
   LIMIT match_count;
 $$;
 
--- 5. Migrar dados do JSON antigo (rodar manualmente se precisar)
+-- 5. Histórico de copies geradas
+CREATE TABLE IF NOT EXISTS historico_conteudo (
+  id BIGSERIAL PRIMARY KEY,
+  tema TEXT NOT NULL,
+  tipo TEXT NOT NULL,   -- 'carrossel' | 'substack'
+  angulo TEXT,
+  conteudo TEXT NOT NULL,
+  criado_em TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS historico_tipo_idx ON historico_conteudo (tipo, criado_em DESC);
+
+-- 6. Migrar dados do JSON antigo (rodar manualmente se precisar)
 -- Use o endpoint POST /api/migrar para importar leonam-os-db.json

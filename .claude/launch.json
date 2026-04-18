@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "leonam-os (main server)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server.js"],
+      "port": 3747
+    },
+    {
+      "name": "sync-vault",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["sync-vault.js"],
+      "port": null
+    }
+  ]
+}

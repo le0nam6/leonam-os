@@ -557,12 +557,14 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   display: flex; align-items: center; justify-content: center;
   padding: 28px; position: relative;
 }
-.ed-canvas-area canvas {
+.ed-canvas-area .slide-canvas-host {
   border-radius: 8px;
   box-shadow:
     0 0 0 1px rgba(255,255,255,0.07),
     0 24px 64px rgba(0,0,0,0.7),
     0 0 100px rgba(139,92,246,0.08);
+  overflow: hidden;
+  flex-shrink: 0;
 }
 .ed-nav-arrow {
   position: absolute; top: 50%; transform: translateY(-50%);
@@ -817,7 +819,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   z-index: 200; min-width: 220px;
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
@@ -1337,7 +1339,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
     <div class="ed-canvas-wrap">
       <button class="ed-nav-arrow left" id="nav-prev" onclick="navSlide(-1)" title="Slide anterior">‹</button>
       <div class="ed-canvas-area">
-        <canvas id="main-canvas"></canvas>
+        <div id="slide-canvas" class="slide-canvas-host" style="width:360px;height:450px;"></div>
       </div>
       <button class="ed-nav-arrow right" id="nav-next" onclick="navSlide(1)" title="Próximo slide">›</button>
       <div class="ed-slide-badge" id="slide-badge">1/1</div>
@@ -1407,7 +1409,7 @@ function irPara(pagina, el) {
 
   if (pagina === 'biblioteca') carregarInsights();
   if (pagina === 'conteudo') carregarHistorico();
-  if (pagina === 'editor') setTimeout(() => initFabricEditor(), 60);
+  if (pagina === 'editor') setTimeout(() => initEditor(), 60);
 }
 
 function abrirTab(tab, el) {
@@ -2299,114 +2301,16 @@ async function carregarMetricas() {
   btn.textContent = 'Ver análise';
 }
 
-// ─── EDITOR DE CARROSSEL (FABRIC.JS) ─────────────────────────────────────────
-
-// ── Undo/Redo History ─────────────────────────────────────────────────────────
-const _hist   = [];
-let _histCursor = -1;
-let _histPaused = false;
-const _HIST_MAX = 30;
-
-function historyPush() {
-  if (!fc || _histPaused) return;
-  const state = {
-    json:   fc.toJSON(['selectable','evented','name','_locked']),
-    bg:     fc.backgroundColor,
-    bgImg:  edSlides[activeIdx]?.bgImage || '',
-    idx:    activeIdx
-  };
-  _hist.splice(_histCursor + 1);           // apaga estados à frente
-  _hist.push(state);
-  if (_hist.length > _HIST_MAX) _hist.shift();
-  else _histCursor++;
-  _syncUndoRedo();
-}
-
-function edUndo() {
-  if (_histCursor <= 0) { toast('Nada para desfazer', 'error'); return; }
-  _histCursor--;
-  _applyHistory(_hist[_histCursor]);
-}
-
-function edRedo() {
-  if (_histCursor >= _hist.length - 1) { toast('Nada para refazer', 'error'); return; }
-  _histCursor++;
-  _applyHistory(_hist[_histCursor]);
-}
-
-function _applyHistory(state) {
-  if (!fc || !state) return;
-  _histPaused = true;
-  fc.loadFromJSON(state.json, () => {
-    fc.backgroundColor = state.bg;
-    if (state.bgImg) {
-      fabric.Image.fromURL(state.bgImg, img => {
-        const sx = CANVAS_W / img.width, sy = CANVAS_H / img.height;
-        img.set({ scaleX: sx, scaleY: sy, originX: 'left', originY: 'top' });
-        fc.setBackgroundImage(img, () => { fc.renderAll(); updateThumb(activeIdx); });
-      }, { crossOrigin: 'anonymous' });
-    } else {
-      fc.backgroundImage = null;
-      fc.renderAll();
-    }
-    updatePropsPanel();
-    updateThumb(activeIdx);
-    _histPaused = false;
-    _syncUndoRedo();
-  });
-}
-
-function _syncUndoRedo() {
-  const u = document.getElementById('btn-undo');
-  const r = document.getElementById('btn-redo');
-  if (u) u.disabled = _histCursor <= 0;
-  if (r) r.disabled = _histCursor >= _hist.length - 1;
-}
-
-// ── Keyboard shortcuts (Delete, Ctrl+Z, Ctrl+Shift+Z) ─────────────────────────
-document.addEventListener('keydown', function(e) {
-  const tag = document.activeElement?.tagName;
-  const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable;
-  if (inInput) return;
-
-  const meta = e.ctrlKey || e.metaKey;
-
-  // Undo
-  if (meta && !e.shiftKey && e.key.toLowerCase() === 'z') {
-    e.preventDefault(); edUndo(); return;
-  }
-  // Redo
-  if (meta && (e.shiftKey && e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) {
-    e.preventDefault(); edRedo(); return;
-  }
-
-  // Delete selected objects (Delete ou Backspace)
-  if ((e.key === 'Delete' || e.key === 'Backspace') && fc) {
-    const actives = fc.getActiveObjects();
-    if (!actives.length) return;
-    const locked = actives.filter(o => o._locked);
-    if (locked.length) {
-      toast('O logo leonam↑alves está bloqueado e não pode ser deletado.', 'error');
-      return;
-    }
-    e.preventDefault();
-    actives.forEach(o => fc.remove(o));
-    fc.discardActiveObject();
-    fc.renderAll();
-    saveCurrentSlide();
-    historyPush();
-  }
-});
+// ─── EDITOR DE CARROSSEL (HTML/CSS + html-to-image) ──────────────────────────
 
 const CANVAS_W = 360;
 const CANVAS_H = 450;
 const EXPORT_MULT = 3; // → 1080 × 1350 px
 
-// ── Limites de caracteres por tipo de slide ───────────────────
 const SLIDE_LIMITS = {
-  capa:  90,   // headline da capa (parágrafo 1)
-  corpo: 280,  // texto de slides de conteúdo
-  label: 50    // tag de função do slide
+  capa:  90,
+  corpo: 280,
+  label: 50
 };
 
 const TEMPLATES = {
@@ -2422,183 +2326,302 @@ const TEMPLATES = {
 };
 Object.assign(TEMPLATES, JSON.parse(localStorage.getItem('customTemplates') || '{}'));
 
-let fc = null;          // fabric.Canvas instance
-let edSlides = [];      // [{ json, thumb, bgColor, bgImage }]
-let activeIdx = 0;
+// edSlides: [{ label, headline, subtitle, body, isCover, funcTag, bgColor, bgImage, accentColor, username, topicLabel, idx, total }]
+let edSlides    = [];
+let activeIdx   = 0;
 let activeTemplate = 'noite';
 
-// ── Canvas init ──────────────────────────────────────────────────────────────
-function initFabricEditor() {
-  if (fc) { fc.renderAll(); return; } // já inicializado — só re-renderiza
-  const el = document.getElementById('main-canvas');
-  if (!el) { console.warn('main-canvas não encontrado'); return; }
+// ── History ────────────────────────────────────────────────────────────────────
+const _hist   = [];
+let _histCursor = -1;
+const _HIST_MAX = 30;
 
-  const tpl = TEMPLATES[activeTemplate];
-  fc = new fabric.Canvas('main-canvas', {
-    width: CANVAS_W,
-    height: CANVAS_H,
-    backgroundColor: tpl.bg,
-    preserveObjectStacking: true,
-    selection: true,
-  });
+function historyPush() {
+  _hist.splice(_histCursor + 1);
+  _hist.push(JSON.parse(JSON.stringify(edSlides)));
+  if (_hist.length > _HIST_MAX) _hist.shift();
+  else _histCursor++;
+  _syncUndoRedo();
+}
 
-  fc.on('selection:created', updatePropsPanel);
-  fc.on('selection:updated', updatePropsPanel);
-  fc.on('selection:cleared', updatePropsPanel);
-  fc.on('object:modified', () => { updateThumb(activeIdx); updatePropsPanel(); historyPush(); });
-  fc.on('object:added',    () => { if (!_histPaused) updateThumb(activeIdx); });
-  fc.on('object:removed',  () => { if (!_histPaused) updateThumb(activeIdx); });
+function edUndo() {
+  if (_histCursor <= 0) { toast('Nada para desfazer', 'error'); return; }
+  _histCursor--;
+  edSlides = JSON.parse(JSON.stringify(_hist[_histCursor]));
+  activeIdx = Math.min(activeIdx, edSlides.length - 1);
+  rebuildSlideList();
+  mountActiveSlide();
+  _syncUndoRedo();
+}
 
-  // Slide de boas-vindas com conteúdo visível
-  if (edSlides.length === 0) {
-    edSlides.push({ json: null, thumb: '', bgColor: tpl.bg, bgImage: '' });
-    activeIdx = 0;
+function edRedo() {
+  if (_histCursor >= _hist.length - 1) { toast('Nada para refazer', 'error'); return; }
+  _histCursor++;
+  edSlides = JSON.parse(JSON.stringify(_hist[_histCursor]));
+  activeIdx = Math.min(activeIdx, edSlides.length - 1);
+  rebuildSlideList();
+  mountActiveSlide();
+  _syncUndoRedo();
+}
 
-    // Label
-    fc.add(new fabric.IText('[ GANCHO ]', {
-      left: 30, top: 36,
-      fontFamily: tpl.font || 'Syne', fontSize: 11,
-      fill: tpl.labelColor, fontWeight: '700', charSpacing: 120, name: 'label',
-    }));
-    // Título
-    fc.add(new fabric.Textbox('Clique em qualquer\nelemento para editar', {
-      left: 30, top: 80, width: CANVAS_W - 60,
-      fontFamily: tpl.font || 'Syne', fontSize: 28, fontWeight: '700',
-      fill: tpl.textColor, lineHeight: 1.2, name: 'text',
-    }));
-    // Subtítulo
-    fc.add(new fabric.Textbox('Adicione texto, imagens e formas\nusando a toolbar acima.', {
-      left: 30, top: 210, width: CANVAS_W - 60,
-      fontFamily: tpl.font || 'Syne', fontSize: 14,
-      fill: tpl.textColor + 'aa', lineHeight: 1.5, name: 'text',
-    }));
-    // Número de slide
-    fc.add(new fabric.IText('1/1', {
-      left: CANVAS_W - 46, top: CANVAS_H - 28,
-      fontFamily: tpl.font || 'Syne', fontSize: 11,
-      fill: tpl.textColor + '55', name: 'slidenum',
-    }));
+function _syncUndoRedo() {
+  const u = document.getElementById('btn-undo');
+  const r = document.getElementById('btn-redo');
+  if (u) u.disabled = _histCursor <= 0;
+  if (r) r.disabled = _histCursor >= _hist.length - 1;
+}
 
-    fc.renderAll();
+// ── Keyboard shortcuts ─────────────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  const tag = document.activeElement?.tagName;
+  const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable;
+  if (inInput) return;
+  const meta = e.ctrlKey || e.metaKey;
+  if (meta && !e.shiftKey && e.key.toLowerCase() === 'z') { e.preventDefault(); edUndo(); return; }
+  if (meta && (e.shiftKey && e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) { e.preventDefault(); edRedo(); return; }
+});
 
-    // Cria thumbnail e item na lista
-    const thumb = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
-    edSlides[0].json  = fc.toJSON(['selectable','evented','name','_locked']);
-    edSlides[0].thumb = thumb;
+// ── Accent words helper ────────────────────────────────────────────────────────
+function _buildAccentHtml(text, accentColor) {
+  if (!accentColor || !text.includes('*')) {
+    return (text || '').replace(/\*/g, '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  let html = '', inAccent = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '*') { inAccent = !inAccent; html += inAccent ? `<span style="color:${accentColor}">` : '</span>'; continue; }
+    html += c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c;
+  }
+  if (inAccent) html += '</span>';
+  return html;
+}
 
-    const listEl = document.getElementById('slides-list');
-    const item = document.createElement('div');
-    item.className = 'slide-thumb-item active';
-    item.id = 'thumb-0';
-    item.onclick = () => switchToSlide(0);
-    item.innerHTML = `
-      <div class="thumb-num">1</div>
-      <canvas class="thumb-preview" id="thumb-cv-0" width="72" height="90"></canvas>
-      <button class="thumb-del" onclick="deleteSlide(event,0)" title="Deletar">✕</button>`;
-    listEl.appendChild(item);
-    renderThumbItem(0);
+// ── Slide renderer (HTML/CSS) ─────────────────────────────────────────────────
+function renderSlideEl(data) {
+  const { headline = '', subtitle = '', body = '', isCover, bgColor, bgImage,
+          accentColor, username, topicLabel, funcTag = '', idx = 0, total = 1 } = data;
+
+  const el = document.createElement('div');
+  el.style.cssText = `width:${CANVAS_W}px;height:${CANVAS_H}px;position:relative;overflow:hidden;background:${bgColor || '#0c0c0f'};font-family:'DM Sans',sans-serif;box-sizing:border-box;flex-shrink:0;`;
+
+  // Background image
+  if (bgImage) {
+    const bg = document.createElement('div');
+    bg.style.cssText = `position:absolute;inset:0;background:url("${bgImage}") center/cover no-repeat;z-index:0;`;
+    el.appendChild(bg);
   }
 
+  // Overlay
+  const overlay = document.createElement('div');
+  if (isCover) {
+    overlay.style.cssText = `position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.52) 30%,rgba(0,0,0,0.96) 100%);`;
+  } else {
+    overlay.style.cssText = `position:absolute;inset:0;z-index:1;background:rgba(12,12,15,${bgImage ? '0.8' : '0.0'});`;
+  }
+  el.appendChild(overlay);
+
+  // Content layer
+  const layer = document.createElement('div');
+  layer.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;`;
+
+  // Top row: badge + tag
+  const topRow = document.createElement('div');
+  topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:flex-start;padding:12px 14px 0;flex-shrink:0;gap:8px;';
+  const badge = document.createElement('div');
+  badge.style.cssText = `background:rgba(0,0,0,0.52);border:1px solid rgba(255,255,255,0.13);border-radius:11px;padding:4px 10px;font-size:10px;color:#fff;letter-spacing:0.04em;white-space:nowrap;flex-shrink:0;`;
+  badge.textContent = username || '@leonamalves';
+  topRow.appendChild(badge);
+  const tagEl = document.createElement('div');
+  tagEl.style.cssText = `font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.12em;text-transform:uppercase;text-align:right;padding-top:5px;word-break:break-word;`;
+  tagEl.textContent = funcTag;
+  topRow.appendChild(tagEl);
+  layer.appendChild(topRow);
+
+  if (isCover) {
+    // Logo
+    const logoWrap = document.createElement('div');
+    logoWrap.style.cssText = 'display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0;';
+    const logo = document.createElement('img');
+    logo.src = '/logo-branco.png'; logo.crossOrigin = 'anonymous';
+    logo.style.cssText = 'width:116px;height:auto;object-fit:contain;';
+    logo.onerror = () => { logoWrap.style.display = 'none'; };
+    logoWrap.appendChild(logo); layer.appendChild(logoWrap);
+
+    const spacer = document.createElement('div');
+    spacer.style.flex = '1';
+    layer.appendChild(spacer);
+
+    const hlWrap = document.createElement('div');
+    hlWrap.style.cssText = 'padding:0 22px 8px;flex-shrink:0;';
+    const hl = document.createElement('div');
+    hl.style.cssText = `font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:#ffffff;line-height:1.15;word-break:break-word;`;
+    hl.innerHTML = _buildAccentHtml(headline.toUpperCase(), accentColor);
+    hlWrap.appendChild(hl); layer.appendChild(hlWrap);
+
+    if (subtitle) {
+      const sub = document.createElement('div');
+      sub.style.cssText = `padding:0 22px 10px;font-family:'DM Sans',sans-serif;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.45;flex-shrink:0;word-break:break-word;`;
+      sub.textContent = subtitle; layer.appendChild(sub);
+    }
+  } else {
+    // Image placeholder
+    const imgBox = document.createElement('div');
+    imgBox.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;color:rgba(255,255,255,0.18);`;
+    imgBox.textContent = '🖼'; layer.appendChild(imgBox);
+
+    const hLen = headline.replace(/\*/g, '').length;
+    const hSize = hLen > 90 ? 20 : hLen > 65 ? 23 : hLen > 45 ? 27 : hLen > 28 ? 30 : 34;
+    const hlWrap = document.createElement('div');
+    hlWrap.style.cssText = 'padding:12px 22px 0;flex-shrink:0;';
+    const hl = document.createElement('div');
+    hl.style.cssText = `font-family:'Syne',sans-serif;font-size:${hSize}px;font-weight:800;color:#ffffff;line-height:1.18;word-break:break-word;`;
+    hl.innerHTML = _buildAccentHtml(headline.toUpperCase(), accentColor);
+    hlWrap.appendChild(hl); layer.appendChild(hlWrap);
+
+    const divider = document.createElement('div');
+    divider.style.cssText = 'margin:8px 22px;height:1px;background:rgba(255,255,255,0.08);flex-shrink:0;';
+    layer.appendChild(divider);
+
+    if (body) {
+      const bodyEl = document.createElement('div');
+      bodyEl.style.cssText = `padding:0 22px;font-family:'DM Sans',sans-serif;font-size:12px;color:#9CA3AF;line-height:1.58;overflow:hidden;flex-shrink:1;word-break:break-word;`;
+      bodyEl.textContent = body; layer.appendChild(bodyEl);
+    }
+
+    const spacer = document.createElement('div');
+    spacer.style.flex = '1'; layer.appendChild(spacer);
+  }
+
+  // Pagination dots
+  if (total > 1) {
+    const dotsRow = document.createElement('div');
+    dotsRow.style.cssText = 'display:flex;justify-content:center;align-items:center;gap:10px;padding-bottom:4px;flex-shrink:0;';
+    for (let i = 0; i < total; i++) {
+      const dot = document.createElement('div');
+      const active = i === idx;
+      dot.style.cssText = `width:${active ? 8 : 6}px;height:${active ? 8 : 6}px;border-radius:50%;background:${active ? '#ffffff' : 'rgba(255,255,255,0.32)'};flex-shrink:0;`;
+      dotsRow.appendChild(dot);
+    }
+    layer.appendChild(dotsRow);
+  }
+
+  // CTA pills
+  const ctaRow = document.createElement('div');
+  ctaRow.style.cssText = 'display:flex;justify-content:space-between;padding:4px 14px 10px;flex-shrink:0;';
+  const makePill = txt => {
+    const p = document.createElement('div');
+    p.style.cssText = `background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.13);border-radius:13px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:10px;color:#ffffff;letter-spacing:0.02em;white-space:nowrap;`;
+    p.textContent = txt; return p;
+  };
+  ctaRow.appendChild(makePill((topicLabel || 'CARROSSEL').slice(0, 18).toUpperCase()));
+  ctaRow.appendChild(makePill('Arrasta →'));
+  layer.appendChild(ctaRow);
+
+  el.appendChild(layer);
+  return el;
+}
+
+// ── Editor init ────────────────────────────────────────────────────────────────
+function initEditor() {
+  if (edSlides.length > 0) { mountActiveSlide(); return; }
+  const tpl = TEMPLATES[activeTemplate];
+  edSlides.push({
+    label: 'SLIDE 1 — GANCHO',
+    headline: 'Bem-vindo ao Editor',
+    subtitle: 'Importe texto ou adicione slides usando o painel.',
+    body: '', isCover: true, funcTag: 'GANCHO',
+    bgColor: tpl.bg || '#0c0c0f', bgImage: '', accentColor: null,
+    username: localStorage.getItem('edUsername') || '@leonamalves',
+    topicLabel: 'CARROSSEL', idx: 0, total: 1,
+  });
+  activeIdx = 0;
+  rebuildSlideList();
+  mountActiveSlide();
   renderTemplateBtns();
   initPalettes();
   updateNavArrows();
   updateSlideBadge();
-  updatePropsPanel();
+  historyPush();
 }
 
-// ── Slide management ─────────────────────────────────────────────────────────
-function saveCurrentSlide() {
-  if (!fc || edSlides.length === 0) return;
-  edSlides[activeIdx].json    = fc.toJSON(['selectable','evented','name','_locked']);
-  edSlides[activeIdx].bgColor = fc.backgroundColor;
-  edSlides[activeIdx].bgImage = fc.backgroundImage ? fc.backgroundImage.getSrc() : '';
-  edSlides[activeIdx].thumb   = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
-  renderThumbItem(activeIdx);
+// ── Slide management ──────────────────────────────────────────────────────────
+// saveCurrentSlide is a no-op: data is always live in edSlides[]
+function saveCurrentSlide() {}
+
+// Mount the active slide into the editor canvas area
+function mountActiveSlide(skipPropsUpdate) {
+  const host = document.getElementById('slide-canvas');
+  if (!host) return;
+  const data = edSlides[activeIdx];
+  if (!data) return;
+  host.innerHTML = '';
+  host.appendChild(renderSlideEl(data));
+  if (!skipPropsUpdate) updatePropsPanel();
 }
 
-function edAddSlide() {
-  if (fc) saveCurrentSlide();
-  const tpl = TEMPLATES[activeTemplate];
-  const idx = edSlides.length;
-  edSlides.push({ json: null, thumb: '', bgColor: tpl.bg, bgImage: '' });
+// Render a thumbnail for slide idx using CSS scale
+function renderThumbItem(idx) {
+  const container = document.getElementById(`thumb-cv-${idx}`);
+  if (!container || !edSlides[idx]) return;
+  const scale = 104 / CANVAS_W; // 0.288... → 360px → 104px wide
+  const slideEl = renderSlideEl(edSlides[idx]);
+  slideEl.style.transformOrigin = 'top left';
+  slideEl.style.transform = `scale(${scale})`;
+  slideEl.style.pointerEvents = 'none';
+  container.style.overflow = 'hidden';
+  container.innerHTML = '';
+  container.appendChild(slideEl);
+}
 
-  // blank canvas
-  if (fc) {
-    fc.clear();
-    fc.backgroundColor = tpl.bg;
-    fc.backgroundImage = null;
-    fc.renderAll();
-  }
-  activeIdx = idx;
+function updateThumb(idx) { renderThumbItem(idx); }
 
+// Rebuild the full slide list in the left panel
+function rebuildSlideList() {
   const listEl = document.getElementById('slides-list');
-  const item = document.createElement('div');
-  item.className = 'slide-thumb-item active';
-  item.id = `thumb-${idx}`;
-  item.onclick = () => switchToSlide(idx);
-  item.innerHTML = `
-    <div class="thumb-num">${idx + 1}</div>
-    <canvas class="thumb-preview" id="thumb-cv-${idx}" width="72" height="90"></canvas>
-    <button class="thumb-del" onclick="deleteSlide(event,${idx})" title="Deletar slide">✕</button>`;
-  listEl.appendChild(item);
-  updateThumb(idx);
-  updatePropsPanel();
-  updateNavArrows();
-  updateSlideBadge();
+  if (!listEl) return;
+  listEl.innerHTML = '';
+  edSlides.forEach((s, i) => {
+    s.idx = i; s.total = edSlides.length;
+    const item = document.createElement('div');
+    item.className = 'slide-thumb-item' + (i === activeIdx ? ' active' : '') + (s.isCover ? ' slide-is-cover' : '');
+    item.id = `thumb-${i}`;
+    item.onclick = () => switchToSlide(i);
+    item.innerHTML = `
+      <div class="thumb-num">${i + 1}</div>
+      <div class="thumb-preview" id="thumb-cv-${i}"></div>
+      <button class="thumb-del" onclick="deleteSlide(event,${i})" title="Deletar">✕</button>`;
+    listEl.appendChild(item);
+    renderThumbItem(i);
+  });
   document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
 }
 
 function switchToSlide(idx) {
-  if (!fc || idx === activeIdx) return;
-  saveCurrentSlide();
+  if (idx < 0 || idx >= edSlides.length) return;
   activeIdx = idx;
   document.querySelectorAll('.slide-thumb-item').forEach((el, i) => el.classList.toggle('active', i === idx));
-  const s = edSlides[idx];
-
-  function _applyBgImage(afterFn) {
-    if (s.bgImage) {
-      fabric.Image.fromURL(s.bgImage, img => {
-        const scX = CANVAS_W / img.width;
-        const scY = CANVAS_H / img.height;
-        const sc  = Math.max(scX, scY);
-        img.set({ left: 0, top: 0, scaleX: sc, scaleY: sc,
-                  selectable: false, evented: false, name: 'bg-photo' });
-        fc.setBackgroundImage(img, () => { fc.renderAll(); });
-        afterFn();
-      }, { crossOrigin: 'anonymous' });
-    } else {
-      fc.backgroundImage = null;
-      afterFn();
-    }
-  }
-
-  if (s.json) {
-    fc.loadFromJSON(s.json, () => {
-      fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg;
-      _applyBgImage(() => { fc.renderAll(); updatePropsPanel(); });
-    });
-  } else {
-    fc.clear();
-    fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg;
-    _applyBgImage(() => { fc.renderAll(); updatePropsPanel(); });
-  }
+  mountActiveSlide();
   updateNavArrows();
   updateSlideBadge();
 }
 
-function renderThumbItem(idx) {
-  const cv = document.getElementById(`thumb-cv-${idx}`);
-  if (!cv) return;
-  const ctx = cv.getContext('2d');
-  const img = new Image();
-  img.onload = () => ctx.drawImage(img, 0, 0, 72, 90);
-  img.src = edSlides[idx].thumb || '';
-}
-
-function updateThumb(idx) {
-  if (!fc || !edSlides[idx]) return;
-  edSlides[idx].thumb = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
-  renderThumbItem(idx);
+function edAddSlide() {
+  const tpl = TEMPLATES[activeTemplate];
+  const idx = edSlides.length;
+  edSlides.push({
+    label: `SLIDE ${idx + 1} — CONTEÚDO`, headline: 'Novo Slide',
+    subtitle: '', body: '', isCover: false, funcTag: 'CONTEÚDO',
+    bgColor: tpl.bg || '#0c0c0f', bgImage: '',
+    accentColor: localStorage.getItem('accentColor') || null,
+    username: localStorage.getItem('edUsername') || '@leonamalves',
+    topicLabel: 'CARROSSEL', idx, total: edSlides.length + 1,
+  });
+  activeIdx = idx;
+  rebuildSlideList();
+  mountActiveSlide();
+  updateNavArrows();
+  updateSlideBadge();
+  historyPush();
 }
 
 function deleteSlide(e, idx) {
@@ -2606,152 +2629,46 @@ function deleteSlide(e, idx) {
   if (edSlides.length <= 1) { toast('O carrossel precisa ter ao menos 1 slide', 'error'); return; }
   if (!confirm(`Deletar slide ${idx + 1}?`)) return;
   edSlides.splice(idx, 1);
-  const listEl = document.getElementById('slides-list');
-  listEl.querySelectorAll('.slide-thumb-item').forEach(el => el.remove());
-  edSlides.forEach((_, i) => {
-    const item = document.createElement('div');
-    item.className = 'slide-thumb-item' + (i === 0 ? ' active' : '');
-    item.id = `thumb-${i}`;
-    item.onclick = () => switchToSlide(i);
-    item.innerHTML = `
-      <div class="thumb-num">${i + 1}</div>
-      <canvas class="thumb-preview" id="thumb-cv-${i}" width="72" height="90"></canvas>
-      <button class="thumb-del" onclick="deleteSlide(event,${i})" title="Deletar slide">✕</button>`;
-    listEl.appendChild(item);
-    renderThumbItem(i);
-  });
-  const newActive = Math.min(idx, edSlides.length - 1);
-  activeIdx = newActive;
-  const s = edSlides[newActive];
-  if (s.json) {
-    fc.loadFromJSON(s.json, () => { fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg; fc.renderAll(); });
-  } else {
-    fc.clear(); fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg; fc.renderAll();
-  }
+  activeIdx = Math.min(activeIdx, edSlides.length - 1);
+  rebuildSlideList();
+  mountActiveSlide();
   updateNavArrows();
   updateSlideBadge();
-  document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
-}
-
-// ── Toolbar: add elements ────────────────────────────────────────────────────
-function edAddText() {
-  if (!fc) return;
-  const tpl = TEMPLATES[activeTemplate];
-  const t = new fabric.IText('Clique para editar', {
-    left: 30, top: 140,
-    width: CANVAS_W - 60,
-    fontFamily: tpl.font || 'Syne',
-    fontSize: 24,
-    fill: tpl.textColor || '#ffffff',
-    splitByGrapheme: false,
-    name: 'text',
-  });
-  fc.add(t);
-  fc.setActiveObject(t);
-  fc.renderAll();
   historyPush();
 }
 
-function edAddLabel() {
-  if (!fc) return;
-  const tpl = TEMPLATES[activeTemplate];
-  const t = new fabric.IText('[ FUNÇÃO ]', {
-    left: 30, top: 40,
-    fontFamily: tpl.font || 'Syne',
-    fontSize: 13,
-    fill: tpl.labelColor || '#7c6af7',
-    fontWeight: '700',
-    charSpacing: 120,
-    name: 'label',
-  });
-  fc.add(t);
-  fc.setActiveObject(t);
-  fc.renderAll();
-  historyPush();
-}
+// ── Toolbar: add / edit elements ──────────────────────────────────────────────
+function edAddText()   { toast('Edite o texto no painel de propriedades →', 'error'); }
+function edAddLabel()  { toast('Edite o texto no painel de propriedades →', 'error'); }
+function edAddSlideNum() { toast('Número de slide já aparece nos dots de paginação', 'error'); }
+function edAddRect()   { toast('Formas em breve nesta versão', 'error'); }
+function edAddCircle() { toast('Formas em breve nesta versão', 'error'); }
+function edAddLine()   { toast('Formas em breve nesta versão', 'error'); }
+function edDeleteSelected() { toast('Selecione um slide e use o painel → para deletar', 'error'); }
 
-function edAddImage() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.onchange = e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      fabric.Image.fromURL(ev.target.result, img => {
-        const scale = Math.min(CANVAS_W / img.width, CANVAS_H / img.height, 1);
-        img.scale(scale);
-        img.set({ left: (CANVAS_W - img.width * scale) / 2, top: (CANVAS_H - img.height * scale) / 2, name: 'image' });
-        fc.add(img);
-        fc.setActiveObject(img);
-        fc.renderAll();
-      }, { crossOrigin: 'anonymous' });
-    };
-    reader.readAsDataURL(file);
-  };
-  input.click();
-}
+function edAddImage() { edSetBgImage(); }
 
-function edAddRect() {
-  if (!fc) return;
-  const tpl = TEMPLATES[activeTemplate];
-  const r = new fabric.Rect({ left: 60, top: 80, width: 240, height: 120, fill: 'transparent', stroke: tpl.labelColor || '#7c6af7', strokeWidth: 2, name: 'rect' });
-  fc.add(r); fc.setActiveObject(r); fc.renderAll();
-  historyPush();
-}
-
-function edAddCircle() {
-  if (!fc) return;
-  const tpl = TEMPLATES[activeTemplate];
-  const c = new fabric.Circle({ left: 130, top: 170, radius: 60, fill: 'transparent', stroke: tpl.labelColor || '#7c6af7', strokeWidth: 2, name: 'circle' });
-  fc.add(c); fc.setActiveObject(c); fc.renderAll();
-  historyPush();
-}
-
-function edAddSlideNum() {
-  if (!fc) return;
-  const tpl = TEMPLATES[activeTemplate];
-  const total = edSlides.length;
-  const t = new fabric.IText(`${activeIdx + 1}/${total}`, {
-    left: CANVAS_W - 50, top: CANVAS_H - 30,
-    fontFamily: tpl.font || 'Syne',
-    fontSize: 12,
-    fill: tpl.textColor ? tpl.textColor + '88' : '#ffffff88',
-    name: 'slidenum',
-  });
-  fc.add(t); fc.setActiveObject(t); fc.renderAll();
-}
-
-// ── Toolbar: background ──────────────────────────────────────────────────────
+// ── Toolbar: background ────────────────────────────────────────────────────────
 function edSetBgColor(hex) {
-  if (!fc) return;
-  fc.backgroundImage = null;
-  fc.backgroundColor = hex;
+  if (!edSlides[activeIdx]) return;
   edSlides[activeIdx].bgColor = hex;
   edSlides[activeIdx].bgImage = '';
-  fc.renderAll();
-  updateThumb(activeIdx);
+  mountActiveSlide(true);
+  renderThumbItem(activeIdx);
   historyPush();
 }
 
 function edSetBgImage() {
   const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
+  input.type = 'file'; input.accept = 'image/*';
   input.onchange = e => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      fabric.Image.fromURL(ev.target.result, img => {
-        const scaleX = CANVAS_W / img.width;
-        const scaleY = CANVAS_H / img.height;
-        img.set({ scaleX, scaleY, originX: 'left', originY: 'top', crossOrigin: 'anonymous' });
-        fc.setBackgroundImage(img, () => { fc.renderAll(); updateThumb(activeIdx); historyPush(); });
-        edSlides[activeIdx].bgImage = ev.target.result;
-        edSlides[activeIdx].bgColor = '';
-      }, { crossOrigin: 'anonymous' });
+      edSlides[activeIdx].bgImage = ev.target.result;
+      mountActiveSlide(true);
+      renderThumbItem(activeIdx);
+      historyPush();
     };
     reader.readAsDataURL(file);
   };
@@ -2767,22 +2684,18 @@ async function edGerarImagem() {
   statusEl.textContent = 'Gerando imagem com IA...';
   try {
     const r = await fetch(`${API}/api/imagem/gerar`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt }),
     });
     const data = await r.json();
     if (data.ok && data.imagem) {
-      fabric.Image.fromURL(data.imagem, img => {
-        const scaleX = CANVAS_W / img.width;
-        const scaleY = CANVAS_H / img.height;
-        img.set({ scaleX, scaleY, originX: 'left', originY: 'top' });
-        fc.setBackgroundImage(img, () => { fc.renderAll(); updateThumb(activeIdx); });
-        edSlides[activeIdx].bgImage = data.imagem;
-        edSlides[activeIdx].bgColor = '';
-      }, { crossOrigin: 'anonymous' });
+      edSlides[activeIdx].bgImage = data.imagem;
+      mountActiveSlide(true);
+      renderThumbItem(activeIdx);
       statusEl.className = 'status-box success';
       statusEl.textContent = '✓ Imagem gerada!';
+      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+      historyPush();
     } else {
       statusEl.className = 'status-box error';
       statusEl.textContent = 'Erro: ' + (data.erro || 'falhou');
@@ -2793,177 +2706,89 @@ async function edGerarImagem() {
   }
 }
 
-function edDeleteSelected() {
-  if (!fc) return;
-  const sel = fc.getActiveObjects();
-  if (!sel.length) return;
-  sel.forEach(o => fc.remove(o));
-  fc.discardActiveObject();
-  fc.renderAll();
-}
-
-// ── Properties panel ─────────────────────────────────────────────────────────
+// ── Properties panel ──────────────────────────────────────────────────────────
 function updatePropsPanel() {
   const container = document.getElementById('props-content');
-  if (!fc) { container.innerHTML = '<div class="no-select-msg">Editor não iniciado</div>'; return; }
-  const sel = fc.getActiveObject();
-  if (!sel) { container.innerHTML = '<div class="no-select-msg">Clique em um elemento<br>para editar</div>'; return; }
+  if (!container) return;
+  const data = edSlides[activeIdx];
+  if (!data) { container.innerHTML = '<div class="no-select-msg">Nenhum slide</div>'; return; }
+  const bgHex = (data.bgColor || '#0c0c0f').match(/^#/) ? data.bgColor : '#0c0c0f';
+  const escHl = (data.headline || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const escSub = (data.subtitle || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const escBody = (data.body || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const taStyle = 'width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:12px;font-family:"DM Sans",sans-serif;resize:vertical;outline:none;margin-top:4px;';
 
-  const isText = sel.type === 'i-text' || sel.type === 'textbox';
-  const isImage = sel.type === 'image';
-  const isShape = sel.type === 'rect' || sel.type === 'circle' || sel.type === 'polygon';
-
-  let html = `<div class="props-group">
-    <div class="props-label">Posição</div>
-    <div class="props-row">
-      <label>X</label><input type="number" value="${Math.round(sel.left)}" oninput="propSet('left',+this.value)" style="width:60px">
-      <label>Y</label><input type="number" value="${Math.round(sel.top)}" oninput="propSet('top',+this.value)" style="width:60px">
+  container.innerHTML = `
+    <div class="props-group">
+      <div class="props-label">Headline <span style="color:var(--dim);font-weight:400">(*destaque*)</span></div>
+      <textarea rows="3" oninput="updateSlideField(${activeIdx},'headline',this.value)" style="${taStyle}">${escHl}</textarea>
     </div>
-    <div class="props-row">
-      <label>W</label><input type="number" value="${Math.round(sel.getScaledWidth())}" oninput="propSetW(+this.value)" style="width:60px">
-      <label>H</label><input type="number" value="${Math.round(sel.getScaledHeight())}" oninput="propSetH(+this.value)" style="width:60px">
+    ${data.isCover
+      ? `<div class="props-group"><div class="props-label">Subtítulo</div>
+         <textarea rows="2" oninput="updateSlideField(${activeIdx},'subtitle',this.value)" style="${taStyle}">${escSub}</textarea></div>`
+      : `<div class="props-group"><div class="props-label">Corpo do texto</div>
+         <textarea rows="4" oninput="updateSlideField(${activeIdx},'body',this.value)" style="${taStyle}">${escBody}</textarea></div>`}
+    <div class="props-group">
+      <div class="props-label">Cor de fundo</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+        <input type="color" value="${bgHex}" oninput="updateSlideField(${activeIdx},'bgColor',this.value)" style="width:34px;height:28px;border:1px solid var(--border);border-radius:6px;padding:1px;background:var(--s2);cursor:pointer">
+        ${data.bgImage ? `<button class="props-btn" onclick="clearBgImage()">✕ Remover bg</button>` : ''}
+      </div>
     </div>
-    <div class="props-row">
-      <label>Rot</label><input type="number" value="${Math.round(sel.angle||0)}" oninput="propSet('angle',+this.value)" style="width:60px">
-      <label>Op</label><input type="range" min="0" max="1" step="0.05" value="${sel.opacity||1}" oninput="propSet('opacity',+this.value)" style="width:70px">
+    <div class="props-group">
+      <div class="props-label">Cor de destaque</div>
+      <div class="accent-swatches" id="accent-swatches-props" style="margin-top:4px"></div>
     </div>
-  </div>`;
-
-  if (isText) {
-    const fonts = ['Syne','Space Grotesk','Inter','DM Sans','Playfair Display','Bebas Neue'];
-    const fontOpts = fonts.map(f => `<option value="${f}" ${sel.fontFamily===f?'selected':''}>${f}</option>`).join('');
-    html += `<div class="props-group">
-      <div class="props-label">Texto</div>
-      <div class="props-row">
-        <label>Cor</label><input type="color" value="${rgbToHex(sel.fill)||'#ffffff'}" oninput="propSet('fill',this.value)">
-        <label>Tam</label><input type="number" value="${sel.fontSize||24}" oninput="propSet('fontSize',+this.value)" style="width:55px">
-      </div>
-      <div class="props-row">
-        <label>Fonte</label>
-        <select oninput="propSet('fontFamily',this.value)" style="flex:1">${fontOpts}</select>
-      </div>
-      <div class="props-row">
-        <label>Espaç</label><input type="number" value="${sel.charSpacing||0}" oninput="propSet('charSpacing',+this.value)" style="width:55px">
-        <label>Linha</label><input type="number" value="${sel.lineHeight||1.16}" step="0.05" oninput="propSet('lineHeight',+this.value)" style="width:55px">
-      </div>
-      <div class="props-row">
-        <label>Peso</label>
-        <select oninput="propSet('fontWeight',this.value)">
-          <option ${sel.fontWeight==='normal'?'selected':''}>normal</option>
-          <option ${sel.fontWeight==='700'?'selected':''} value="700">Bold</option>
-          <option ${sel.fontWeight==='900'?'selected':''} value="900">Black</option>
-        </select>
-        <label>Align</label>
-        <select oninput="propSet('textAlign',this.value)">
-          <option ${sel.textAlign==='left'?'selected':''} value="left">◀</option>
-          <option ${sel.textAlign==='center'?'selected':''} value="center">◆</option>
-          <option ${sel.textAlign==='right'?'selected':''} value="right">▶</option>
-        </select>
-      </div>
+    <div class="props-group" style="margin-top:auto">
+      <button class="props-btn danger" onclick="deleteSlide({stopPropagation:()=>{}},${activeIdx})" style="width:100%;justify-content:center">🗑 Deletar este slide</button>
     </div>`;
+
+  // Render accent swatches in props panel
+  const swContainer = container.querySelector('#accent-swatches-props');
+  if (swContainer) {
+    const current = data.accentColor || null;
+    swContainer.innerHTML = ACCENT_COLORS.map(ac => {
+      const isActive = ac.color === current || (ac.color === null && current === null);
+      return `<div class="accent-swatch${ac.color === null ? ' none-swatch' : ''}${isActive ? ' active' : ''}"
+        style="${ac.color ? `background:${ac.color}` : ''}" title="${ac.id}"
+        onclick="updateSlideAccent(${activeIdx},${ac.color ? `'${ac.color}'` : 'null'})">
+        ${ac.color === null ? '✕' : ''}</div>`;
+    }).join('');
   }
-
-  if (isShape) {
-    html += `<div class="props-group">
-      <div class="props-label">Forma</div>
-      <div class="props-row">
-        <label>Preench.</label><input type="color" value="${sel.fill && sel.fill!=='transparent'?rgbToHex(sel.fill):'#000001'}" oninput="propFill(this.value)">
-        <button class="props-btn" onclick="propFill('transparent')">Sem fill</button>
-      </div>
-      <div class="props-row">
-        <label>Borda</label><input type="color" value="${rgbToHex(sel.stroke)||'#7c6af7'}" oninput="propSet('stroke',this.value)">
-        <label>Larg</label><input type="number" value="${sel.strokeWidth||2}" oninput="propSet('strokeWidth',+this.value)" style="width:45px">
-      </div>
-      ${sel.type==='rect'?`<div class="props-row"><label>Raio</label><input type="number" value="${sel.rx||0}" oninput="propSet('rx',+this.value);propSet('ry',+this.value)" style="width:55px"></div>`:''}
-    </div>`;
-  }
-
-  if (isImage) {
-    html += `<div class="props-group">
-      <div class="props-label">Imagem</div>
-      <div class="props-row">
-        <label>Op</label><input type="range" min="0" max="1" step="0.05" value="${sel.opacity||1}" oninput="propSet('opacity',+this.value)" style="width:100%">
-      </div>
-      <div class="props-row" style="flex-wrap:wrap;gap:4px">
-        <button class="props-btn" onclick="propImgFilter('grayscale')">P&B</button>
-        <button class="props-btn" onclick="propImgFilter('sepia')">Sépia</button>
-        <button class="props-btn" onclick="propImgFilter('brightness')">Brilho +</button>
-        <button class="props-btn" onclick="propImgClear()">Sem filtro</button>
-      </div>
-    </div>`;
-  }
-
-  html += `<div class="props-group" style="margin-top:auto">
-    <button class="props-btn danger" onclick="edDeleteSelected()" style="width:100%;justify-content:center">🗑 Remover elemento</button>
-    <div class="props-row" style="margin-top:6px;gap:4px">
-      <button class="props-btn" onclick="propLayer('up')" style="flex:1">▲ Cima</button>
-      <button class="props-btn" onclick="propLayer('down')" style="flex:1">▼ Baixo</button>
-      <button class="props-btn" onclick="propLayer('front')" style="flex:1">⤒ Topo</button>
-      <button class="props-btn" onclick="propLayer('back')" style="flex:1">⤓ Fundo</button>
-    </div>
-  </div>`;
-
-  container.innerHTML = html;
 }
 
-function propSet(key, val) {
-  const sel = fc && fc.getActiveObject();
-  if (!sel) return;
-  sel.set(key, val);
-  fc.renderAll();
-  updateThumb(activeIdx);
+function updateSlideField(idx, field, value) {
+  if (!edSlides[idx]) return;
+  edSlides[idx][field] = value;
+  if (idx === activeIdx) mountActiveSlide(true); // skip props rebuild to keep focus
+  renderThumbItem(idx);
 }
 
-function propSetW(w) {
-  const sel = fc && fc.getActiveObject();
-  if (!sel) return;
-  sel.set('scaleX', w / sel.width);
-  fc.renderAll(); updateThumb(activeIdx);
+function updateSlideAccent(idx, color) {
+  if (!edSlides[idx]) return;
+  edSlides[idx].accentColor = color;
+  if (idx === activeIdx) { mountActiveSlide(true); updatePropsPanel(); }
+  renderThumbItem(idx);
+  historyPush();
 }
 
-function propSetH(h) {
-  const sel = fc && fc.getActiveObject();
-  if (!sel) return;
-  sel.set('scaleY', h / sel.height);
-  fc.renderAll(); updateThumb(activeIdx);
+function clearBgImage() {
+  if (!edSlides[activeIdx]) return;
+  edSlides[activeIdx].bgImage = '';
+  mountActiveSlide(true);
+  renderThumbItem(activeIdx);
+  updatePropsPanel();
+  historyPush();
 }
 
-function propFill(val) {
-  const sel = fc && fc.getActiveObject();
-  if (!sel) return;
-  sel.set('fill', val);
-  fc.renderAll(); updateThumb(activeIdx);
-}
-
-function propLayer(dir) {
-  const sel = fc && fc.getActiveObject();
-  if (!sel) return;
-  if (dir === 'up')    fc.bringForward(sel);
-  if (dir === 'down')  fc.sendBackwards(sel);
-  if (dir === 'front') fc.bringToFront(sel);
-  if (dir === 'back')  fc.sendToBack(sel);
-  fc.renderAll(); updateThumb(activeIdx);
-}
-
-function propImgFilter(type) {
-  const sel = fc && fc.getActiveObject();
-  if (!sel || sel.type !== 'image') return;
-  sel.filters = [];
-  if (type === 'grayscale') sel.filters.push(new fabric.Image.filters.Grayscale());
-  if (type === 'sepia')     sel.filters.push(new fabric.Image.filters.Sepia());
-  if (type === 'brightness') sel.filters.push(new fabric.Image.filters.Brightness({ brightness: 0.15 }));
-  sel.applyFilters();
-  fc.renderAll(); updateThumb(activeIdx);
-}
-
-function propImgClear() {
-  const sel = fc && fc.getActiveObject();
-  if (!sel || sel.type !== 'image') return;
-  sel.filters = [];
-  sel.applyFilters();
-  fc.renderAll(); updateThumb(activeIdx);
-}
-
+// Stubs for backwards compat
+function propSet() {}
+function propSetW() {}
+function propSetH() {}
+function propFill() {}
+function propLayer() {}
+function propImgFilter() {}
+function propImgClear() {}
 function rgbToHex(color) {
   if (!color || color === 'transparent') return '#000000';
   if (color.startsWith('#')) return color;
@@ -2972,7 +2797,7 @@ function rgbToHex(color) {
   return '#' + [m[1],m[2],m[3]].map(n => (+n).toString(16).padStart(2,'0')).join('');
 }
 
-// ── Import text ───────────────────────────────────────────────────────────────
+// ── Import text ────────────────────────────────────────────────────────────────
 function toggleImport() {
   const area = document.getElementById('import-area');
   const isHidden = area.style.display === 'none' || area.style.display === '';
@@ -3003,520 +2828,57 @@ async function importarTextoNoEditor() {
   const parsed = parseSlides(texto);
   if (!parsed.length) { toast('Nenhum slide encontrado. Use o formato **SLIDE 1 — GANCHO**', 'error'); return; }
 
-  // ── Char limit warnings ──────────────────────────────────────
   const overLimit = parsed.filter((s, i) => {
     const limit = i === 0 ? (SLIDE_LIMITS.capa + SLIDE_LIMITS.corpo) : SLIDE_LIMITS.corpo;
     return s.texto.length > limit;
   });
-  if (overLimit.length) {
-    toast(`⚠ ${overLimit.length} slide(s) com texto acima do ideal. Menos é mais!`, 'error');
-  }
+  if (overLimit.length) toast(`⚠ ${overLimit.length} slide(s) com texto acima do ideal. Menos é mais!`, 'error');
 
-  if (!fc) initFabricEditor();
   document.getElementById('import-area').style.display = 'none';
+  edSlides = []; activeIdx = 0;
 
-  // clear existing slides
-  edSlides = [];
-  activeIdx = 0;
-  const listEl = document.getElementById('slides-list');
-  listEl.querySelectorAll('.slide-thumb-item').forEach(el => el.remove());
-  fc.clear();
-
-  const tpl = TEMPLATES[activeTemplate];
-
-  // ── Configuração do carrossel ──────────────────────────────
   const username    = document.getElementById('cfg-username')?.value.trim() || '@leonamalves';
   const accentColor = localStorage.getItem('accentColor') || null;
-  // Topic label: função do primeiro slide (sem "SLIDE X —")
-  const topicLabel  = (parsed[0]?.label || '')
-    .replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '')
-    .slice(0, 20)
-    .toUpperCase() || 'CARROSSEL';
-  const opts = { username, accentColor, topicLabel };
+  const topicLabel  = (parsed[0]?.label || '').replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '').slice(0, 20).toUpperCase() || 'CARROSSEL';
 
   for (let i = 0; i < parsed.length; i++) {
     const s = parsed[i];
-    if (i > 0) fc.clear();
-    fc.backgroundColor = '#0c0c0f';
-    fc.backgroundImage = null;
-
-    // Slide 0 = layout de CAPA; demais = conteúdo padrão
+    const paras = s.texto.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+    const headline = paras[0] || s.texto;
     if (i === 0) {
-      await _renderCoverSlide(fc, s, tpl, parsed.length, opts);
+      const subParas = paras.slice(1).filter(p => !/^→/.test(p));
+      edSlides.push({
+        label: s.label, headline, subtitle: subParas.join('\n'), body: '', isCover: true,
+        funcTag: (s.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') || 'GANCHO').toUpperCase(),
+        bgColor: '#0c0c0f', bgImage: '', accentColor, username, topicLabel,
+        idx: 0, total: parsed.length,
+      });
     } else {
-      _renderContentSlide(fc, s, tpl, i, parsed.length, opts);
+      edSlides.push({
+        label: s.label, headline, subtitle: '', body: paras.slice(1).join('\n\n'), isCover: false,
+        funcTag: (s.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') || '').toUpperCase(),
+        bgColor: '#0c0c0f', bgImage: '', accentColor, username, topicLabel,
+        idx: i, total: parsed.length,
+      });
     }
-
-    fc.renderAll();
-    const thumb = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
-    const json  = fc.toJSON(['selectable','evented','name','_locked']);
-    edSlides.push({ json, thumb, bgColor: fc.backgroundColor || tpl.bg, bgImage: '', isCover: i === 0 });
-
-    const item = document.createElement('div');
-    item.className = 'slide-thumb-item' + (i === 0 ? ' active slide-is-cover' : '');
-    item.id = `thumb-${i}`;
-    item.onclick = () => switchToSlide(i);
-    item.innerHTML = `
-      <div class="thumb-num">${i + 1}</div>
-      <canvas class="thumb-preview" id="thumb-cv-${i}" width="72" height="90"></canvas>
-      <button class="thumb-del" onclick="deleteSlide(event,${i})" title="Deletar">✕</button>`;
-    listEl.appendChild(item);
   }
-
-  // re-render all thumbs
-  edSlides.forEach((_, i) => renderThumbItem(i));
-
-  // show slide 0
-  activeIdx = 0;
-  const s0 = edSlides[0];
-  fc.loadFromJSON(s0.json, () => { fc.backgroundColor = s0.bgColor; fc.renderAll(); updatePropsPanel(); });
+  rebuildSlideList();
+  mountActiveSlide();
   updateNavArrows();
   updateSlideBadge();
-  document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
+  historyPush();
   toast(`${parsed.length} slides importados! Gerando imagens…`);
-
-  // Gerar imagens em background (não bloqueia o editor)
   _gerarImagensCarrossel(parsed);
 }
 
-// ── Slide helper: profile badge ───────────────────────────────
-function _addProfileBadge(fc, username) {
-  const label = (username || '@leonamalves').slice(0, 22);
-  const fontSize = 10;
-  const padX = 10, padY = 4;
-  // Estimate text width (~6px per char at 10px font)
-  const estimatedW = label.length * 6 + padX * 2;
-  const pillH = fontSize + padY * 2;
-  const pillX = 14, pillY = 12;
-
-  fc.add(new fabric.Rect({
-    left: pillX, top: pillY,
-    width: estimatedW, height: pillH,
-    rx: pillH / 2, ry: pillH / 2,
-    fill: 'rgba(0,0,0,0.52)',
-    stroke: 'rgba(255,255,255,0.13)', strokeWidth: 1,
-    selectable: false, evented: false, name: 'badge-bg'
-  }));
-  fc.add(new fabric.IText(label, {
-    left: pillX + padX, top: pillY + padY,
-    fontFamily: 'DM Sans', fontSize: fontSize,
-    fill: '#ffffff', charSpacing: 30,
-    selectable: false, evented: false, name: 'badge-text'
-  }));
-}
-
-// ── Slide helper: CTA pill buttons ────────────────────────────
-function _addCTAButtons(fc, leftLabel, rightLabel) {
-  const L = (leftLabel || 'Carrossel').slice(0, 18);
-  const R = rightLabel || 'Arrasta →';
-  const fontSize = 10, padX = 12, padY = 5;
-  const pillH = fontSize + padY * 2;
-  const y = CANVAS_H - 10;
-
-  // Left pill
-  const lW = L.length * 6 + padX * 2;
-  fc.add(new fabric.Rect({
-    left: 14, top: y - pillH,
-    width: lW, height: pillH,
-    rx: pillH / 2, ry: pillH / 2,
-    fill: 'rgba(0,0,0,0.55)',
-    stroke: 'rgba(255,255,255,0.13)', strokeWidth: 1,
-    selectable: false, evented: false, name: 'cta-l-bg'
-  }));
-  fc.add(new fabric.IText(L, {
-    left: 14 + padX, top: y - pillH + padY,
-    fontFamily: 'DM Sans', fontSize: fontSize,
-    fill: '#ffffff', charSpacing: 20,
-    selectable: false, evented: false, name: 'cta-l-text'
-  }));
-
-  // Right pill
-  const rW = R.length * 6 + padX * 2;
-  fc.add(new fabric.Rect({
-    left: CANVAS_W - 14 - rW, top: y - pillH,
-    width: rW, height: pillH,
-    rx: pillH / 2, ry: pillH / 2,
-    fill: 'rgba(0,0,0,0.55)',
-    stroke: 'rgba(255,255,255,0.13)', strokeWidth: 1,
-    selectable: false, evented: false, name: 'cta-r-bg'
-  }));
-  fc.add(new fabric.IText(R, {
-    left: CANVAS_W - 14 - rW + padX, top: y - pillH + padY,
-    fontFamily: 'DM Sans', fontSize: fontSize,
-    fill: '#ffffff', charSpacing: 20,
-    selectable: false, evented: false, name: 'cta-r-text'
-  }));
-}
-
-// ── Slide helper: pagination dots ─────────────────────────────
-function _addPaginationDots(fc, currentIdx, total) {
-  if (total <= 1) return;
-  const dotSpacing = 14;
-  const totalW = (total - 1) * dotSpacing;
-  const startX = CANVAS_W / 2 - totalW / 2;
-  const y = CANVAS_H - 42;
-
-  for (let i = 0; i < total; i++) {
-    const active = i === currentIdx;
-    fc.add(new fabric.Circle({
-      left: startX + i * dotSpacing, top: y,
-      radius: active ? 4 : 3,
-      fill: active ? '#ffffff' : 'rgba(255,255,255,0.32)',
-      originX: 'center', originY: 'center',
-      selectable: false, evented: false,
-      name: `dot-${i}`
-    }));
-  }
-}
-
-// ── Slide helper: accent word styles ──────────────────────────
-// Parses *word* markers from text, returns { cleanText, styles }
-// styles format: { lineIdx: { charIdx: { fill: color } } }
-function _parseAccentText(text, accentColor) {
-  if (!accentColor || !text.includes('*')) {
-    return { cleanText: text.replace(/\*/g, ''), styles: {} };
-  }
-  const styles = {};
-  let cleanText = '';
-  let lineIdx = 0;
-  let charIdx = 0;
-  let inAccent = false;
-  let i = 0;
-
-  // Process char by char, tracking line breaks and accent ranges
-  while (i < text.length) {
-    if (text[i] === '\n') {
-      cleanText += '\n';
-      lineIdx++;
-      charIdx = 0;
-      i++;
-      continue;
-    }
-    if (text[i] === '*') {
-      inAccent = !inAccent;
-      i++;
-      continue;
-    }
-    cleanText += text[i];
-    if (inAccent) {
-      if (!styles[lineIdx]) styles[lineIdx] = {};
-      styles[lineIdx][charIdx] = { fill: accentColor };
-    }
-    charIdx++;
-    i++;
-  }
-  return { cleanText, styles };
-}
-
-// ── Cover slide renderer (slide 0 — CAPA/GANCHO) ──────────────
-// opts: { username, accentColor, topicLabel }
-function _renderCoverSlide(fc, slide, tpl, totalSlides, opts) {
-  opts = opts || {};
-  const username    = opts.username    || '@leonamalves';
-  const accentColor = opts.accentColor || null;
-  const topicLabel  = opts.topicLabel  || 'CARROSSEL';
-
-  return new Promise(resolve => {
-    // Gradient overlay — base forte (escurece de baixo para cima)
-    const overlayH = Math.round(CANVAS_H * 0.78);
-    fc.add(new fabric.Rect({
-      left: 0, top: CANVAS_H - overlayH,
-      width: CANVAS_W, height: overlayH,
-      fill: new fabric.Gradient({
-        type: 'linear',
-        gradientUnits: 'pixels',
-        coords: { x1: 0, y1: 0, x2: 0, y2: overlayH },
-        colorStops: [
-          { offset: 0,    color: 'rgba(0,0,0,0)' },
-          { offset: 0.25, color: 'rgba(0,0,0,0.55)' },
-          { offset: 1,    color: 'rgba(0,0,0,0.96)' }
-        ]
-      }),
-      selectable: false, evented: false, name: 'overlay'
-    }));
-
-    function _addCoverText() {
-      // Badge de perfil — topo esquerdo
-      _addProfileBadge(fc, username);
-
-      // Categoria — topo direito
-      const tag = (slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') || 'ANÁLISE').toUpperCase();
-      fc.add(new fabric.IText(tag, {
-        left: CANVAS_W - 14, top: 16,
-        originX: 'right',
-        fontFamily: 'DM Sans', fontSize: 9,
-        fill: '#ffffff', opacity: 0.38, charSpacing: 120,
-        name: 'cat-tag', selectable: true
-      }));
-
-      // Parsear texto: headline, subtítulo
-      const paras    = slide.texto.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
-      const rawHL    = paras[0] || slide.texto;
-      const subParas = paras.slice(1).filter(p => !/^→/.test(p));
-      const subtitle = subParas.join('\n');
-
-      // Accent words na headline
-      const { cleanText: hlText, styles: hlStyles } = _parseAccentText(rawHL.toUpperCase(), accentColor);
-
-      // Posicionamento dinâmico — espaço reservado para dots + pills
-      const reservedBottom = 58; // dots(14px) + pills(26px) + margens
-      const estLines    = Math.ceil(hlText.length / 14);
-      const headlineH   = estLines * 34 * 1.2;
-      const subH        = subtitle ? Math.ceil(subtitle.length / 38) * 13 * 1.5 + 10 : 0;
-      const headlineTop = Math.max(155, CANVAS_H - headlineH - subH - reservedBottom);
-
-      // Headline
-      const hlTB = new fabric.Textbox(hlText, {
-        left: 22, top: headlineTop,
-        width: CANVAS_W - 44,
-        fontFamily: tpl.font || 'Syne', fontSize: 34,
-        fill: '#ffffff', fontWeight: '800',
-        lineHeight: 1.15,
-        styles: hlStyles,
-        name: 'headline', selectable: true
-      });
-      fc.add(hlTB);
-
-      // Subtítulo
-      if (subtitle) {
-        fc.add(new fabric.Textbox(subtitle, {
-          left: 22, top: headlineTop + headlineH + 6,
-          width: CANVAS_W - 44,
-          fontFamily: 'DM Sans', fontSize: 13,
-          fill: 'rgba(255,255,255,0.65)',
-          lineHeight: 1.45,
-          name: 'subtitle', selectable: true
-        }));
-      }
-
-      // Pagination dots + CTA pills
-      _addPaginationDots(fc, 0, totalSlides);
-      _addCTAButtons(fc, topicLabel, 'Arrasta →');
-
-      resolve();
-    }
-
-    // Logo PNG bloqueado no topo
-    fabric.Image.fromURL('/logo-branco.png', logoImg => {
-      if (logoImg && logoImg.width) {
-        const targetW = 116;
-        const s = targetW / logoImg.width;
-        logoImg.set({
-          left: CANVAS_W / 2, top: 16,
-          originX: 'center', originY: 'top',
-          scaleX: s, scaleY: s,
-          name: 'brand', selectable: true, evented: true,
-          _locked: true
-        });
-        fc.add(logoImg);
-      }
-      _addCoverText();
-    }, { crossOrigin: 'anonymous' });
-  });
-}
-
-// ── Content slide renderer — Dark style (MyPostFlow) ──────────
-// opts: { username, accentColor, topicLabel }
-function _renderContentSlide(fc, slide, tpl, idx, totalSlides, opts) {
-  opts = opts || {};
-  const username    = opts.username    || '@leonamalves';
-  const accentColor = opts.accentColor || null;
-  const topicLabel  = opts.topicLabel  || 'CARROSSEL';
-
-  // Dark background
-  fc.backgroundColor = '#0c0c0f';
-
-  // Badge de perfil — topo esquerdo
-  _addProfileBadge(fc, username);
-
-  // Tag de função — topo direito
-  const funcTag = slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '').toUpperCase();
-  fc.add(new fabric.IText(funcTag, {
-    left: CANVAS_W - 14, top: 16,
-    originX: 'right',
-    fontFamily: 'DM Sans', fontSize: 9,
-    fill: 'rgba(255,255,255,0.3)', charSpacing: 120,
-    name: 'tag', selectable: true
-  }));
-
-  // Image grid placeholder — caixa arredondada centralizada
-  const boxTop = 38, boxH = 158, boxW = 316;
-  fc.add(new fabric.Rect({
-    left: CANVAS_W / 2, top: boxTop,
-    originX: 'center',
-    width: boxW, height: boxH,
-    rx: 12, ry: 12,
-    fill: 'rgba(255,255,255,0.03)',
-    stroke: 'rgba(255,255,255,0.09)', strokeWidth: 1,
-    selectable: false, evented: false, name: 'img-placeholder'
-  }));
-  fc.add(new fabric.IText('🖼', {
-    left: CANVAS_W / 2, top: boxTop + boxH / 2,
-    originX: 'center', originY: 'middle',
-    fontSize: 24, opacity: 0.18,
-    selectable: false, evented: false, name: 'img-icon'
-  }));
-
-  // Separar texto: headline (§1) + corpo (§2+)
-  const paras    = slide.texto.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
-  const rawHL    = paras[0] || slide.texto;
-  const body     = paras.slice(1).join('\n\n');
-
-  // Headline com accent words
-  const { cleanText: hlText, styles: hlStyles } = _parseAccentText(rawHL.toUpperCase(), accentColor);
-  const hLen      = hlText.replace(/\*/g, '').length;
-  const hFontSize = hLen > 90 ? 20 : hLen > 65 ? 23 : hLen > 45 ? 27 : hLen > 28 ? 30 : 34;
-
-  const headlineTop = boxTop + boxH + 12;
-  fc.add(new fabric.Textbox(hlText, {
-    left: 22, top: headlineTop,
-    width: CANVAS_W - 44,
-    fontFamily: 'Syne', fontSize: hFontSize,
-    fill: '#ffffff', fontWeight: '800',
-    lineHeight: 1.18,
-    styles: hlStyles,
-    name: 'headline', selectable: true
-  }));
-
-  // Calcular posição do corpo
-  const charsPerLine   = Math.max(1, Math.floor((CANVAS_W - 44) / (hFontSize * 0.55)));
-  const hlLines        = Math.ceil(hlText.length / charsPerLine);
-  const headlineBottom = headlineTop + hlLines * hFontSize * 1.22 + 8;
-
-  // Separador leve
-  fc.add(new fabric.Line([22, headlineBottom, CANVAS_W - 22, headlineBottom], {
-    stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1,
-    selectable: false, evented: false, name: 'divider'
-  }));
-
-  // Corpo do texto
-  if (body) {
-    fc.add(new fabric.Textbox(body, {
-      left: 22, top: headlineBottom + 10,
-      width: CANVAS_W - 44,
-      fontFamily: 'DM Sans', fontSize: 12,
-      fill: '#9CA3AF', lineHeight: 1.58,
-      name: 'text', selectable: true
-    }));
-  }
-
-  // Pagination dots + CTA pills
-  _addPaginationDots(fc, idx, totalSlides);
-  _addCTAButtons(fc, topicLabel, 'Arrasta →');
-}
-
-// ── Geração automática de imagens (Imagen 3 Fast via servidor) ────
-function _buildSlidePrompt(slide, isCover) {
-  const funcTag  = slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '').toUpperCase();
-  const headline = slide.texto.split(/\n\n+/)[0]?.replace(/\*/g, '').slice(0, 80) || '';
-
-  if (isCover) {
-    // Capa: foto dramática de hero
-    return `dramatic hero photograph for Instagram carousel, theme: "${headline}", person or subject strongly lit, dark cinematic background, bokeh, emotional impact, no text`;
-  }
-  // Slides de conteúdo: imagem editorial relevante ao tema
-  return `editorial photograph for Instagram content, topic: ${funcTag}, subject: "${headline}", dark moody studio lighting, professional, no text, no typography`;
-}
-
-async function _gerarImagensCarrossel(parsed) {
-  if (!parsed || !parsed.length) return;
-
-  // Indicador de progresso
-  const toastId = 'img-gen-toast';
-  const existing = document.getElementById(toastId);
-  if (existing) existing.remove();
-
-  function updateProgress(current, total) {
-    let el = document.getElementById(toastId);
-    if (!el) {
-      el = document.createElement('div');
-      el.id = toastId;
-      el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c2e;border:1px solid rgba(139,92,246,0.4);color:#f1f5f9;padding:10px 18px;border-radius:20px;font-size:12px;font-family:"DM Sans",sans-serif;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5)';
-      document.body.appendChild(el);
-    }
-    if (current > total) {
-      el.textContent = '✓ Imagens geradas com IA!';
-      el.style.borderColor = 'rgba(16,185,129,0.5)';
-      setTimeout(() => el.remove(), 3000);
-    } else {
-      el.innerHTML = `<span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Gerando imagem ${current}/${total}…`;
-    }
-  }
-
-  updateProgress(1, parsed.length);
-
-  for (let i = 0; i < parsed.length; i++) {
-    if (i >= edSlides.length) break;
-    const prompt = _buildSlidePrompt(parsed[i], i === 0);
-    try {
-      const r   = await fetch('/api/imagem/gerar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
-      const data = await r.json();
-      if (!data.ok || !data.imagem) throw new Error(data.erro || 'sem imagem');
-
-      // Guardar na estrutura do slide
-      edSlides[i].bgImage = data.imagem;
-
-      // Atualizar thumbnail via canvas offscreen
-      await _renderThumbComBg(i, data.imagem);
-
-      // Se o slide estiver ativo, aplicar no canvas ao vivo
-      if (i === activeIdx) {
-        fabric.Image.fromURL(data.imagem, img => {
-          const sc = Math.max(CANVAS_W / img.width, CANVAS_H / img.height);
-          img.set({ left: 0, top: 0, scaleX: sc, scaleY: sc,
-                    selectable: false, evented: false, name: 'bg-photo' });
-          fc.setBackgroundImage(img, () => { fc.renderAll(); });
-        }, { crossOrigin: 'anonymous' });
-      }
-
-      console.log(`Slide ${i + 1} imagem OK (${data.fonte})`);
-    } catch (e) {
-      console.warn(`Slide ${i + 1} imagem falhou:`, e.message);
-    }
-    updateProgress(i + 2, parsed.length);
-  }
-  updateProgress(parsed.length + 1, parsed.length);
-}
-
-// Renderiza thumbnail com bg image usando canvas offscreen (StaticCanvas)
-function _renderThumbComBg(idx, bgDataUrl) {
-  return new Promise(resolve => {
-    const s = edSlides[idx];
-    if (!s || !s.json) { resolve(); return; }
-
-    const offscreen = new fabric.StaticCanvas(null, { width: CANVAS_W, height: CANVAS_H });
-
-    fabric.Image.fromURL(bgDataUrl, bgImg => {
-      const sc = Math.max(CANVAS_W / bgImg.width, CANVAS_H / bgImg.height);
-      bgImg.set({ scaleX: sc, scaleY: sc, left: 0, top: 0 });
-
-      offscreen.setBackgroundImage(bgImg, () => {
-        offscreen.loadFromJSON(s.json, () => {
-          offscreen.backgroundColor = 'transparent';
-          offscreen.renderAll();
-          const thumb = offscreen.toDataURL({ format: 'jpeg', quality: 0.65, multiplier: 0.36 });
-          edSlides[idx].thumb = thumb;
-          renderThumbItem(idx);
-          offscreen.dispose();
-          resolve();
-        });
-      });
-    }, { crossOrigin: 'anonymous' });
-  });
-}
-
-// ── Char analysis functions ────────────────────────────────────
+// ── Char analysis ──────────────────────────────────────────────────────────────
 function analyzeSlideChars(slides) {
   return slides.map((s, i) => {
     const isCover = i === 0;
-    const limit   = isCover ? (SLIDE_LIMITS.capa + SLIDE_LIMITS.corpo) : SLIDE_LIMITS.corpo;
-    const count   = s.texto.length;
-    const pct     = count / limit;
-    const status  = count > limit ? 'over' : count > limit * 0.82 ? 'warn' : 'ok';
+    const limit = isCover ? (SLIDE_LIMITS.capa + SLIDE_LIMITS.corpo) : SLIDE_LIMITS.corpo;
+    const count = s.texto.length;
+    const pct = count / limit;
+    const status = count > limit ? 'over' : count > limit * 0.82 ? 'warn' : 'ok';
     return { label: s.label, count, limit, pct, status, isCover };
   });
 }
@@ -3528,92 +2890,119 @@ function renderCharAnalysis(slides, containerId) {
   const analysis  = analyzeSlideChars(slides);
   const overCount = analysis.filter(a => a.status === 'over').length;
   const warnCount = analysis.filter(a => a.status === 'warn').length;
-  const summary   = overCount
-    ? `<span style="color:var(--danger)">⚠ ${overCount} slide(s) acima do limite — corte o texto!</span>`
+  const summary = overCount
+    ? `<span style="color:var(--danger)">⚠ ${overCount} slide(s) acima do limite!</span>`
     : warnCount
       ? `<span style="color:#f59e0b">${warnCount} slide(s) próximos do limite</span>`
       : `<span style="color:var(--success)">✓ Todos dentro do limite</span>`;
-  el.innerHTML = `
-    <div class="char-analysis">
-      <div class="char-analysis-title">
-        <span>Análise — ${slides.length} slides</span>
-        ${summary}
-      </div>
-      ${analysis.map(a => {
-        const shortLabel = a.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') + (a.isCover ? ' (capa)' : '');
-        const barW = Math.min(a.pct * 100, 100).toFixed(0);
-        return `<div class="char-row ${a.status}">
-          <span class="cr-label">${shortLabel}</span>
-          <div class="char-bar"><div class="char-bar-fill" style="width:${barW}%"></div></div>
-          <span class="cr-count">${a.count}/${a.limit}</span>
-        </div>`;
-      }).join('')}
-    </div>`;
+  el.innerHTML = `<div class="char-analysis">
+    <div class="char-analysis-title"><span>Análise — ${slides.length} slides</span>${summary}</div>
+    ${analysis.map(a => {
+      const shortLabel = a.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') + (a.isCover ? ' (capa)' : '');
+      const barW = Math.min(a.pct * 100, 100).toFixed(0);
+      return `<div class="char-row ${a.status}">
+        <span class="cr-label">${shortLabel}</span>
+        <div class="char-bar"><div class="char-bar-fill" style="width:${barW}%"></div></div>
+        <span class="cr-count">${a.count}/${a.limit}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
 }
 
 function updateImportCharCounter() {
-  const texto  = (document.getElementById('import-texto').value || '').trim();
+  const texto = (document.getElementById('import-texto').value || '').trim();
   if (!texto) { const el = document.getElementById('import-char-info'); if (el) el.innerHTML = ''; return; }
-  const slides = parseSlides(texto);
-  renderCharAnalysis(slides, 'import-char-info');
+  renderCharAnalysis(parseSlides(texto), 'import-char-info');
 }
 
-// ── Export ────────────────────────────────────────────────────────────────────
-function exportCurrentSlide() {
-  if (!fc) return;
-  saveCurrentSlide();
-  const dataUrl = fc.toDataURL({ format: 'png', multiplier: EXPORT_MULT });
-  const a = document.createElement('a');
-  a.download = `slide-${activeIdx + 1}.png`;
-  a.href = dataUrl;
-  a.click();
+// ── Image generation ──────────────────────────────────────────────────────────
+function _buildSlidePrompt(slide, isCover) {
+  const funcTag  = slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '').toUpperCase();
+  const headline = slide.texto.split(/\n\n+/)[0]?.replace(/\*/g, '').slice(0, 80) || '';
+  if (isCover) return `dramatic hero photograph for Instagram carousel, theme: "${headline}", person or subject strongly lit, dark cinematic background, bokeh, emotional impact, no text`;
+  return `editorial photograph for Instagram content, topic: ${funcTag}, subject: "${headline}", dark moody studio lighting, professional, no text, no typography`;
+}
+
+async function _gerarImagensCarrossel(parsed) {
+  if (!parsed || !parsed.length) return;
+  function updateProgress(current, total) {
+    let el = document.getElementById('img-gen-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'img-gen-toast';
+      el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c2e;border:1px solid rgba(139,92,246,0.4);color:#f1f5f9;padding:10px 18px;border-radius:20px;font-size:12px;font-family:"DM Sans",sans-serif;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5)';
+      document.body.appendChild(el);
+    }
+    if (current > total) {
+      el.textContent = '✓ Imagens geradas com IA!';
+      el.style.borderColor = 'rgba(16,185,129,0.5)';
+      setTimeout(() => el.remove(), 3000);
+    } else {
+      el.innerHTML = `<span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Gerando imagem ${current}/${total}…`;
+    }
+  }
+  updateProgress(1, parsed.length);
+  for (let i = 0; i < parsed.length; i++) {
+    if (i >= edSlides.length) break;
+    const prompt = _buildSlidePrompt(parsed[i], i === 0);
+    try {
+      const r = await fetch('/api/imagem/gerar', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await r.json();
+      if (!data.ok || !data.imagem) throw new Error(data.erro || 'sem imagem');
+      edSlides[i].bgImage = data.imagem;
+      renderThumbItem(i);
+      if (i === activeIdx) mountActiveSlide(true);
+      console.log(`Slide ${i + 1} imagem OK (${data.fonte})`);
+    } catch (e) {
+      console.warn(`Slide ${i + 1} imagem falhou:`, e.message);
+    }
+    updateProgress(i + 2, parsed.length);
+  }
+  updateProgress(parsed.length + 1, parsed.length);
+}
+
+// ── Export ─────────────────────────────────────────────────────────────────────
+async function exportCurrentSlide() {
+  const data = edSlides[activeIdx];
+  if (!data) return;
+  const el = renderSlideEl(data);
+  el.style.cssText += ';position:fixed;top:-9999px;left:-9999px;';
+  document.body.appendChild(el);
+  try {
+    const dataUrl = await htmlToImage.toPng(el, { pixelRatio: EXPORT_MULT, cacheBust: true });
+    const a = document.createElement('a');
+    a.download = `slide-${activeIdx + 1}.png`;
+    a.href = dataUrl; a.click();
+  } catch (err) { toast('Erro ao exportar: ' + err.message, 'error'); }
+  finally { document.body.removeChild(el); }
 }
 
 async function exportAllSlides() {
   if (!edSlides.length) return;
-  saveCurrentSlide();
   const btn = document.getElementById('btn-export-zip');
   btn.disabled = true;
   const statusEl = document.getElementById('status-editor');
   statusEl.style.display = 'block';
   statusEl.className = 'status-box loading';
-
   const zip = new JSZip();
   const pasta = zip.folder('carrossel');
-
-  // Render each slide in a hidden offscreen canvas
-  const offEl = document.createElement('canvas');
-  offEl.width = CANVAS_W; offEl.height = CANVAS_H;
-  const off = new fabric.StaticCanvas(offEl, { width: CANVAS_W, height: CANVAS_H });
-
   for (let i = 0; i < edSlides.length; i++) {
     statusEl.textContent = `Exportando ${i + 1}/${edSlides.length}...`;
-    const s = edSlides[i];
-    await new Promise(resolve => {
-      off.clear();
-      off.backgroundColor = s.bgColor || '#000000';
-      if (s.json) {
-        off.loadFromJSON(s.json, () => {
-          off.renderAll();
-          const b64 = off.toDataURL({ format: 'png', multiplier: EXPORT_MULT }).split(',')[1];
-          pasta.file(`slide-${String(i+1).padStart(2,'0')}.png`, b64, { base64: true });
-          resolve();
-        });
-      } else {
-        off.renderAll();
-        const b64 = off.toDataURL({ format: 'png', multiplier: EXPORT_MULT }).split(',')[1];
-        pasta.file(`slide-${String(i+1).padStart(2,'0')}.png`, b64, { base64: true });
-        resolve();
-      }
-    });
+    const el = renderSlideEl(edSlides[i]);
+    el.style.cssText += ';position:fixed;top:-9999px;left:-9999px;';
+    document.body.appendChild(el);
+    try {
+      const dataUrl = await htmlToImage.toPng(el, { pixelRatio: EXPORT_MULT, cacheBust: true });
+      pasta.file(`slide-${String(i + 1).padStart(2, '0')}.png`, dataUrl.split(',')[1], { base64: true });
+    } catch (err) { console.warn(`Export slide ${i + 1}:`, err.message); }
+    finally { document.body.removeChild(el); }
   }
-
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
-  a.download = 'carrossel-leonam.zip';
-  a.href = URL.createObjectURL(blob);
-  a.click();
-
+  a.download = 'carrossel-leonam.zip'; a.href = URL.createObjectURL(blob); a.click();
   statusEl.className = 'status-box success';
   statusEl.textContent = `✓ ZIP com ${edSlides.length} slides baixado!`;
   btn.disabled = false;
@@ -3624,23 +3013,14 @@ function abrirInstagram() {
   setTimeout(() => window.open('https://www.instagram.com/', '_blank'), 800);
 }
 
-// ── Templates ─────────────────────────────────────────────────────────────────
+// ── Templates ──────────────────────────────────────────────────────────────────
 function aplicarTemplate(nome) {
   activeTemplate = nome;
   renderTemplateBtns();
-  if (!fc) return;
   const tpl = TEMPLATES[nome];
-  fc.backgroundColor = tpl.bg;
-  // update default colours on existing text objects
-  fc.getObjects().forEach(obj => {
-    if (obj.name === 'text')    obj.set({ fill: tpl.textColor, fontFamily: tpl.font });
-    if (obj.name === 'label')   obj.set({ fill: tpl.labelColor, fontFamily: tpl.font });
-    if (obj.name === 'slidenum') obj.set({ fill: tpl.textColor + '66', fontFamily: tpl.font });
-  });
-  const pick = document.getElementById('bg-color-pick');
-  if (pick) pick.value = tpl.bg.startsWith('#') ? tpl.bg : '#0c0c0f';
-  fc.renderAll();
-  updateThumb(activeIdx);
+  edSlides.forEach(s => { if (!s.bgImage) s.bgColor = tpl.bg; });
+  mountActiveSlide(true);
+  rebuildSlideList();
 }
 
 function renderTemplateBtns() {
@@ -3659,14 +3039,10 @@ function renderTemplateBtns() {
       const del = document.createElement('button');
       del.className = 'tpl-chip';
       del.style.cssText = 'padding:4px 7px;color:var(--danger);border-color:transparent;font-size:11px';
-      del.title = 'Deletar template';
-      del.textContent = '✕';
-      del.onclick = e => { e.stopPropagation(); deletarTemplate(key); };
-      wrap.appendChild(del);
-      container.appendChild(wrap);
-    } else {
-      container.appendChild(btn);
-    }
+      del.title = 'Deletar template'; del.textContent = '✕';
+      del.onclick = ev => { ev.stopPropagation(); deletarTemplate(key); };
+      wrap.appendChild(del); container.appendChild(wrap);
+    } else { container.appendChild(btn); }
   });
 }
 
@@ -3693,8 +3069,7 @@ function salvarTemplate() {
   const customs = JSON.parse(localStorage.getItem('customTemplates') || '{}');
   customs[key] = tpl;
   localStorage.setItem('customTemplates', JSON.stringify(customs));
-  renderTemplateBtns();
-  aplicarTemplate(key);
+  renderTemplateBtns(); aplicarTemplate(key);
   document.getElementById('template-editor-panel').style.display = 'none';
   document.getElementById('ct-nome').value = '';
   document.getElementById('ct-emoji').value = '';
@@ -3711,13 +3086,9 @@ function deletarTemplate(key) {
   else renderTemplateBtns();
 }
 
-// ── Left panel: accordion, toggles, palettes, nav ────────────────────────────
+// ── Left panel: accordion, toggles ────────────────────────────────────────────
+function toggleEpSection(id) { document.getElementById(id)?.classList.toggle('open'); }
 
-function toggleEpSection(id) {
-  document.getElementById(id)?.classList.toggle('open');
-}
-
-// ep-bgfx, ep-counter, ep-creator
 const epFeatureState = { bgfx: false, counter: true, creator: true };
 
 function toggleEpFeature(feat) {
@@ -3726,81 +3097,23 @@ function toggleEpFeature(feat) {
   const row = document.getElementById('ep-' + feat + '-row');
   if (toggle) toggle.classList.toggle('on', epFeatureState[feat]);
   if (row)    row.classList.toggle('on', epFeatureState[feat]);
-  // Apply effects
-  if (feat === 'counter') applyCounterVisibility();
-  if (feat === 'creator') applyCreatorVisibility();
-  if (feat === 'bgfx') applyBgFx();
-}
-
-function applyCounterVisibility() {
-  if (!fc) return;
-  const visible = epFeatureState.counter;
-  fc.getObjects().forEach(o => {
-    if (o.name === 'slidenum') { o.set('visible', visible); }
-  });
-  fc.renderAll(); updateThumb(activeIdx);
-}
-
-function applyCreatorVisibility() {
-  if (!fc) return;
-  const visible = epFeatureState.creator;
-  fc.getObjects().forEach(o => {
-    if (o.name === 'creator') { o.set('visible', visible); }
-  });
-  fc.renderAll(); updateThumb(activeIdx);
-  const fields = document.getElementById('creator-fields');
-  if (fields) fields.style.display = visible ? 'block' : 'none';
-}
-
-function applyBgFx() {
-  if (!fc) return;
-  if (epFeatureState.bgfx) {
-    const tpl = TEMPLATES[activeTemplate];
-    fc.getObjects().forEach(o => { if (o.name === 'bgfx') fc.remove(o); });
-    const grad = new fabric.Rect({
-      left: 0, top: 0, width: CANVAS_W, height: CANVAS_H,
-      fill: new fabric.Gradient({
-        type: 'linear',
-        gradientUnits: 'pixels',
-        coords: { x1: 0, y1: 0, x2: CANVAS_W, y2: CANVAS_H },
-        colorStops: [
-          { offset: 0, color: (tpl.labelColor || '#7c6af7') + '22' },
-          { offset: 1, color: 'transparent' }
-        ]
-      }),
-      selectable: false, evented: false, name: 'bgfx',
-    });
-    fc.add(grad);
-    fc.sendToBack(grad);
-  } else {
-    fc.getObjects().forEach(o => { if (o.name === 'bgfx') fc.remove(o); });
+  if (feat === 'creator') {
+    const fields = document.getElementById('creator-fields');
+    if (fields) fields.style.display = epFeatureState.creator ? 'block' : 'none';
   }
-  fc.renderAll(); updateThumb(activeIdx);
 }
 
-function updateCreatorOverlay() {
-  if (!fc || !epFeatureState.creator) return;
-  const nome = document.getElementById('creator-nome')?.value || '';
-  const handle = document.getElementById('creator-handle')?.value || '';
-  fc.getObjects().forEach(o => { if (o.name === 'creator') fc.remove(o); });
-  if (!nome && !handle) { fc.renderAll(); return; }
-  const tpl = TEMPLATES[activeTemplate];
-  const info = new fabric.IText((nome + (handle ? '  ' + handle : '')), {
-    left: 28, top: CANVAS_H - 30,
-    fontFamily: tpl.font || 'Syne', fontSize: 10,
-    fill: (tpl.textColor || '#ffffff') + 'aa', name: 'creator',
-    selectable: true, evented: true,
-  });
-  fc.add(info);
-  fc.renderAll(); updateThumb(activeIdx);
-}
+// Stubs for left-panel features (simplified in this version)
+function applyCounterVisibility() {}
+function applyCreatorVisibility() { toggleEpFeature('creator'); }
+function applyBgFx() {}
+function updateCreatorOverlay() {}
 
-// Navigation arrows
+// ── Navigation arrows ──────────────────────────────────────────────────────────
 function navSlide(dir) {
   const next = activeIdx + dir;
   if (next < 0 || next >= edSlides.length) return;
   switchToSlide(next);
-  // scroll thumb into view
   const thumb = document.getElementById('thumb-' + next);
   if (thumb) thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -3817,7 +3130,7 @@ function updateSlideBadge() {
   if (badge) badge.textContent = `${activeIdx + 1}/${edSlides.length}`;
 }
 
-// Color palettes
+// ── Color palettes ─────────────────────────────────────────────────────────────
 const COLOR_PALETTES = [
   { name: 'Dark Neon',    bg: '#07070d', text: '#f1f5f9', accent: '#8b5cf6', label: '#a78bfa' },
   { name: 'Midnight',     bg: '#0c0c0f', text: '#e8e8f0', accent: '#7c6af7', label: '#7c6af7' },
@@ -3830,7 +3143,6 @@ const COLOR_PALETTES = [
   { name: 'Rose Dark',    bg: '#1c0a0f', text: '#fce7f3',  accent: '#f43f5e', label: '#fb7185' },
   { name: 'Roxo',         bg: '#2a1a5e', text: '#f0eeff',  accent: '#7c3aed', label: '#c4b5fd' },
 ];
-
 let activePaletteIdx = -1;
 
 function initPalettes() {
@@ -3851,24 +3163,16 @@ function initPalettes() {
 function applyPalette(idx) {
   activePaletteIdx = idx;
   const p = COLOR_PALETTES[idx];
-  if (!fc) return;
-  fc.backgroundColor = p.bg;
-  fc.getObjects().forEach(obj => {
-    if (obj.name === 'text')     obj.set({ fill: p.text });
-    if (obj.name === 'label')    obj.set({ fill: p.accent });
-    if (obj.name === 'slidenum') obj.set({ fill: p.text + '66' });
-    if (obj.name === 'creator')  obj.set({ fill: p.text + 'aa' });
-  });
-  // Also update the bg-color-pick
+  edSlides.forEach(s => { if (!s.bgImage) s.bgColor = p.bg; });
   const pick = document.getElementById('bg-color-pick');
   if (pick) pick.value = p.bg;
-  fc.renderAll();
-  updateThumb(activeIdx);
-  initPalettes(); // re-render to update active state
+  mountActiveSlide(true);
+  rebuildSlideList();
+  initPalettes();
   toast(`Paleta "${p.name}" aplicada`);
 }
 
-// ── History (Criar Conteúdo page) ────────────────────────────────────────────
+// ── History (Criar Conteúdo page) ─────────────────────────────────────────────
 async function carregarHistorico() {
   const grid = document.getElementById('grid-historico');
   if (!grid) return;
@@ -3935,15 +3239,15 @@ async function deletarHistorico(id) {
   else toast('Erro ao deletar', 'error');
 }
 
-// ── Accent color swatches ──────────────────────────────────────
+// ── Accent color swatches ──────────────────────────────────────────────────────
 const ACCENT_COLORS = [
-  { id: 'none',    color: null,      label: '✕' },
-  { id: 'amarelo', color: '#FFD700', label: '' },
-  { id: 'cyan',    color: '#00D4FF', label: '' },
-  { id: 'roxo',    color: '#a78bfa', label: '' },
-  { id: 'vermelho',color: '#FF4444', label: '' },
-  { id: 'verde',   color: '#10b981', label: '' },
-  { id: 'laranja', color: '#f97316', label: '' },
+  { id: 'none',     color: null,      label: '✕' },
+  { id: 'amarelo',  color: '#FFD700', label: '' },
+  { id: 'cyan',     color: '#00D4FF', label: '' },
+  { id: 'roxo',     color: '#a78bfa', label: '' },
+  { id: 'vermelho', color: '#FF4444', label: '' },
+  { id: 'verde',    color: '#10b981', label: '' },
+  { id: 'laranja',  color: '#f97316', label: '' },
 ];
 
 function renderAccentSwatches() {
@@ -3953,20 +3257,17 @@ function renderAccentSwatches() {
   container.innerHTML = ACCENT_COLORS.map(ac => {
     const isActive = ac.color === current || (ac.color === null && current === null);
     return `<div class="accent-swatch${ac.color === null ? ' none-swatch' : ''}${isActive ? ' active' : ''}"
-      style="${ac.color ? `background:${ac.color}` : ''}"
-      title="${ac.id}"
+      style="${ac.color ? `background:${ac.color}` : ''}" title="${ac.id}"
       onclick="setAccentColor(${ac.color ? `'${ac.color}'` : 'null'})">
-      ${ac.color === null ? '✕' : ''}
-    </div>`;
+      ${ac.color === null ? '✕' : ''}</div>`;
   }).join('');
-
-  // Restore username field
   const saved = localStorage.getItem('edUsername');
   const field = document.getElementById('cfg-username');
   if (field && saved) field.value = saved;
-  if (field) field.addEventListener('change', () => {
-    localStorage.setItem('edUsername', field.value);
-  });
+  if (field && !field._listenerSet) {
+    field.addEventListener('change', () => localStorage.setItem('edUsername', field.value));
+    field._listenerSet = true;
+  }
 }
 
 function setAccentColor(color) {
@@ -3975,7 +3276,7 @@ function setAccentColor(color) {
   renderAccentSwatches();
 }
 
-// Init
+// ── Init ───────────────────────────────────────────────────────────────────────
 renderTemplateBtns();
 renderAccentSwatches();
 </script>
