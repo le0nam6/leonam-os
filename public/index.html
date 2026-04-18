@@ -1184,6 +1184,9 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
     <button class="tb-btn" onclick="edSetBgImage()" title="Imagem de fundo">🖼 Bg</button>
     <button class="tb-btn" onclick="edGerarImagem()" title="Gerar fundo com IA">✦ Gerar bg</button>
     <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-undo" onclick="edUndo()" title="Desfazer (Ctrl+Z)" disabled>↩ Desfazer</button>
+    <button class="tb-btn" id="btn-redo" onclick="edRedo()" title="Refazer (Ctrl+Shift+Z)" disabled>↪ Refazer</button>
+    <div class="tb-sep"></div>
     <button class="tb-btn" onclick="toggleImport()">📥 Importar</button>
     <div class="tb-sep"></div>
     <button class="tb-btn" onclick="exportCurrentSlide()">⬇ PNG</button>
@@ -2272,6 +2275,103 @@ async function carregarMetricas() {
 
 // ─── EDITOR DE CARROSSEL (FABRIC.JS) ─────────────────────────────────────────
 
+// ── Undo/Redo History ─────────────────────────────────────────────────────────
+const _hist   = [];
+let _histCursor = -1;
+let _histPaused = false;
+const _HIST_MAX = 30;
+
+function historyPush() {
+  if (!fc || _histPaused) return;
+  const state = {
+    json:   fc.toJSON(['selectable','evented','name','_locked']),
+    bg:     fc.backgroundColor,
+    bgImg:  edSlides[activeIdx]?.bgImage || '',
+    idx:    activeIdx
+  };
+  _hist.splice(_histCursor + 1);           // apaga estados à frente
+  _hist.push(state);
+  if (_hist.length > _HIST_MAX) _hist.shift();
+  else _histCursor++;
+  _syncUndoRedo();
+}
+
+function edUndo() {
+  if (_histCursor <= 0) { toast('Nada para desfazer', 'error'); return; }
+  _histCursor--;
+  _applyHistory(_hist[_histCursor]);
+}
+
+function edRedo() {
+  if (_histCursor >= _hist.length - 1) { toast('Nada para refazer', 'error'); return; }
+  _histCursor++;
+  _applyHistory(_hist[_histCursor]);
+}
+
+function _applyHistory(state) {
+  if (!fc || !state) return;
+  _histPaused = true;
+  fc.loadFromJSON(state.json, () => {
+    fc.backgroundColor = state.bg;
+    if (state.bgImg) {
+      fabric.Image.fromURL(state.bgImg, img => {
+        const sx = CANVAS_W / img.width, sy = CANVAS_H / img.height;
+        img.set({ scaleX: sx, scaleY: sy, originX: 'left', originY: 'top' });
+        fc.setBackgroundImage(img, () => { fc.renderAll(); updateThumb(activeIdx); });
+      }, { crossOrigin: 'anonymous' });
+    } else {
+      fc.backgroundImage = null;
+      fc.renderAll();
+    }
+    updatePropsPanel();
+    updateThumb(activeIdx);
+    _histPaused = false;
+    _syncUndoRedo();
+  });
+}
+
+function _syncUndoRedo() {
+  const u = document.getElementById('btn-undo');
+  const r = document.getElementById('btn-redo');
+  if (u) u.disabled = _histCursor <= 0;
+  if (r) r.disabled = _histCursor >= _hist.length - 1;
+}
+
+// ── Keyboard shortcuts (Delete, Ctrl+Z, Ctrl+Shift+Z) ─────────────────────────
+document.addEventListener('keydown', function(e) {
+  const tag = document.activeElement?.tagName;
+  const inInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement?.isContentEditable;
+  if (inInput) return;
+
+  const meta = e.ctrlKey || e.metaKey;
+
+  // Undo
+  if (meta && !e.shiftKey && e.key.toLowerCase() === 'z') {
+    e.preventDefault(); edUndo(); return;
+  }
+  // Redo
+  if (meta && (e.shiftKey && e.key.toLowerCase() === 'z' || e.key.toLowerCase() === 'y')) {
+    e.preventDefault(); edRedo(); return;
+  }
+
+  // Delete selected objects (Delete ou Backspace)
+  if ((e.key === 'Delete' || e.key === 'Backspace') && fc) {
+    const actives = fc.getActiveObjects();
+    if (!actives.length) return;
+    const locked = actives.filter(o => o._locked);
+    if (locked.length) {
+      toast('O logo leonam↑alves está bloqueado e não pode ser deletado.', 'error');
+      return;
+    }
+    e.preventDefault();
+    actives.forEach(o => fc.remove(o));
+    fc.discardActiveObject();
+    fc.renderAll();
+    saveCurrentSlide();
+    historyPush();
+  }
+});
+
 const CANVAS_W = 360;
 const CANVAS_H = 450;
 const EXPORT_MULT = 3; // → 1080 × 1350 px
@@ -2284,7 +2384,8 @@ const SLIDE_LIMITS = {
 };
 
 const TEMPLATES = {
-  noite:     { nome: '🌙 Noite',     bg: '#0c0c0f', textColor: '#e8e8f0', labelColor: '#7c6af7', font: 'Syne' },
+  noite:          { nome: '🌙 Noite',     bg: '#0c0c0f', textColor: '#e8e8f0', labelColor: '#7c6af7', font: 'Syne' },
+  bege_editorial: { nome: '🟤 Bege',      bg: '#EDE8DC', textColor: '#1a1208', labelColor: '#f97316', font: 'Syne' },
   dia:       { nome: '☀️ Dia',       bg: '#f8f8fc', textColor: '#1a1a2e', labelColor: '#7c6af7', font: 'Syne' },
   gradiente: { nome: '✨ Gradiente', bg: '#1a1035', textColor: '#ffffff',  labelColor: '#f7a26a', font: 'Syne' },
   laranja:   { nome: '🔥 Laranja',  bg: '#110800', textColor: '#fff5e6', labelColor: '#f7a26a', font: 'Space Grotesk' },
@@ -2318,9 +2419,9 @@ function initFabricEditor() {
   fc.on('selection:created', updatePropsPanel);
   fc.on('selection:updated', updatePropsPanel);
   fc.on('selection:cleared', updatePropsPanel);
-  fc.on('object:modified', () => { updateThumb(activeIdx); updatePropsPanel(); });
-  fc.on('object:added',    () => updateThumb(activeIdx));
-  fc.on('object:removed',  () => updateThumb(activeIdx));
+  fc.on('object:modified', () => { updateThumb(activeIdx); updatePropsPanel(); historyPush(); });
+  fc.on('object:added',    () => { if (!_histPaused) updateThumb(activeIdx); });
+  fc.on('object:removed',  () => { if (!_histPaused) updateThumb(activeIdx); });
 
   // Slide de boas-vindas com conteúdo visível
   if (edSlides.length === 0) {
@@ -2356,7 +2457,7 @@ function initFabricEditor() {
 
     // Cria thumbnail e item na lista
     const thumb = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
-    edSlides[0].json  = fc.toJSON(['selectable','evented','name']);
+    edSlides[0].json  = fc.toJSON(['selectable','evented','name','_locked']);
     edSlides[0].thumb = thumb;
 
     const listEl = document.getElementById('slides-list');
@@ -2382,7 +2483,7 @@ function initFabricEditor() {
 // ── Slide management ─────────────────────────────────────────────────────────
 function saveCurrentSlide() {
   if (!fc || edSlides.length === 0) return;
-  edSlides[activeIdx].json    = fc.toJSON(['selectable','evented','name']);
+  edSlides[activeIdx].json    = fc.toJSON(['selectable','evented','name','_locked']);
   edSlides[activeIdx].bgColor = fc.backgroundColor;
   edSlides[activeIdx].bgImage = fc.backgroundImage ? fc.backgroundImage.getSrc() : '';
   edSlides[activeIdx].thumb   = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
@@ -2507,6 +2608,7 @@ function edAddText() {
   fc.add(t);
   fc.setActiveObject(t);
   fc.renderAll();
+  historyPush();
 }
 
 function edAddLabel() {
@@ -2524,6 +2626,7 @@ function edAddLabel() {
   fc.add(t);
   fc.setActiveObject(t);
   fc.renderAll();
+  historyPush();
 }
 
 function edAddImage() {
@@ -2554,6 +2657,7 @@ function edAddRect() {
   const tpl = TEMPLATES[activeTemplate];
   const r = new fabric.Rect({ left: 60, top: 80, width: 240, height: 120, fill: 'transparent', stroke: tpl.labelColor || '#7c6af7', strokeWidth: 2, name: 'rect' });
   fc.add(r); fc.setActiveObject(r); fc.renderAll();
+  historyPush();
 }
 
 function edAddCircle() {
@@ -2561,6 +2665,7 @@ function edAddCircle() {
   const tpl = TEMPLATES[activeTemplate];
   const c = new fabric.Circle({ left: 130, top: 170, radius: 60, fill: 'transparent', stroke: tpl.labelColor || '#7c6af7', strokeWidth: 2, name: 'circle' });
   fc.add(c); fc.setActiveObject(c); fc.renderAll();
+  historyPush();
 }
 
 function edAddSlideNum() {
@@ -2586,6 +2691,7 @@ function edSetBgColor(hex) {
   edSlides[activeIdx].bgImage = '';
   fc.renderAll();
   updateThumb(activeIdx);
+  historyPush();
 }
 
 function edSetBgImage() {
@@ -2601,7 +2707,7 @@ function edSetBgImage() {
         const scaleX = CANVAS_W / img.width;
         const scaleY = CANVAS_H / img.height;
         img.set({ scaleX, scaleY, originX: 'left', originY: 'top', crossOrigin: 'anonymous' });
-        fc.setBackgroundImage(img, () => { fc.renderAll(); updateThumb(activeIdx); });
+        fc.setBackgroundImage(img, () => { fc.renderAll(); updateThumb(activeIdx); historyPush(); });
         edSlides[activeIdx].bgImage = ev.target.result;
         edSlides[activeIdx].bgColor = '';
       }, { crossOrigin: 'anonymous' });
@@ -2892,8 +2998,8 @@ async function importarTextoNoEditor() {
 
     fc.renderAll();
     const thumb = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
-    const json  = fc.toJSON(['selectable','evented','name']);
-    edSlides.push({ json, thumb, bgColor: tpl.bg, bgImage: '', isCover: i === 0 });
+    const json  = fc.toJSON(['selectable','evented','name','_locked']);
+    edSlides.push({ json, thumb, bgColor: fc.backgroundColor || tpl.bg, bgImage: '', isCover: i === 0 });
 
     const item = document.createElement('div');
     item.className = 'slide-thumb-item' + (i === 0 ? ' active slide-is-cover' : '');
@@ -2940,13 +3046,13 @@ function _renderCoverSlide(fc, slide, tpl, totalSlides) {
   });
   fc.add(overlay);
 
-  // Brand — topo centro
+  // Brand — topo centro (BLOQUEADO — não pode ser deletado)
   fc.add(new fabric.IText('leonam\u2191alves', {
     left: CANVAS_W / 2, top: 18,
     originX: 'center',
     fontFamily: 'Syne', fontSize: 13,
     fill: '#ffffff', fontWeight: '600',
-    opacity: 0.88, charSpacing: 20, name: 'brand', selectable: true
+    opacity: 0.88, charSpacing: 20, name: 'brand', selectable: true, _locked: true
   }));
 
   // Categoria — topo direita (extraída do label do slide)
@@ -3006,41 +3112,81 @@ function _renderCoverSlide(fc, slide, tpl, totalSlides) {
   }));
 }
 
-// ── Content slide renderer (slides 1, 2, 3…) ──────────────────
+// ── Content slide renderer — Editorial Bege ────────────────────
+// Baseado no design system real dos carrosséis do Leonam:
+// bg bege #EDE8DC, headline grande bold, corpo menor, tag bracketed
 function _renderContentSlide(fc, slide, tpl, idx, totalSlides) {
-  // Tag de função do slide (ex: CONTEXTO, VIRADA, PROVA)
+  // ── Sistema Editorial Bege (padrão para slides de conteúdo) ──
+  // Usa bege independente do template selecionado —
+  // igual ao design real dos carrosséis do usuário
+  const BG     = '#EDE8DC';
+  const DARK   = '#1a1208';
+  const MID    = '#3d3520';
+
+  // Override bg para bege
+  fc.backgroundColor = BG;
+
+  // Tag de função: [ CONTEXTO ] — centralizado no topo
   const funcTag = slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '').toUpperCase();
-  fc.add(new fabric.IText(funcTag, {
-    left: 28, top: 34,
-    fontFamily: tpl.font || 'Syne', fontSize: 11,
-    fill: tpl.labelColor || '#7c6af7',
-    fontWeight: '700', charSpacing: 100,
-    selectable: true, name: 'label',
+  fc.add(new fabric.IText(`[ ${funcTag} ]`, {
+    left: CANVAS_W / 2, top: 24,
+    originX: 'center',
+    fontFamily: 'DM Sans', fontSize: 9,
+    fill: DARK, opacity: 0.36, charSpacing: 180,
+    name: 'tag', selectable: true
   }));
 
-  // Separador leve abaixo do tag
-  fc.add(new fabric.Line([28, 58, CANVAS_W - 28, 58], {
-    stroke: tpl.labelColor || '#7c6af7',
-    strokeWidth: 1, opacity: 0.18,
+  // Separar texto em headline (§1) e corpo (§2+)
+  const paras    = slide.texto.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+  const headline = paras[0] || slide.texto;
+  const body     = paras.slice(1).join('\n\n');
+
+  // Tamanho da headline: menor se texto mais longo
+  const hLen      = headline.length;
+  const hFontSize = hLen > 110 ? 19 : hLen > 80 ? 22 : hLen > 55 ? 26 : hLen > 35 ? 30 : 34;
+
+  // Headline — grande e bold (Syne)
+  fc.add(new fabric.Textbox(headline.toUpperCase(), {
+    left: 28, top: 48,
+    width: CANVAS_W - 56,
+    fontFamily: 'Syne', fontSize: hFontSize,
+    fill: DARK, fontWeight: '800',
+    lineHeight: 1.18,
+    name: 'headline', selectable: true
+  }));
+
+  // Calcular posição do corpo baseado na altura estimada da headline
+  const charsPerLine = Math.max(1, Math.floor((CANVAS_W - 56) / (hFontSize * 0.56)));
+  const estLines     = Math.ceil(headline.length / charsPerLine);
+  const headlineBottom = 48 + estLines * hFontSize * 1.22 + 8;
+
+  // Separador leve
+  fc.add(new fabric.Line([28, headlineBottom, CANVAS_W - 28, headlineBottom], {
+    stroke: DARK, strokeWidth: 1, opacity: 0.1,
     selectable: false, evented: false, name: 'divider'
   }));
 
-  // Corpo do texto
-  fc.add(new fabric.Textbox(slide.texto, {
-    left: 28, top: 72,
-    width: CANVAS_W - 56,
-    fontFamily: tpl.font || 'Syne', fontSize: 20,
-    fill: tpl.textColor || '#ffffff',
-    lineHeight: 1.38,
-    splitByGrapheme: false, name: 'text',
-  }));
+  // Corpo do texto (parágrafos 2+)
+  if (body) {
+    fc.add(new fabric.Textbox(body, {
+      left: 28, top: headlineBottom + 12,
+      width: CANVAS_W - 56,
+      fontFamily: 'DM Sans', fontSize: 13,
+      fill: MID, lineHeight: 1.58,
+      name: 'text', selectable: true
+    }));
+  }
 
-  // Numeração do slide — canto inferior direito
+  // Área reservada para imagem (placeholder visual) — apenas se não houver corpo
+  // O usuário pode adicionar imagem depois via toolbar "🖼 Img" ou "🖼 Bg"
+
+  // Numeração — canto inferior direito
   fc.add(new fabric.IText(`${idx + 1}/${totalSlides}`, {
-    left: CANVAS_W - 48, top: CANVAS_H - 26,
-    fontFamily: tpl.font || 'Syne', fontSize: 11,
-    fill: (tpl.textColor || '#ffffff') + '55',
-    selectable: true, name: 'slidenum',
+    left: CANVAS_W - 26, top: CANVAS_H - 22,
+    originX: 'right',
+    fontFamily: 'DM Sans', fontSize: 10,
+    fill: DARK, opacity: 0.2,
+    name: 'slidenum', selectable: true
   }));
 }
 
