@@ -775,6 +775,21 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   background: var(--s1); border-bottom: 1px solid var(--border);
   padding: 14px 18px; flex-shrink: 0;
 }
+.import-config-row { display: flex; gap: 10px; margin-top: 10px; align-items: flex-end; flex-wrap: wrap; }
+.import-config-row .ep-field { min-width: 0; }
+.accent-swatches { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
+.accent-swatch {
+  width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; transition: transform 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.accent-swatch:hover { transform: scale(1.15); }
+.accent-swatch.active { border-color: #ffffff; box-shadow: 0 0 0 1px rgba(255,255,255,0.4); }
+.accent-swatch.none-swatch {
+  background: var(--s3); color: var(--dim);
+  font-size: 10px; display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
 
 /* ─── HISTORY CARDS ──────────────────────────────────────────── */
 .hist-card {
@@ -1229,7 +1244,17 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Cole o texto gerado (formato <strong>**SLIDE X — FUNÇÃO**</strong>)</div>
     <textarea id="import-texto" style="width:100%;min-height:90px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical" placeholder="**SLIDE 1 — GANCHO**&#10;texto...&#10;&#10;**SLIDE 2 — CONTEXTO**&#10;texto..." oninput="updateImportCharCounter()"></textarea>
     <div id="import-char-info" class="import-char-info"></div>
-    <div style="display:flex;gap:8px;margin-top:8px">
+    <div class="import-config-row">
+      <div class="ep-field" style="flex:1;min-width:110px">
+        <label>Perfil</label>
+        <input id="cfg-username" placeholder="@leonamalves" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 9px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none">
+      </div>
+      <div class="ep-field">
+        <label>Cor de destaque <span style="color:var(--dim);font-weight:400">(*palavra*)</span></label>
+        <div class="accent-swatches" id="accent-swatches"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
       <button class="btn btn-primary btn-sm" onclick="importarTextoNoEditor()">Carregar slides</button>
       <button class="btn btn-ghost btn-sm" onclick="toggleImport()">Cancelar</button>
     </div>
@@ -2983,17 +3008,27 @@ async function importarTextoNoEditor() {
 
   const tpl = TEMPLATES[activeTemplate];
 
+  // ── Configuração do carrossel ──────────────────────────────
+  const username    = document.getElementById('cfg-username')?.value.trim() || '@leonamalves';
+  const accentColor = localStorage.getItem('accentColor') || null;
+  // Topic label: função do primeiro slide (sem "SLIDE X —")
+  const topicLabel  = (parsed[0]?.label || '')
+    .replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '')
+    .slice(0, 20)
+    .toUpperCase() || 'CARROSSEL';
+  const opts = { username, accentColor, topicLabel };
+
   for (let i = 0; i < parsed.length; i++) {
     const s = parsed[i];
     if (i > 0) fc.clear();
-    fc.backgroundColor = tpl.bg;
+    fc.backgroundColor = '#0c0c0f';
     fc.backgroundImage = null;
 
     // Slide 0 = layout de CAPA; demais = conteúdo padrão
     if (i === 0) {
-      await _renderCoverSlide(fc, s, tpl, parsed.length);
+      await _renderCoverSlide(fc, s, tpl, parsed.length, opts);
     } else {
-      _renderContentSlide(fc, s, tpl, i, parsed.length);
+      _renderContentSlide(fc, s, tpl, i, parsed.length, opts);
     }
 
     fc.renderAll();
@@ -3025,13 +3060,147 @@ async function importarTextoNoEditor() {
   toast(`${parsed.length} slides importados!`);
 }
 
+// ── Slide helper: profile badge ───────────────────────────────
+function _addProfileBadge(fc, username) {
+  const label = (username || '@leonamalves').slice(0, 22);
+  const fontSize = 10;
+  const padX = 10, padY = 4;
+  // Estimate text width (~6px per char at 10px font)
+  const estimatedW = label.length * 6 + padX * 2;
+  const pillH = fontSize + padY * 2;
+  const pillX = 14, pillY = 12;
+
+  fc.add(new fabric.Rect({
+    left: pillX, top: pillY,
+    width: estimatedW, height: pillH,
+    rx: pillH / 2, ry: pillH / 2,
+    fill: 'rgba(0,0,0,0.52)',
+    stroke: 'rgba(255,255,255,0.13)', strokeWidth: 1,
+    selectable: false, evented: false, name: 'badge-bg'
+  }));
+  fc.add(new fabric.IText(label, {
+    left: pillX + padX, top: pillY + padY,
+    fontFamily: 'DM Sans', fontSize: fontSize,
+    fill: '#ffffff', charSpacing: 30,
+    selectable: false, evented: false, name: 'badge-text'
+  }));
+}
+
+// ── Slide helper: CTA pill buttons ────────────────────────────
+function _addCTAButtons(fc, leftLabel, rightLabel) {
+  const L = (leftLabel || 'Carrossel').slice(0, 18);
+  const R = rightLabel || 'Arrasta →';
+  const fontSize = 10, padX = 12, padY = 5;
+  const pillH = fontSize + padY * 2;
+  const y = CANVAS_H - 10;
+
+  // Left pill
+  const lW = L.length * 6 + padX * 2;
+  fc.add(new fabric.Rect({
+    left: 14, top: y - pillH,
+    width: lW, height: pillH,
+    rx: pillH / 2, ry: pillH / 2,
+    fill: 'rgba(0,0,0,0.55)',
+    stroke: 'rgba(255,255,255,0.13)', strokeWidth: 1,
+    selectable: false, evented: false, name: 'cta-l-bg'
+  }));
+  fc.add(new fabric.IText(L, {
+    left: 14 + padX, top: y - pillH + padY,
+    fontFamily: 'DM Sans', fontSize: fontSize,
+    fill: '#ffffff', charSpacing: 20,
+    selectable: false, evented: false, name: 'cta-l-text'
+  }));
+
+  // Right pill
+  const rW = R.length * 6 + padX * 2;
+  fc.add(new fabric.Rect({
+    left: CANVAS_W - 14 - rW, top: y - pillH,
+    width: rW, height: pillH,
+    rx: pillH / 2, ry: pillH / 2,
+    fill: 'rgba(0,0,0,0.55)',
+    stroke: 'rgba(255,255,255,0.13)', strokeWidth: 1,
+    selectable: false, evented: false, name: 'cta-r-bg'
+  }));
+  fc.add(new fabric.IText(R, {
+    left: CANVAS_W - 14 - rW + padX, top: y - pillH + padY,
+    fontFamily: 'DM Sans', fontSize: fontSize,
+    fill: '#ffffff', charSpacing: 20,
+    selectable: false, evented: false, name: 'cta-r-text'
+  }));
+}
+
+// ── Slide helper: pagination dots ─────────────────────────────
+function _addPaginationDots(fc, currentIdx, total) {
+  if (total <= 1) return;
+  const dotSpacing = 14;
+  const totalW = (total - 1) * dotSpacing;
+  const startX = CANVAS_W / 2 - totalW / 2;
+  const y = CANVAS_H - 42;
+
+  for (let i = 0; i < total; i++) {
+    const active = i === currentIdx;
+    fc.add(new fabric.Circle({
+      left: startX + i * dotSpacing, top: y,
+      radius: active ? 4 : 3,
+      fill: active ? '#ffffff' : 'rgba(255,255,255,0.32)',
+      originX: 'center', originY: 'center',
+      selectable: false, evented: false,
+      name: `dot-${i}`
+    }));
+  }
+}
+
+// ── Slide helper: accent word styles ──────────────────────────
+// Parses *word* markers from text, returns { cleanText, styles }
+// styles format: { lineIdx: { charIdx: { fill: color } } }
+function _parseAccentText(text, accentColor) {
+  if (!accentColor || !text.includes('*')) {
+    return { cleanText: text.replace(/\*/g, ''), styles: {} };
+  }
+  const styles = {};
+  let cleanText = '';
+  let lineIdx = 0;
+  let charIdx = 0;
+  let inAccent = false;
+  let i = 0;
+
+  // Process char by char, tracking line breaks and accent ranges
+  while (i < text.length) {
+    if (text[i] === '\n') {
+      cleanText += '\n';
+      lineIdx++;
+      charIdx = 0;
+      i++;
+      continue;
+    }
+    if (text[i] === '*') {
+      inAccent = !inAccent;
+      i++;
+      continue;
+    }
+    cleanText += text[i];
+    if (inAccent) {
+      if (!styles[lineIdx]) styles[lineIdx] = {};
+      styles[lineIdx][charIdx] = { fill: accentColor };
+    }
+    charIdx++;
+    i++;
+  }
+  return { cleanText, styles };
+}
+
 // ── Cover slide renderer (slide 0 — CAPA/GANCHO) ──────────────
-// Retorna Promise — carrega logo PNG real (bloqueado) no topo
-function _renderCoverSlide(fc, slide, tpl, totalSlides) {
+// opts: { username, accentColor, topicLabel }
+function _renderCoverSlide(fc, slide, tpl, totalSlides, opts) {
+  opts = opts || {};
+  const username    = opts.username    || '@leonamalves';
+  const accentColor = opts.accentColor || null;
+  const topicLabel  = opts.topicLabel  || 'CARROSSEL';
+
   return new Promise(resolve => {
-    // Gradient overlay para simular sombra de foto (funciona mesmo sem imagem)
-    const overlayH = Math.round(CANVAS_H * 0.72);
-    const overlay = new fabric.Rect({
+    // Gradient overlay — base forte (escurece de baixo para cima)
+    const overlayH = Math.round(CANVAS_H * 0.78);
+    fc.add(new fabric.Rect({
       left: 0, top: CANVAS_H - overlayH,
       width: CANVAS_W, height: overlayH,
       fill: new fabric.Gradient({
@@ -3040,82 +3209,81 @@ function _renderCoverSlide(fc, slide, tpl, totalSlides) {
         coords: { x1: 0, y1: 0, x2: 0, y2: overlayH },
         colorStops: [
           { offset: 0,    color: 'rgba(0,0,0,0)' },
-          { offset: 0.3,  color: 'rgba(0,0,0,0.65)' },
-          { offset: 1,    color: 'rgba(0,0,0,0.97)' }
+          { offset: 0.25, color: 'rgba(0,0,0,0.55)' },
+          { offset: 1,    color: 'rgba(0,0,0,0.96)' }
         ]
       }),
       selectable: false, evented: false, name: 'overlay'
-    });
-    fc.add(overlay);
+    }));
 
-    // ── helper: adiciona os elementos de texto depois do logo ──
     function _addCoverText() {
-      // Categoria — topo direita (extraída do label do slide)
+      // Badge de perfil — topo esquerdo
+      _addProfileBadge(fc, username);
+
+      // Categoria — topo direito
       const tag = (slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') || 'ANÁLISE').toUpperCase();
       fc.add(new fabric.IText(tag, {
-        left: CANVAS_W - 20, top: 22,
+        left: CANVAS_W - 14, top: 16,
         originX: 'right',
         fontFamily: 'DM Sans', fontSize: 9,
-        fill: '#ffffff', opacity: 0.42, charSpacing: 120,
+        fill: '#ffffff', opacity: 0.38, charSpacing: 120,
         name: 'cat-tag', selectable: true
       }));
 
-      // Parsear o texto do slide em: headline, subtítulo e CTA
+      // Parsear texto: headline, subtítulo
       const paras    = slide.texto.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
-      const headline = paras[0] || slide.texto;
+      const rawHL    = paras[0] || slide.texto;
       const subParas = paras.slice(1).filter(p => !/^→/.test(p));
       const subtitle = subParas.join('\n');
-      const cta      = paras.find(p => /^→/.test(p)) || '→ Deslize para entender a lógica.';
 
-      // Posicionamento dinâmico: headline sobe se houver subtítulo
-      const estLines    = Math.ceil(headline.length / 14);
+      // Accent words na headline
+      const { cleanText: hlText, styles: hlStyles } = _parseAccentText(rawHL.toUpperCase(), accentColor);
+
+      // Posicionamento dinâmico — espaço reservado para dots + pills
+      const reservedBottom = 58; // dots(14px) + pills(26px) + margens
+      const estLines    = Math.ceil(hlText.length / 14);
       const headlineH   = estLines * 34 * 1.2;
-      const ctaH        = 28;
-      const subH        = subtitle ? 50 : 0;
-      const gapBottom   = 20;
-      const headlineTop = Math.max(160, CANVAS_H - headlineH - subH - ctaH - gapBottom);
+      const subH        = subtitle ? Math.ceil(subtitle.length / 38) * 13 * 1.5 + 10 : 0;
+      const headlineTop = Math.max(155, CANVAS_H - headlineH - subH - reservedBottom);
 
-      // Headline — grande e bold
-      fc.add(new fabric.Textbox(headline.toUpperCase(), {
-        left: 24, top: headlineTop,
-        width: CANVAS_W - 48,
+      // Headline
+      const hlTB = new fabric.Textbox(hlText, {
+        left: 22, top: headlineTop,
+        width: CANVAS_W - 44,
         fontFamily: tpl.font || 'Syne', fontSize: 34,
-        fill: tpl.textColor || '#ffffff', fontWeight: '800',
+        fill: '#ffffff', fontWeight: '800',
         lineHeight: 1.15,
+        styles: hlStyles,
         name: 'headline', selectable: true
-      }));
+      });
+      fc.add(hlTB);
 
-      // Subtítulo (parágrafo 2+)
+      // Subtítulo
       if (subtitle) {
         fc.add(new fabric.Textbox(subtitle, {
-          left: 24, top: headlineTop + headlineH + 8,
-          width: CANVAS_W - 48,
+          left: 22, top: headlineTop + headlineH + 6,
+          width: CANVAS_W - 44,
           fontFamily: 'DM Sans', fontSize: 13,
-          fill: (tpl.textColor || '#ffffff') + 'bb',
+          fill: 'rgba(255,255,255,0.65)',
           lineHeight: 1.45,
           name: 'subtitle', selectable: true
         }));
       }
 
-      // CTA — rodapé
-      fc.add(new fabric.IText(cta, {
-        left: CANVAS_W / 2, top: CANVAS_H - 16,
-        originX: 'center', originY: 'bottom',
-        fontFamily: 'DM Sans', fontSize: 11,
-        fill: tpl.labelColor || '#a78bfa',
-        name: 'cta', selectable: true
-      }));
+      // Pagination dots + CTA pills
+      _addPaginationDots(fc, 0, totalSlides);
+      _addCTAButtons(fc, topicLabel, 'Arrasta →');
 
       resolve();
     }
 
-    // ── Logo PNG bloqueado no topo ──────────────────────────────
+    // Logo PNG bloqueado no topo
     fabric.Image.fromURL('/logo-branco.png', logoImg => {
       if (logoImg && logoImg.width) {
-        const targetW = 120;
+        const targetW = 116;
         const s = targetW / logoImg.width;
         logoImg.set({
-          left: CANVAS_W / 2, top: 18,
+          left: CANVAS_W / 2, top: 16,
           originX: 'center', originY: 'top',
           scaleX: s, scaleY: s,
           name: 'brand', selectable: true, evented: true,
@@ -3123,88 +3291,99 @@ function _renderCoverSlide(fc, slide, tpl, totalSlides) {
         });
         fc.add(logoImg);
       }
-      // Mesmo se falhar no load, continua adicionando o texto
       _addCoverText();
     }, { crossOrigin: 'anonymous' });
   });
 }
 
-// ── Content slide renderer — Editorial Bege ────────────────────
-// Baseado no design system real dos carrosséis do Leonam:
-// bg bege #EDE8DC, headline grande bold, corpo menor, tag bracketed
-function _renderContentSlide(fc, slide, tpl, idx, totalSlides) {
-  // ── Sistema Editorial Bege (padrão para slides de conteúdo) ──
-  // Usa bege independente do template selecionado —
-  // igual ao design real dos carrosséis do usuário
-  const BG     = '#EDE8DC';
-  const DARK   = '#1a1208';
-  const MID    = '#3d3520';
+// ── Content slide renderer — Dark style (MyPostFlow) ──────────
+// opts: { username, accentColor, topicLabel }
+function _renderContentSlide(fc, slide, tpl, idx, totalSlides, opts) {
+  opts = opts || {};
+  const username    = opts.username    || '@leonamalves';
+  const accentColor = opts.accentColor || null;
+  const topicLabel  = opts.topicLabel  || 'CARROSSEL';
 
-  // Override bg para bege
-  fc.backgroundColor = BG;
+  // Dark background
+  fc.backgroundColor = '#0c0c0f';
 
-  // Tag de função: [ CONTEXTO ] — centralizado no topo
+  // Badge de perfil — topo esquerdo
+  _addProfileBadge(fc, username);
+
+  // Tag de função — topo direito
   const funcTag = slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '').toUpperCase();
-  fc.add(new fabric.IText(`[ ${funcTag} ]`, {
-    left: CANVAS_W / 2, top: 24,
-    originX: 'center',
+  fc.add(new fabric.IText(funcTag, {
+    left: CANVAS_W - 14, top: 16,
+    originX: 'right',
     fontFamily: 'DM Sans', fontSize: 9,
-    fill: DARK, opacity: 0.36, charSpacing: 180,
+    fill: 'rgba(255,255,255,0.3)', charSpacing: 120,
     name: 'tag', selectable: true
   }));
 
-  // Separar texto em headline (§1) e corpo (§2+)
+  // Image grid placeholder — caixa arredondada centralizada
+  const boxTop = 38, boxH = 158, boxW = 316;
+  fc.add(new fabric.Rect({
+    left: CANVAS_W / 2, top: boxTop,
+    originX: 'center',
+    width: boxW, height: boxH,
+    rx: 12, ry: 12,
+    fill: 'rgba(255,255,255,0.03)',
+    stroke: 'rgba(255,255,255,0.09)', strokeWidth: 1,
+    selectable: false, evented: false, name: 'img-placeholder'
+  }));
+  fc.add(new fabric.IText('🖼', {
+    left: CANVAS_W / 2, top: boxTop + boxH / 2,
+    originX: 'center', originY: 'middle',
+    fontSize: 24, opacity: 0.18,
+    selectable: false, evented: false, name: 'img-icon'
+  }));
+
+  // Separar texto: headline (§1) + corpo (§2+)
   const paras    = slide.texto.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
-  const headline = paras[0] || slide.texto;
+  const rawHL    = paras[0] || slide.texto;
   const body     = paras.slice(1).join('\n\n');
 
-  // Tamanho da headline: menor se texto mais longo
-  const hLen      = headline.length;
-  const hFontSize = hLen > 110 ? 19 : hLen > 80 ? 22 : hLen > 55 ? 26 : hLen > 35 ? 30 : 34;
+  // Headline com accent words
+  const { cleanText: hlText, styles: hlStyles } = _parseAccentText(rawHL.toUpperCase(), accentColor);
+  const hLen      = hlText.replace(/\*/g, '').length;
+  const hFontSize = hLen > 90 ? 20 : hLen > 65 ? 23 : hLen > 45 ? 27 : hLen > 28 ? 30 : 34;
 
-  // Headline — grande e bold (Syne)
-  fc.add(new fabric.Textbox(headline.toUpperCase(), {
-    left: 28, top: 48,
-    width: CANVAS_W - 56,
+  const headlineTop = boxTop + boxH + 12;
+  fc.add(new fabric.Textbox(hlText, {
+    left: 22, top: headlineTop,
+    width: CANVAS_W - 44,
     fontFamily: 'Syne', fontSize: hFontSize,
-    fill: DARK, fontWeight: '800',
+    fill: '#ffffff', fontWeight: '800',
     lineHeight: 1.18,
+    styles: hlStyles,
     name: 'headline', selectable: true
   }));
 
-  // Calcular posição do corpo baseado na altura estimada da headline
-  const charsPerLine = Math.max(1, Math.floor((CANVAS_W - 56) / (hFontSize * 0.56)));
-  const estLines     = Math.ceil(headline.length / charsPerLine);
-  const headlineBottom = 48 + estLines * hFontSize * 1.22 + 8;
+  // Calcular posição do corpo
+  const charsPerLine   = Math.max(1, Math.floor((CANVAS_W - 44) / (hFontSize * 0.55)));
+  const hlLines        = Math.ceil(hlText.length / charsPerLine);
+  const headlineBottom = headlineTop + hlLines * hFontSize * 1.22 + 8;
 
   // Separador leve
-  fc.add(new fabric.Line([28, headlineBottom, CANVAS_W - 28, headlineBottom], {
-    stroke: DARK, strokeWidth: 1, opacity: 0.1,
+  fc.add(new fabric.Line([22, headlineBottom, CANVAS_W - 22, headlineBottom], {
+    stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1,
     selectable: false, evented: false, name: 'divider'
   }));
 
-  // Corpo do texto (parágrafos 2+)
+  // Corpo do texto
   if (body) {
     fc.add(new fabric.Textbox(body, {
-      left: 28, top: headlineBottom + 12,
-      width: CANVAS_W - 56,
-      fontFamily: 'DM Sans', fontSize: 13,
-      fill: MID, lineHeight: 1.58,
+      left: 22, top: headlineBottom + 10,
+      width: CANVAS_W - 44,
+      fontFamily: 'DM Sans', fontSize: 12,
+      fill: '#9CA3AF', lineHeight: 1.58,
       name: 'text', selectable: true
     }));
   }
 
-  // Área reservada para imagem (placeholder visual) — apenas se não houver corpo
-  // O usuário pode adicionar imagem depois via toolbar "🖼 Img" ou "🖼 Bg"
-
-  // Numeração — canto inferior direito
-  fc.add(new fabric.IText(`${idx + 1}/${totalSlides}`, {
-    left: CANVAS_W - 26, top: CANVAS_H - 22,
-    originX: 'right',
-    fontFamily: 'DM Sans', fontSize: 10,
-    fill: DARK, opacity: 0.2,
-    name: 'slidenum', selectable: true
-  }));
+  // Pagination dots + CTA pills
+  _addPaginationDots(fc, idx, totalSlides);
+  _addCTAButtons(fc, topicLabel, 'Arrasta →');
 }
 
 // ── Char analysis functions ────────────────────────────────────
@@ -3633,8 +3812,49 @@ async function deletarHistorico(id) {
   else toast('Erro ao deletar', 'error');
 }
 
+// ── Accent color swatches ──────────────────────────────────────
+const ACCENT_COLORS = [
+  { id: 'none',    color: null,      label: '✕' },
+  { id: 'amarelo', color: '#FFD700', label: '' },
+  { id: 'cyan',    color: '#00D4FF', label: '' },
+  { id: 'roxo',    color: '#a78bfa', label: '' },
+  { id: 'vermelho',color: '#FF4444', label: '' },
+  { id: 'verde',   color: '#10b981', label: '' },
+  { id: 'laranja', color: '#f97316', label: '' },
+];
+
+function renderAccentSwatches() {
+  const container = document.getElementById('accent-swatches');
+  if (!container) return;
+  const current = localStorage.getItem('accentColor') || null;
+  container.innerHTML = ACCENT_COLORS.map(ac => {
+    const isActive = ac.color === current || (ac.color === null && current === null);
+    return `<div class="accent-swatch${ac.color === null ? ' none-swatch' : ''}${isActive ? ' active' : ''}"
+      style="${ac.color ? `background:${ac.color}` : ''}"
+      title="${ac.id}"
+      onclick="setAccentColor(${ac.color ? `'${ac.color}'` : 'null'})">
+      ${ac.color === null ? '✕' : ''}
+    </div>`;
+  }).join('');
+
+  // Restore username field
+  const saved = localStorage.getItem('edUsername');
+  const field = document.getElementById('cfg-username');
+  if (field && saved) field.value = saved;
+  if (field) field.addEventListener('change', () => {
+    localStorage.setItem('edUsername', field.value);
+  });
+}
+
+function setAccentColor(color) {
+  if (color === null) localStorage.removeItem('accentColor');
+  else localStorage.setItem('accentColor', color);
+  renderAccentSwatches();
+}
+
 // Init
 renderTemplateBtns();
+renderAccentSwatches();
 </script>
 
 </body>
