@@ -33,6 +33,7 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 html, body { height: 100%; }
 
@@ -2553,18 +2554,33 @@ function switchToSlide(idx) {
   activeIdx = idx;
   document.querySelectorAll('.slide-thumb-item').forEach((el, i) => el.classList.toggle('active', i === idx));
   const s = edSlides[idx];
+
+  function _applyBgImage(afterFn) {
+    if (s.bgImage) {
+      fabric.Image.fromURL(s.bgImage, img => {
+        const scX = CANVAS_W / img.width;
+        const scY = CANVAS_H / img.height;
+        const sc  = Math.max(scX, scY);
+        img.set({ left: 0, top: 0, scaleX: sc, scaleY: sc,
+                  selectable: false, evented: false, name: 'bg-photo' });
+        fc.setBackgroundImage(img, () => { fc.renderAll(); });
+        afterFn();
+      }, { crossOrigin: 'anonymous' });
+    } else {
+      fc.backgroundImage = null;
+      afterFn();
+    }
+  }
+
   if (s.json) {
     fc.loadFromJSON(s.json, () => {
       fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg;
-      fc.renderAll();
-      updatePropsPanel();
+      _applyBgImage(() => { fc.renderAll(); updatePropsPanel(); });
     });
   } else {
     fc.clear();
     fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg;
-    fc.backgroundImage = null;
-    fc.renderAll();
-    updatePropsPanel();
+    _applyBgImage(() => { fc.renderAll(); updatePropsPanel(); });
   }
   updateNavArrows();
   updateSlideBadge();
@@ -3057,7 +3073,10 @@ async function importarTextoNoEditor() {
   updateNavArrows();
   updateSlideBadge();
   document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
-  toast(`${parsed.length} slides importados!`);
+  toast(`${parsed.length} slides importados! Gerando imagens…`);
+
+  // Gerar imagens em background (não bloqueia o editor)
+  _gerarImagensCarrossel(parsed);
 }
 
 // ── Slide helper: profile badge ───────────────────────────────
@@ -3384,6 +3403,110 @@ function _renderContentSlide(fc, slide, tpl, idx, totalSlides, opts) {
   // Pagination dots + CTA pills
   _addPaginationDots(fc, idx, totalSlides);
   _addCTAButtons(fc, topicLabel, 'Arrasta →');
+}
+
+// ── Geração automática de imagens (Imagen 3 Fast via servidor) ────
+function _buildSlidePrompt(slide, isCover) {
+  const funcTag  = slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '').toUpperCase();
+  const headline = slide.texto.split(/\n\n+/)[0]?.replace(/\*/g, '').slice(0, 80) || '';
+
+  if (isCover) {
+    // Capa: foto dramática de hero
+    return `dramatic hero photograph for Instagram carousel, theme: "${headline}", person or subject strongly lit, dark cinematic background, bokeh, emotional impact, no text`;
+  }
+  // Slides de conteúdo: imagem editorial relevante ao tema
+  return `editorial photograph for Instagram content, topic: ${funcTag}, subject: "${headline}", dark moody studio lighting, professional, no text, no typography`;
+}
+
+async function _gerarImagensCarrossel(parsed) {
+  if (!parsed || !parsed.length) return;
+
+  // Indicador de progresso
+  const toastId = 'img-gen-toast';
+  const existing = document.getElementById(toastId);
+  if (existing) existing.remove();
+
+  function updateProgress(current, total) {
+    let el = document.getElementById(toastId);
+    if (!el) {
+      el = document.createElement('div');
+      el.id = toastId;
+      el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c2e;border:1px solid rgba(139,92,246,0.4);color:#f1f5f9;padding:10px 18px;border-radius:20px;font-size:12px;font-family:"DM Sans",sans-serif;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5)';
+      document.body.appendChild(el);
+    }
+    if (current > total) {
+      el.textContent = '✓ Imagens geradas com IA!';
+      el.style.borderColor = 'rgba(16,185,129,0.5)';
+      setTimeout(() => el.remove(), 3000);
+    } else {
+      el.innerHTML = `<span style="animation:spin 1s linear infinite;display:inline-block">⟳</span> Gerando imagem ${current}/${total}…`;
+    }
+  }
+
+  updateProgress(1, parsed.length);
+
+  for (let i = 0; i < parsed.length; i++) {
+    if (i >= edSlides.length) break;
+    const prompt = _buildSlidePrompt(parsed[i], i === 0);
+    try {
+      const r   = await fetch('/api/imagem/gerar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await r.json();
+      if (!data.ok || !data.imagem) throw new Error(data.erro || 'sem imagem');
+
+      // Guardar na estrutura do slide
+      edSlides[i].bgImage = data.imagem;
+
+      // Atualizar thumbnail via canvas offscreen
+      await _renderThumbComBg(i, data.imagem);
+
+      // Se o slide estiver ativo, aplicar no canvas ao vivo
+      if (i === activeIdx) {
+        fabric.Image.fromURL(data.imagem, img => {
+          const sc = Math.max(CANVAS_W / img.width, CANVAS_H / img.height);
+          img.set({ left: 0, top: 0, scaleX: sc, scaleY: sc,
+                    selectable: false, evented: false, name: 'bg-photo' });
+          fc.setBackgroundImage(img, () => { fc.renderAll(); });
+        }, { crossOrigin: 'anonymous' });
+      }
+
+      console.log(`Slide ${i + 1} imagem OK (${data.fonte})`);
+    } catch (e) {
+      console.warn(`Slide ${i + 1} imagem falhou:`, e.message);
+    }
+    updateProgress(i + 2, parsed.length);
+  }
+  updateProgress(parsed.length + 1, parsed.length);
+}
+
+// Renderiza thumbnail com bg image usando canvas offscreen (StaticCanvas)
+function _renderThumbComBg(idx, bgDataUrl) {
+  return new Promise(resolve => {
+    const s = edSlides[idx];
+    if (!s || !s.json) { resolve(); return; }
+
+    const offscreen = new fabric.StaticCanvas(null, { width: CANVAS_W, height: CANVAS_H });
+
+    fabric.Image.fromURL(bgDataUrl, bgImg => {
+      const sc = Math.max(CANVAS_W / bgImg.width, CANVAS_H / bgImg.height);
+      bgImg.set({ scaleX: sc, scaleY: sc, left: 0, top: 0 });
+
+      offscreen.setBackgroundImage(bgImg, () => {
+        offscreen.loadFromJSON(s.json, () => {
+          offscreen.backgroundColor = 'transparent';
+          offscreen.renderAll();
+          const thumb = offscreen.toDataURL({ format: 'jpeg', quality: 0.65, multiplier: 0.36 });
+          edSlides[idx].thumb = thumb;
+          renderThumbItem(idx);
+          offscreen.dispose();
+          resolve();
+        });
+      });
+    }, { crossOrigin: 'anonymous' });
+  });
 }
 
 // ── Char analysis functions ────────────────────────────────────

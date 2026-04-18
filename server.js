@@ -593,15 +593,25 @@ ${contextoVault.slice(0, 3000)}`;
 
 ${estiloBase}
 ${secaoBriefing}
-PADRÕES DOS CARROSSÉIS DO LEONAM:
-1. HOOK com nome real e situação concreta (ex: "A Cimed ofereceu um contrato milionário para o Toguro.")
+════════════════════════════════
+PADRÕES EDITORIAIS DOS CARROSSÉIS DO LEONAM
+════════════════════════════════
+ESTRUTURA NARRATIVA:
+1. GANCHO com nome real e situação concreta (ex: "A Cimed ofereceu um contrato milionário para o Toguro.")
 2. Valida parcialmente o argumento oposto antes de destruí-lo
 3. Identifica a falha lógica central com precisão — não é opinião, é análise
 4. Paradoxo que inverte a conclusão óbvia
 5. Dados específicos contextualizados (números reais, nomes reais) — USE os dados da matéria-prima acima
 6. Slides de 3-6 linhas quando o argumento precisa — não fragmentado
-7. Penúltimo slide inverte quem está na posição de poder (reversão de status)
+7. Penúltimo slide conecta a análise ao público (designers, criativos, freelancers, empreendedores)
 8. CTA com mecanismo: "Comente MARCA", "Salva esse post" — nunca "Me siga"
+
+ESTRUTURA VISUAL (cada slide tem função visual específica — escreva o texto respeitando isso):
+- SLIDE 1 (GANCHO): Headline curta e impactante em caixa alta + 1 subtítulo explicativo + CTA "→ Deslize para entender a análise."
+- SLIDES DE CONCEITO/ANÁLISE: Começam com etiqueta entre colchetes [ FUNÇÃO DO SLIDE ] + título bold + texto corrido. Ex de etiquetas: [ O QUE ESTÁ EM JOGO ], [ A CIÊNCIA DA DECISÃO ], [ O FRAMEWORK QUE RESOLVE O IMPASSE ], [ COMO O FUNIL FUNCIONA NA PRÁTICA ]
+- SLIDES DE DADO/PROVA: Destaque de número ou citação, depois análise curta
+- SLIDE DE APLICAÇÃO: Etiqueta [ COMO ISSO SE APLICA À SUA CARREIRA ] + conecta ao público-alvo (criativos, designers, freelancers)
+- SLIDE FINAL (CTA): Chamada para ação direta
 
 Tema: "${tema}"
 Ângulo: ${angulo || 'contraintuitivo — questione uma crença que o mercado aceita como verdade'}
@@ -612,14 +622,14 @@ Decida antes de escrever:
 - Qual é a virada lógica inesperada?
 - Quantos slides o argumento precisa? (mínimo 8, máximo 15)
 
-FORMATO DE SAÍDA:
+FORMATO DE SAÍDA OBRIGATÓRIO:
 **SLIDE 1 — GANCHO**
-[texto]
+[texto — headline + subtítulo + CTA deslize]
 
-**SLIDE 2 — SEGUNDA CHANCE**
-[texto]
+**SLIDE 2 — [FUNÇÃO]**
+[texto — inclua a etiqueta [ ] no início se for slide de conceito/análise]
 
-[continue nomeando cada slide pela função: AGITAÇÃO, CONTEXTO, DESCONSTRUÇÃO, PARADOXO, VIRADA, APLICAÇÃO, REVERSÃO DE STATUS, CTA]
+[continue. Funções possíveis: CONTEXTO, CONCEITO, AGITAÇÃO, DESCONSTRUÇÃO, DADO, PARADOXO, VIRADA, FRAMEWORK, FUNIL, APLICAÇÃO, REVERSÃO DE STATUS, CTA]
 
 LEGENDA SUGERIDA:
 [legenda]
@@ -702,12 +712,61 @@ REGRAS ABSOLUTAS:
 ${secaoVault}`;
     }
 
-    const conteudo = await chamarClaude(prompt);
+    // Exemplos anteriores aprovados para calibrar o estilo
+    let exemplosAnteriores = '';
+    try {
+      const { data: hist } = await supabase
+        .from('historico_conteudo')
+        .select('tema, conteudo')
+        .eq('tipo', tipo)
+        .order('criado_em', { ascending: false })
+        .limit(2);
+      if (hist && hist.length > 0) {
+        const label = tipo === 'carrossel' ? 'carrosséis aprovados' : 'artigos aprovados';
+        exemplosAnteriores = `\n════════════════════════════════
+EXEMPLOS REAIS DO LEONAM (últimos ${label} — calibre formato, tamanho e voz com base neles)
+════════════════════════════════\n` + hist.map((h, idx) =>
+          `EXEMPLO ${idx + 1} — tema: "${h.tema}"\n${h.conteudo.slice(0, 2500)}`
+        ).join('\n\n---\n\n');
+      }
+    } catch (_) {}
+
+    const promptFinal = prompt + exemplosAnteriores;
+    const conteudo = await chamarClaude(promptFinal);
     const notasUsadas = notas.map(n => n.arquivo);
+
+    // Salva no histórico (silencioso em caso de falha)
+    try {
+      await supabase.from('historico_conteudo').insert({ tema, tipo, angulo: angulo || '', conteudo });
+    } catch (_) {}
+
     res.json({ ok: true, conteudo, notasUsadas, tema, tipo });
   } catch (e) {
     res.status(500).json({ erro: e.message });
   }
+});
+
+app.get('/api/conteudo/historico', async (req, res) => {
+  const { tipo, limit = 30 } = req.query;
+  try {
+    let query = supabase
+      .from('historico_conteudo')
+      .select('id, tema, tipo, angulo, criado_em, conteudo')
+      .order('criado_em', { ascending: false })
+      .limit(parseInt(limit));
+    if (tipo && tipo !== 'todos') query = query.eq('tipo', tipo);
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    res.json(data || []);
+  } catch (e) { res.status(500).json({ erro: e.message }); }
+});
+
+app.delete('/api/conteudo/historico/:id', async (req, res) => {
+  try {
+    const { error } = await supabase.from('historico_conteudo').delete().eq('id', req.params.id);
+    if (error) throw new Error(error.message);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ erro: e.message }); }
 });
 
 app.post('/api/conteudo/exportar', (req, res) => {
@@ -1201,29 +1260,43 @@ Máximo 250 palavras. Sem papo de coach. Direto ao ponto.`;
 });
 
 // ─── GERAÇÃO DE IMAGEM PARA CARROSSEL ─────────────────────────────────────────
+// Ordem de tentativas: Imagen 3 Fast → Imagen 3 Standard → Gemini Flash → Pollinations
+
+async function tentarImagen(model, promptFull) {
+  const r = await axios.post(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:predict?key=${GEMINI_KEY}`,
+    { instances: [{ prompt: promptFull }], parameters: { sampleCount: 1, aspectRatio: '4:5' } },
+    { headers: { 'Content-Type': 'application/json' }, timeout: 35000 }
+  );
+  const b64 = r.data?.predictions?.[0]?.bytesBase64Encoded;
+  if (!b64) throw new Error('sem imagem na resposta');
+  return b64;
+}
 
 app.post('/api/imagem/gerar', async (req, res) => {
   const { prompt } = req.body;
   if (!prompt) return res.status(400).json({ erro: 'prompt obrigatório' });
 
-  const promptFull = prompt + ', professional marketing design, Instagram post, vertical 4:5, high quality, clean typography';
+  // Prompt otimizado para carrosséis Instagram — dramático, escuro, cinematográfico
+  const promptFull = `${prompt}, cinematic dramatic lighting, dark moody atmosphere, professional photography, Instagram carousel background, vertical 4:5 aspect ratio, high resolution, photorealistic`;
 
-  // 1. Tenta Gemini Imagen 3
+  // 1. Imagen 3 Fast (mais rápido, qualidade próxima do standard)
   try {
-    const r = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${GEMINI_KEY}`,
-      { instances: [{ prompt: promptFull }], parameters: { sampleCount: 1, aspectRatio: '4:5' } },
-      { headers: { 'Content-Type': 'application/json' }, timeout: 30000 }
-    );
-    const b64 = r.data?.predictions?.[0]?.bytesBase64Encoded;
-    if (b64) {
-      return res.json({ ok: true, imagem: `data:image/png;base64,${b64}`, fonte: 'gemini-imagen' });
-    }
+    const b64 = await tentarImagen('imagen-3.0-fast-generate-001', promptFull);
+    return res.json({ ok: true, imagem: `data:image/png;base64,${b64}`, fonte: 'imagen-fast' });
   } catch (e) {
-    console.log('Imagen 3 falhou:', e.message);
+    console.log('Imagen 3 Fast falhou:', e.message);
   }
 
-  // 2. Tenta Gemini 2.0 Flash image generation
+  // 2. Imagen 3 Standard
+  try {
+    const b64 = await tentarImagen('imagen-3.0-generate-001', promptFull);
+    return res.json({ ok: true, imagem: `data:image/png;base64,${b64}`, fonte: 'imagen-standard' });
+  } catch (e) {
+    console.log('Imagen 3 Standard falhou:', e.message);
+  }
+
+  // 3. Gemini 2.0 Flash image generation
   try {
     const r = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${GEMINI_KEY}`,
@@ -1236,26 +1309,22 @@ app.post('/api/imagem/gerar', async (req, res) => {
     const parts = r.data?.candidates?.[0]?.content?.parts || [];
     const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
     if (imgPart) {
-      const mime = imgPart.inlineData.mimeType;
-      const b64 = imgPart.inlineData.data;
-      return res.json({ ok: true, imagem: `data:${mime};base64,${b64}`, fonte: 'gemini-flash' });
+      return res.json({ ok: true, imagem: `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`, fonte: 'gemini-flash' });
     }
   } catch (e) {
-    console.log('Gemini Flash image falhou:', e.message);
+    console.log('Gemini Flash falhou:', e.message);
   }
 
-  // 3. Fallback: Pollinations.ai
+  // 4. Fallback: Pollinations.ai (gratuito, sem chave)
   try {
     const seed = Math.floor(Math.random() * 1000000);
-    const encoded = encodeURIComponent(promptFull);
-    const url = `https://image.pollinations.ai/prompt/${encoded}?width=1080&height=1350&nologo=true&seed=${seed}`;
-    const r = await axios.get(url, { responseType: 'arraybuffer', timeout: 45000 });
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptFull)}?width=1080&height=1350&nologo=true&seed=${seed}&model=flux`;
+    const r = await axios.get(url, { responseType: 'arraybuffer', timeout: 50000 });
     const b64 = Buffer.from(r.data).toString('base64');
-    const mime = r.headers['content-type'] || 'image/jpeg';
-    return res.json({ ok: true, imagem: `data:${mime};base64,${b64}`, fonte: 'pollinations' });
+    return res.json({ ok: true, imagem: `data:${r.headers['content-type'] || 'image/jpeg'};base64,${b64}`, fonte: 'pollinations' });
   } catch (e) {
     console.log('Pollinations falhou:', e.message);
-    return res.status(500).json({ ok: false, erro: 'Todas as fontes de imagem falharam: ' + e.message });
+    return res.status(500).json({ ok: false, erro: 'Todas as fontes falharam: ' + e.message });
   }
 });
 
