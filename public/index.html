@@ -1113,6 +1113,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
         </div>
         <div id="status-tendencias" class="status-box" style="display:none"></div>
         <div id="resultado-tendencias" style="display:none">
+          <div id="fontes-tendencias" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px 16px 12px;margin-bottom:12px"></div>
           <div id="sugestoes-tendencias" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;white-space:pre-wrap;font-size:14px;line-height:1.8;color:var(--text)"></div>
         </div>
       </div>
@@ -2131,15 +2132,23 @@ async function pesquisarPauta() {
       // Análise Claude
       document.getElementById('pp-analise').textContent = data.analise || '';
 
-      // Notícias recentes
+      // Notícias recentes com link clicável
       const noticiasEl = document.getElementById('pp-noticias');
       if (data.artigos && data.artigos.length > 0) {
-        noticiasEl.innerHTML = data.artigos.slice(0, 6).map(a =>
-          `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-            <div style="font-size:13px;color:var(--text);line-height:1.4">${a.titulo}</div>
-            <div style="font-size:11px;color:var(--muted);white-space:nowrap;margin-top:2px">${a.fonte}</div>
-          </div>`
-        ).join('');
+        noticiasEl.innerHTML = data.artigos.slice(0, 8).map(a => {
+          const href = a.link ? `href="${a.link}" target="_blank" rel="noopener"` : '';
+          const tag = a.link ? 'a' : 'div';
+          return `<${tag} ${href} style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;${a.link ? 'text-decoration:none;cursor:pointer;' : ''}transition:border-color 0.15s" onmouseenter="this.style.borderColor='rgba(124,106,247,0.5)'" onmouseleave="this.style.borderColor='var(--border)'">
+            <div>
+              <div style="font-size:12px;color:var(--text);line-height:1.45;margin-bottom:3px">${a.titulo}</div>
+              ${a.dataStr ? `<div style="font-size:10px;color:var(--muted)">${new Date(a.dataStr).toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</div>` : ''}
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+              <div style="font-size:11px;color:var(--muted);white-space:nowrap">${a.fonte}</div>
+              ${a.link ? `<div style="font-size:10px;color:rgba(124,106,247,0.8)">Ver matéria →</div>` : ''}
+            </div>
+          </${tag}>`;
+        }).join('');
       } else {
         noticiasEl.innerHTML = '<div style="font-size:13px;color:var(--muted)">Nenhuma notícia recente encontrada</div>';
       }
@@ -2172,6 +2181,31 @@ async function buscarTendencias() {
     statusEl.style.display = 'none';
     if (data.ok) {
       document.getElementById('resultado-tendencias').style.display = 'block';
+
+      // Fontes consultadas — cards clicáveis
+      const fontesEl = document.getElementById('fontes-tendencias');
+      if (data.noticias && data.noticias.length > 0) {
+        fontesEl.innerHTML = `
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">
+            ${data.noticias.length} fontes consultadas
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto">
+            ${data.noticias.map(n => {
+              const href = n.link ? `href="${n.link}" target="_blank" rel="noopener"` : '';
+              const tag = n.link ? 'a' : 'div';
+              return `<${tag} ${href} style="background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;${n.link ? 'text-decoration:none;cursor:pointer;' : ''}transition:border-color 0.15s" onmouseenter="this.style.borderColor='rgba(124,106,247,0.5)'" onmouseleave="this.style.borderColor='var(--border)'">
+                <div style="font-size:12px;color:var(--text);line-height:1.4">${n.titulo}</div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
+                  <div style="font-size:10px;color:var(--muted);white-space:nowrap">${n.fonte || ''}</div>
+                  ${n.link ? `<div style="font-size:10px;color:rgba(124,106,247,0.8)">Ver →</div>` : ''}
+                </div>
+              </${tag}>`;
+            }).join('')}
+          </div>`;
+        fontesEl.style.display = 'block';
+      }
+
+      // Sugestões geradas pela IA
       document.getElementById('sugestoes-tendencias').textContent = data.sugestoes;
     } else {
       statusEl.style.display = 'block';

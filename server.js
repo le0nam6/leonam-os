@@ -936,11 +936,16 @@ app.get('/api/pesquisa-tema', async (req, res) => {
     const items = newsR.data.match(/<item>([\s\S]*?)<\/item>/g) || [];
     const artigos = items.slice(0, 12).map(item => {
       const titulo = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1]?.trim();
-      const fonte = (item.match(/<source[^>]*url="[^"]*"[^>]*>(.*?)<\/source>/))?.[1]?.trim()
-        || (item.match(/<source>(.*?)<\/source>/))?.[1]?.trim()
+      const link = item.match(/<link>(https?:\/\/[^<]+)<\/link>/)?.[1]?.trim()
+        || item.match(/<guid[^>]*>(https?:\/\/[^<]+)<\/guid>/)?.[1]?.trim();
+      const srcMatch = item.match(/<source[^>]*url="([^"]*)"[^>]*>([\s\S]*?)<\/source>/);
+      const fonte = srcMatch?.[2]?.replace(/<!\[CDATA\[(.*?)\]\]>/, '$1')?.trim()
+        || item.match(/<source>([\s\S]*?)<\/source>/)?.[1]?.replace(/<!\[CDATA\[(.*?)\]\]>/, '$1')?.trim()
         || titulo?.split(' - ').pop()?.trim() || 'Portal';
+      const sourceUrl = srcMatch?.[1]?.trim() || '';
       const dataStr = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1]?.trim();
-      return { titulo, fonte, dataStr };
+      const tituloLimpo = titulo?.replace(/\s*[-–]\s*[^-–]{2,50}$/, '')?.trim() || titulo;
+      return { titulo: tituloLimpo, tituloOriginal: titulo, fonte, sourceUrl, link, dataStr };
     }).filter(a => a.titulo);
     resultado.artigos = artigos;
     resultado.totalPortais = artigos.length;
@@ -1024,57 +1029,110 @@ TIPO RECOMENDADO: newsletter ou carrossel — e por quê em 1 frase`;
 });
 
 app.get('/api/tendencias', async (req, res) => {
-  const buscas = [
-    'branding+marca+pessoal+creator',
-    'marketing+digital+criativo+freelancer',
-    'inteligência+artificial+criadores+conteúdo',
-    'design+negócios+agência',
-    'empreendedorismo+posicionamento+brasil'
+  // Pool amplo — seleção aleatória garante variedade a cada busca
+  const pool = [
+    // Marca & posicionamento
+    'marca pessoal creator 2025 brasil',
+    'posicionamento nicho mercado criativo',
+    'branding diferenciação pequenas marcas brasil',
+    'personal branding linkedin creator brasil',
+    'identidade visual agência freelancer mercado',
+    // IA aplicada
+    'inteligência artificial criadores conteúdo brasil',
+    'IA ferramentas designers produtividade 2025',
+    'inteligência artificial emprego criativo futuro',
+    'automação marketing agências pequenas brasil',
+    // Mercado criativo
+    'freelancer precificação honorários brasil 2025',
+    'agência pequena crescimento modelo negócio',
+    'creator economy monetização brasil',
+    'designer cobrar valor percebido projeto',
+    'economia criativa brasil tendências',
+    // Marketing & conteúdo
+    'marketing digital tendências brasil 2025',
+    'instagram algoritmo creators estratégia',
+    'copywriting persuasão conversão brasil',
+    'newsletter email marketing crescimento brasil',
+    'carrossel instagram engajamento orgânico',
+    'conteúdo estratégico posicionamento digital',
+    // Negócios & empreendedorismo
+    'empreendedorismo digital solopreneur brasil',
+    'negócio pessoal sistemas delegação escalar',
+    'precificação valor serviços criativos brasil',
+    'consultoria posicionamento estratégia marca',
+    // Comportamento & consumo
+    'comportamento consumidor digital brasil 2025',
+    'tendências consumo marca autêntica',
+    'geração z comportamento compra digital',
+    'confiança marca relacionamento cliente brasil',
   ];
 
+  const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+  const selecionados = shuffle(pool).slice(0, 9);
+  console.log('Tendências — termos selecionados:', selecionados);
+
   const noticias = [];
-  for (const termo of buscas) {
+  for (const termo of selecionados) {
     try {
-      const url = `https://news.google.com/rss/search?q=${termo}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
-      const r = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 });
+      const url = `https://news.google.com/rss/search?q=${encodeURIComponent(termo)}&hl=pt-BR&gl=BR&ceid=BR:pt-419`;
+      const r = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }, timeout: 9000 });
       const items = r.data.match(/<item>([\s\S]*?)<\/item>/g) || [];
-      for (const item of items.slice(0, 4)) {
+      for (const item of items.slice(0, 3)) {
         const titulo = (item.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || item.match(/<title>(.*?)<\/title>/))?.[1]?.trim();
-        const link = item.match(/<link\/>(.*?)<\/item>/)?.[1]?.trim() || item.match(/<link>(.*?)<\/link>/)?.[1]?.trim();
-        const data = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1]?.trim();
-        if (titulo && titulo.length > 10) noticias.push({ titulo, link, data, categoria: termo.split('+')[0] });
+        // Link — Google News redirect URL
+        const link = item.match(/<link>(https?:\/\/[^<]+)<\/link>/)?.[1]?.trim()
+          || item.match(/<guid[^>]*>(https?:\/\/[^<]+)<\/guid>/)?.[1]?.trim();
+        // Fonte do portal
+        const srcMatch = item.match(/<source[^>]*url="([^"]*)"[^>]*>([\s\S]*?)<\/source>/);
+        const fonte = srcMatch?.[2]?.replace(/<!\[CDATA\[(.*?)\]\]>/, '$1')?.trim()
+          || item.match(/<source>([\s\S]*?)<\/source>/)?.[1]?.replace(/<!\[CDATA\[(.*?)\]\]>/, '$1')?.trim()
+          || (titulo?.includes(' - ') ? titulo.split(' - ').pop()?.trim() : 'Portal');
+        const sourceUrl = srcMatch?.[1]?.trim() || '';
+        const pubDate = item.match(/<pubDate>(.*?)<\/pubDate>/)?.[1]?.trim();
+        // Título limpo sem " - Nome do Portal" no final
+        const tituloLimpo = titulo?.replace(/\s*[-–]\s*[^-–]{2,50}$/, '')?.trim() || titulo;
+        if (tituloLimpo && tituloLimpo.length > 10) {
+          noticias.push({ titulo: tituloLimpo, tituloOriginal: titulo, fonte, sourceUrl, link, pubDate });
+        }
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Tendência falhou:', termo, e.message);
+    }
   }
 
-  // Remove duplicatas por título similar
-  const unicos = noticias.filter((n, i, arr) => arr.findIndex(x => x.titulo.slice(0, 30) === n.titulo.slice(0, 30)) === i);
+  // Remove duplicatas por título similar (primeiros 50 chars, case-insensitive)
+  const unicos = noticias.filter((n, i, arr) =>
+    arr.findIndex(x => x.titulo.slice(0, 50).toLowerCase() === n.titulo.slice(0, 50).toLowerCase()) === i
+  );
 
   if (unicos.length === 0) return res.json({ ok: true, noticias: [], sugestoes: 'Sem tendências disponíveis no momento.' });
 
-  // Claude filtra e sugere ângulos no estilo do Leonam
   const prompt = `Você é o assistente editorial do Leonam Alves — estrategista de conteúdo para criativos, designers e freelancers no Brasil.
 
 Linha editorial: marketing de posicionamento, marca pessoal, precificação, gestão de negócios criativos, IA aplicada, copywriting.
 
-Pautas quentes do momento:
-${unicos.slice(0, 20).map((n, i) => `${i + 1}. ${n.titulo}`).join('\n')}
+Notícias coletadas agora do Google News (${unicos.length} pautas):
+${unicos.slice(0, 25).map((n, i) => `${i + 1}. "${n.titulo}" — ${n.fonte}`).join('\n')}
 
-Selecione as 6 pautas mais relevantes para a linha editorial do Leonam.
-Para cada uma, entregue:
+Selecione as 6 pautas com MAIOR potencial para a linha editorial. Prefira pautas que permitam ângulo contraintuitivo ou perspectiva de nicho criativo. Evite pautas genéricas de "dicas".
 
-PAUTA: [título limpo, sem nome de veículo]
+Para cada uma, entregue EXATAMENTE nesse formato (sem texto extra entre os blocos):
+
+PAUTA: [título limpo, sem nome de veículo, máx 10 palavras]
+FONTE: [nome do portal da notícia]
 TIPO: newsletter ou carrossel
-ÂNGULO: [uma frase — perspectiva contraintuitiva que o Leonam tomaria. Direto, sem verbo "Descubra" ou "Aprenda"]
-GANCHO: [primeira linha do conteúdo — começa com situação concreta, nunca com pergunta ao leitor]
+ÂNGULO: [perspectiva que o Leonam tomaria — contraintuitiva, sem "Descubra" ou "Aprenda", 1 frase]
+GANCHO: [primeira linha do conteúdo — situação concreta ou dado, nunca começa com pergunta ao leitor]
 
-Sem explicações. Só o formato acima, 6 vezes.`;
+---
+
+6 blocos no formato acima. Nada mais.`;
 
   try {
     const sugestoes = await chamarClaude(prompt);
-    res.json({ ok: true, noticias: unicos.slice(0, 20), sugestoes });
+    res.json({ ok: true, noticias: unicos.slice(0, 25), sugestoes });
   } catch (e) {
-    res.json({ ok: true, noticias: unicos, sugestoes: 'Erro ao gerar sugestões.' });
+    res.json({ ok: true, noticias: unicos, sugestoes: 'Erro ao gerar sugestões: ' + e.message });
   }
 });
 
