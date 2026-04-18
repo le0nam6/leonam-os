@@ -2408,7 +2408,7 @@ function renderThumbItem(idx) {
 }
 
 function updateThumb(idx) {
-  if (!fc) return;
+  if (!fc || !edSlides[idx]) return;
   edSlides[idx].thumb = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
   renderThumbItem(idx);
 }
