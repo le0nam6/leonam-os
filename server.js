@@ -1274,26 +1274,37 @@ async function tentarImagen(model, promptFull) {
 }
 
 app.post('/api/imagem/gerar', async (req, res) => {
-  const { prompt } = req.body;
+  const { prompt, model } = req.body;
   if (!prompt) return res.status(400).json({ erro: 'prompt obrigatório' });
 
-  // Prompt otimizado para carrosséis Instagram — dramático, escuro, cinematográfico
-  const promptFull = `${prompt}, cinematic dramatic lighting, dark moody atmosphere, professional photography, Instagram carousel background, vertical 4:5 aspect ratio, high resolution, photorealistic`;
+  // Prompt otimizado para fundos de carrossel Instagram
+  const promptFull = `${prompt}, cinematic dramatic lighting, dark moody atmosphere, professional photography, Instagram carousel background, vertical format, high resolution, photorealistic, no text, no watermark`;
 
-  // 1. Imagen 3 Fast (mais rápido, qualidade próxima do standard)
+  // 1. Nano Banana 2 — Pollinations Turbo (FLUX acelerado, gratuito, confiável)
   try {
-    const b64 = await tentarImagen('imagen-3.0-fast-generate-001', promptFull);
-    return res.json({ ok: true, imagem: `data:image/png;base64,${b64}`, fonte: 'imagen-fast' });
+    const seed = Math.floor(Math.random() * 1000000);
+    const polModel = model || 'turbo';
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptFull)}?width=1080&height=1350&nologo=true&seed=${seed}&model=${polModel}&enhance=true`;
+    const r = await axios.get(url, { responseType: 'arraybuffer', timeout: 55000 });
+    if (r.status === 200 && r.data.byteLength > 5000) {
+      const b64 = Buffer.from(r.data).toString('base64');
+      return res.json({ ok: true, imagem: `data:${r.headers['content-type'] || 'image/jpeg'};base64,${b64}`, fonte: 'nano-banana-2' });
+    }
   } catch (e) {
-    console.log('Imagen 3 Fast falhou:', e.message);
+    console.log('Nano Banana 2 (Pollinations turbo) falhou:', e.message);
   }
 
-  // 2. Imagen 3 Standard
+  // 2. Pollinations flux-realism (fallback de qualidade)
   try {
-    const b64 = await tentarImagen('imagen-3.0-generate-001', promptFull);
-    return res.json({ ok: true, imagem: `data:image/png;base64,${b64}`, fonte: 'imagen-standard' });
+    const seed = Math.floor(Math.random() * 1000000);
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptFull)}?width=1080&height=1350&nologo=true&seed=${seed}&model=flux-realism`;
+    const r = await axios.get(url, { responseType: 'arraybuffer', timeout: 55000 });
+    if (r.status === 200 && r.data.byteLength > 5000) {
+      const b64 = Buffer.from(r.data).toString('base64');
+      return res.json({ ok: true, imagem: `data:${r.headers['content-type'] || 'image/jpeg'};base64,${b64}`, fonte: 'pollinations-realism' });
+    }
   } catch (e) {
-    console.log('Imagen 3 Standard falhou:', e.message);
+    console.log('Pollinations flux-realism falhou:', e.message);
   }
 
   // 3. Gemini 2.0 Flash image generation
@@ -1315,15 +1326,20 @@ app.post('/api/imagem/gerar', async (req, res) => {
     console.log('Gemini Flash falhou:', e.message);
   }
 
-  // 4. Fallback: Pollinations.ai (gratuito, sem chave)
+  // 4. Imagen 3 Fast
   try {
-    const seed = Math.floor(Math.random() * 1000000);
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptFull)}?width=1080&height=1350&nologo=true&seed=${seed}&model=flux`;
-    const r = await axios.get(url, { responseType: 'arraybuffer', timeout: 50000 });
-    const b64 = Buffer.from(r.data).toString('base64');
-    return res.json({ ok: true, imagem: `data:${r.headers['content-type'] || 'image/jpeg'};base64,${b64}`, fonte: 'pollinations' });
+    const b64 = await tentarImagen('imagen-3.0-fast-generate-001', promptFull);
+    return res.json({ ok: true, imagem: `data:image/png;base64,${b64}`, fonte: 'imagen-fast' });
   } catch (e) {
-    console.log('Pollinations falhou:', e.message);
+    console.log('Imagen 3 Fast falhou:', e.message);
+  }
+
+  // 5. Imagen 3 Standard
+  try {
+    const b64 = await tentarImagen('imagen-3.0-generate-001', promptFull);
+    return res.json({ ok: true, imagem: `data:image/png;base64,${b64}`, fonte: 'imagen-standard' });
+  } catch (e) {
+    console.log('Imagen 3 Standard falhou:', e.message);
     return res.status(500).json({ ok: false, erro: 'Todas as fontes falharam: ' + e.message });
   }
 });

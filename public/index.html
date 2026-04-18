@@ -2424,7 +2424,7 @@ function renderSlideEl(data) {
   if (isCover) {
     overlay.style.cssText = `position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.52) 30%,rgba(0,0,0,0.96) 100%);`;
   } else {
-    overlay.style.cssText = `position:absolute;inset:0;z-index:1;background:rgba(12,12,15,${bgImage ? '0.8' : '0.0'});`;
+    overlay.style.cssText = `position:absolute;inset:0;z-index:1;background:rgba(12,12,15,${bgImage ? '0.52' : '0.0'});`;
   }
   el.appendChild(overlay);
 
@@ -2439,10 +2439,6 @@ function renderSlideEl(data) {
   badge.style.cssText = `background:rgba(0,0,0,0.52);border:1px solid rgba(255,255,255,0.13);border-radius:11px;padding:4px 10px;font-size:10px;color:#fff;letter-spacing:0.04em;white-space:nowrap;flex-shrink:0;`;
   badge.textContent = username || '@leonamalves';
   topRow.appendChild(badge);
-  const tagEl = document.createElement('div');
-  tagEl.style.cssText = `font-size:9px;color:rgba(255,255,255,0.38);letter-spacing:0.12em;text-transform:uppercase;text-align:right;padding-top:5px;word-break:break-word;`;
-  tagEl.textContent = funcTag;
-  topRow.appendChild(tagEl);
   layer.appendChild(topRow);
 
   if (isCover) {
@@ -2472,10 +2468,15 @@ function renderSlideEl(data) {
       sub.textContent = subtitle; layer.appendChild(sub);
     }
   } else {
-    // Image placeholder
+    // Image placeholder — clicável para gerar com IA
     const imgBox = document.createElement('div');
-    imgBox.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.09);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;color:rgba(255,255,255,0.18);`;
-    imgBox.textContent = '🖼'; layer.appendChild(imgBox);
+    imgBox.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.18);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:22px;color:rgba(255,255,255,0.35);cursor:pointer;transition:border-color 0.15s,background 0.15s;`;
+    imgBox.title = 'Clique para gerar imagem com IA';
+    imgBox.innerHTML = '<span>🎨</span><span style="font-size:10px;letter-spacing:0.05em;font-family:\'DM Sans\',sans-serif">Gerar imagem</span>';
+    imgBox.onmouseenter = () => { imgBox.style.background = 'rgba(255,255,255,0.06)'; imgBox.style.borderColor = 'rgba(124,106,247,0.5)'; };
+    imgBox.onmouseleave = () => { imgBox.style.background = 'rgba(255,255,255,0.03)'; imgBox.style.borderColor = 'rgba(255,255,255,0.18)'; };
+    imgBox.onclick = () => edGerarImagem();
+    layer.appendChild(imgBox);
 
     const hLen = headline.replace(/\*/g, '').length;
     const hSizeAuto = hLen > 90 ? 20 : hLen > 65 ? 23 : hLen > 45 ? 27 : hLen > 28 ? 30 : 34;
@@ -2514,17 +2515,21 @@ function renderSlideEl(data) {
     layer.appendChild(dotsRow);
   }
 
-  // CTA pills
-  const ctaRow = document.createElement('div');
-  ctaRow.style.cssText = 'display:flex;justify-content:space-between;padding:4px 14px 10px;flex-shrink:0;';
-  const makePill = txt => {
-    const p = document.createElement('div');
-    p.style.cssText = `background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.13);border-radius:13px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:10px;color:#ffffff;letter-spacing:0.02em;white-space:nowrap;`;
-    p.textContent = txt; return p;
-  };
-  ctaRow.appendChild(makePill((topicLabel || 'CARROSSEL').slice(0, 18).toUpperCase()));
-  ctaRow.appendChild(makePill('Arrasta →'));
-  layer.appendChild(ctaRow);
+  // CTA pill — só no primeiro slide (capa)
+  if (idx === 0) {
+    const ctaRow = document.createElement('div');
+    ctaRow.style.cssText = 'display:flex;justify-content:flex-end;padding:4px 14px 10px;flex-shrink:0;';
+    const arrastaPill = document.createElement('div');
+    arrastaPill.style.cssText = `background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.13);border-radius:13px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:10px;color:#ffffff;letter-spacing:0.02em;white-space:nowrap;`;
+    arrastaPill.textContent = 'Arrasta →';
+    ctaRow.appendChild(arrastaPill);
+    layer.appendChild(ctaRow);
+  } else {
+    // Espaçador para manter o layout consistente
+    const spacerBottom = document.createElement('div');
+    spacerBottom.style.cssText = 'height:22px;flex-shrink:0;';
+    layer.appendChild(spacerBottom);
+  }
 
   el.appendChild(layer);
   return el;
@@ -2994,7 +2999,7 @@ async function _gerarImagensCarrossel(parsed) {
     if (i >= edSlides.length) break;
     const prompt = _buildSlidePrompt(parsed[i], i === 0);
     try {
-      const r = await fetch('/api/imagem/gerar', {
+      const r = await fetch(`${API}/api/imagem/gerar`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt })
       });
