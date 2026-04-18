@@ -3059,8 +3059,31 @@ function updateImportCharCounter() {
   renderCharAnalysis(parseSlides(texto), 'import-char-info');
 }
 
-// ── Image generation (client-side via Pollinations — sem passar pela Railway) ──
+// ── Image generation: Railway/Gemini primeiro, Pollinations browser como fallback ──
 async function gerarImagemClientSide(promptTexto) {
+  // 1. Tenta Railway (usa Gemini 3.1 → 2.0 → Pollinations server-side)
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 28000); // 28s antes do timeout da Railway
+    const r = await fetch(`${API}/api/imagem/gerar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: promptTexto }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(t);
+    if (r.ok) {
+      const data = await r.json();
+      if (data.ok && data.imagem) {
+        console.log('Imagem via Railway:', data.fonte);
+        return data.imagem;
+      }
+    }
+  } catch (e) {
+    console.warn('Railway falhou, usando Pollinations direto:', e.message);
+  }
+
+  // 2. Fallback: Pollinations direto do browser (sem Railway)
   const p = `${promptTexto.slice(0, 160)}, cinematic lighting, dark moody, professional photography, no text, no watermark`;
   const seed = Math.floor(Math.random() * 1e6);
   const models = ['flux', 'flux-realism', 'turbo'];
@@ -3072,6 +3095,7 @@ async function gerarImagemClientSide(promptTexto) {
       const ct = r.headers.get('content-type') || '';
       if (!ct.startsWith('image/')) throw new Error('resposta não é imagem');
       const blob = await r.blob();
+      console.log(`Imagem via Pollinations ${model}`);
       return await new Promise((res, rej) => {
         const reader = new FileReader();
         reader.onload = () => res(reader.result);

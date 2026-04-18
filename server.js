@@ -1313,30 +1313,35 @@ app.post('/api/imagem/gerar', async (req, res) => {
     console.log('Pollinations flux-realism falhou:', e.message);
   }
 
-  // 3. Gemini 2.0 Flash image generation
+  // 3. Gemini image generation (3.1 Flash primeiro, depois fallbacks 2.0)
   try {
     const modelos = [
+      'gemini-3.1-flash-image-preview',
       'gemini-2.0-flash-preview-image-generation',
       'gemini-2.0-flash-exp-image-generation',
     ];
     for (const modelo of modelos) {
       try {
+        console.log(`Tentando Gemini modelo: ${modelo}`);
         const r = await axios.post(
           `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${GEMINI_KEY}`,
-          { contents: [{ parts: [{ text: promptFull }] }], generationConfig: { responseModalities: ['IMAGE'] } },
+          { contents: [{ parts: [{ text: promptFull }] }], generationConfig: { responseModalities: ['IMAGE', 'TEXT'] } },
           { headers: { 'Content-Type': 'application/json' }, timeout: 30000 }
         );
         const parts = r.data?.candidates?.[0]?.content?.parts || [];
         const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
         if (imgPart) {
-          return res.json({ ok: true, imagem: `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`, fonte: 'gemini-flash' });
+          console.log(`✓ Gemini gerou imagem com: ${modelo}`);
+          return res.json({ ok: true, imagem: `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`, fonte: modelo });
         }
-      } catch (_) {}
+      } catch (modelErr) {
+        console.log(`${modelo} falhou: ${modelErr.message}`);
+      }
     }
-    throw new Error('nenhum modelo Gemini Flash gerou imagem');
+    throw new Error('nenhum modelo Gemini gerou imagem');
   } catch (e) {
-    erros.push(`gemini-flash: ${e.message}`);
-    console.log('Gemini Flash falhou:', e.message);
+    erros.push(`gemini: ${e.message}`);
+    console.log('Gemini falhou:', e.message);
   }
 
   // 4. Imagen 3 Fast (requer billing no Google Cloud)
