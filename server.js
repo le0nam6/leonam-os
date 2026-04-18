@@ -1274,74 +1274,81 @@ async function tentarImagen(model, promptFull) {
 }
 
 app.post('/api/imagem/gerar', async (req, res) => {
-  const { prompt, model } = req.body;
+  const { prompt } = req.body;
   if (!prompt) return res.status(400).json({ erro: 'prompt obrigatório' });
 
-  // Prompt otimizado para fundos de carrossel Instagram
-  const promptFull = `${prompt}, cinematic dramatic lighting, dark moody atmosphere, professional photography, Instagram carousel background, vertical format, high resolution, photorealistic, no text, no watermark`;
+  // Prompt otimizado — conciso para não explodir a URL
+  const tema = prompt.slice(0, 120);
+  const promptFull = `${tema}, cinematic lighting, dark moody, professional photography, no text, no watermark`;
 
-  // 1. Nano Banana 2 — Pollinations Turbo (FLUX acelerado, gratuito, confiável)
-  try {
+  const erros = [];
+
+  // Função auxiliar para Pollinations (POST evita limite de URL)
+  async function tentarPollinations(polModel) {
     const seed = Math.floor(Math.random() * 1000000);
-    const polModel = model || 'turbo';
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptFull)}?width=1080&height=1350&nologo=true&seed=${seed}&model=${polModel}&enhance=true`;
-    const r = await axios.get(url, { responseType: 'arraybuffer', timeout: 55000 });
-    if (r.status === 200 && r.data.byteLength > 5000) {
-      const b64 = Buffer.from(r.data).toString('base64');
-      return res.json({ ok: true, imagem: `data:${r.headers['content-type'] || 'image/jpeg'};base64,${b64}`, fonte: 'nano-banana-2' });
-    }
-  } catch (e) {
-    console.log('Nano Banana 2 (Pollinations turbo) falhou:', e.message);
+    // Usa dimensão menor (720×900) — mais rápido e menos timeout
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptFull)}?width=720&height=900&nologo=true&seed=${seed}&model=${polModel}`;
+    const r = await axios.get(url, { responseType: 'arraybuffer', timeout: 40000 });
+    const ct = r.headers['content-type'] || 'image/jpeg';
+    if (!ct.startsWith('image/')) throw new Error(`Resposta não é imagem: ${ct}`);
+    const b64 = Buffer.from(r.data).toString('base64');
+    return { b64, ct };
   }
 
-  // 2. Pollinations flux-realism (fallback de qualidade)
+  // 1. Pollinations flux (mais estável)
   try {
-    const seed = Math.floor(Math.random() * 1000000);
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptFull)}?width=1080&height=1350&nologo=true&seed=${seed}&model=flux-realism`;
-    const r = await axios.get(url, { responseType: 'arraybuffer', timeout: 55000 });
-    if (r.status === 200 && r.data.byteLength > 5000) {
-      const b64 = Buffer.from(r.data).toString('base64');
-      return res.json({ ok: true, imagem: `data:${r.headers['content-type'] || 'image/jpeg'};base64,${b64}`, fonte: 'pollinations-realism' });
-    }
+    const { b64, ct } = await tentarPollinations('flux');
+    return res.json({ ok: true, imagem: `data:${ct};base64,${b64}`, fonte: 'pollinations-flux' });
   } catch (e) {
+    erros.push(`pollinations-flux: ${e.message}`);
+    console.log('Pollinations flux falhou:', e.message);
+  }
+
+  // 2. Pollinations flux-realism
+  try {
+    const { b64, ct } = await tentarPollinations('flux-realism');
+    return res.json({ ok: true, imagem: `data:${ct};base64,${b64}`, fonte: 'pollinations-realism' });
+  } catch (e) {
+    erros.push(`pollinations-realism: ${e.message}`);
     console.log('Pollinations flux-realism falhou:', e.message);
   }
 
   // 3. Gemini 2.0 Flash image generation
   try {
-    const r = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${GEMINI_KEY}`,
-      {
-        contents: [{ parts: [{ text: promptFull }] }],
-        generationConfig: { responseModalities: ['IMAGE'] }
-      },
-      { headers: { 'Content-Type': 'application/json' }, timeout: 30000 }
-    );
-    const parts = r.data?.candidates?.[0]?.content?.parts || [];
-    const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
-    if (imgPart) {
-      return res.json({ ok: true, imagem: `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`, fonte: 'gemini-flash' });
+    const modelos = [
+      'gemini-2.0-flash-preview-image-generation',
+      'gemini-2.0-flash-exp-image-generation',
+    ];
+    for (const modelo of modelos) {
+      try {
+        const r = await axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${GEMINI_KEY}`,
+          { contents: [{ parts: [{ text: promptFull }] }], generationConfig: { responseModalities: ['IMAGE'] } },
+          { headers: { 'Content-Type': 'application/json' }, timeout: 30000 }
+        );
+        const parts = r.data?.candidates?.[0]?.content?.parts || [];
+        const imgPart = parts.find(p => p.inlineData?.mimeType?.startsWith('image/'));
+        if (imgPart) {
+          return res.json({ ok: true, imagem: `data:${imgPart.inlineData.mimeType};base64,${imgPart.inlineData.data}`, fonte: 'gemini-flash' });
+        }
+      } catch (_) {}
     }
+    throw new Error('nenhum modelo Gemini Flash gerou imagem');
   } catch (e) {
+    erros.push(`gemini-flash: ${e.message}`);
     console.log('Gemini Flash falhou:', e.message);
   }
 
-  // 4. Imagen 3 Fast
+  // 4. Imagen 3 Fast (requer billing no Google Cloud)
   try {
     const b64 = await tentarImagen('imagen-3.0-fast-generate-001', promptFull);
     return res.json({ ok: true, imagem: `data:image/png;base64,${b64}`, fonte: 'imagen-fast' });
   } catch (e) {
+    erros.push(`imagen-fast: ${e.message}`);
     console.log('Imagen 3 Fast falhou:', e.message);
   }
 
-  // 5. Imagen 3 Standard
-  try {
-    const b64 = await tentarImagen('imagen-3.0-generate-001', promptFull);
-    return res.json({ ok: true, imagem: `data:image/png;base64,${b64}`, fonte: 'imagen-standard' });
-  } catch (e) {
-    console.log('Imagen 3 Standard falhou:', e.message);
-    return res.status(500).json({ ok: false, erro: 'Todas as fontes falharam: ' + e.message });
-  }
+  return res.status(500).json({ ok: false, erro: 'Todas as fontes falharam', detalhes: erros });
 });
 
 app.listen(PORT, () => console.log(`\n✓ Leonam OS rodando em http://localhost:${PORT}\n`));
