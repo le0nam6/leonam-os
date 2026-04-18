@@ -597,6 +597,36 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 }
 .ep-field input:focus { border-color: rgba(139,92,246,0.5); }
 
+/* ─── CHAR COUNTER / SLIDE ANALYSIS ─────────────────────────── */
+.char-analysis { margin-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.char-analysis-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--dim); font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.char-row {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; padding: 4px 8px;
+  background: var(--s2); border-radius: 6px; border: 1px solid var(--border);
+}
+.char-row .cr-label { color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.char-row .cr-count { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 44px; text-align: right; font-size: 10px; }
+.char-row.ok   .cr-count { color: var(--success); }
+.char-row.warn .cr-count { color: #f59e0b; }
+.char-row.over .cr-count { color: var(--danger); }
+.char-row.over { border-color: rgba(239,68,68,0.25); }
+.char-row.warn { border-color: rgba(245,158,11,0.25); }
+.char-bar { height: 3px; border-radius: 2px; flex-shrink: 0; width: 54px; background: var(--s3); overflow: hidden; }
+.char-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+.char-row.ok   .char-bar-fill { background: var(--success); }
+.char-row.warn .char-bar-fill { background: #f59e0b; }
+.char-row.over .char-bar-fill { background: var(--danger); }
+.import-char-info { max-height: 200px; overflow-y: auto; }
+/* Cover slide badge */
+.slide-is-cover { border-color: rgba(139,92,246,0.35) !important; }
+.slide-is-cover::after {
+  content: 'CAPA'; position: absolute; top: 4px; left: 4px;
+  font-size: 7px; font-weight: 800; letter-spacing: 0.8px;
+  color: var(--neon); background: rgba(139,92,246,0.25);
+  padding: 1px 4px; border-radius: 3px; pointer-events: none;
+}
+
 .ed-props {
   background: var(--s1); border-left: 1px solid var(--border);
   overflow-y: auto; padding: 14px 12px; height: 100%;
@@ -968,6 +998,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
           </div>
         </div>
         <div id="conteudo-output" style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px;white-space:pre-wrap;font-size:14px;line-height:1.7;color:var(--text);max-height:600px;overflow-y:auto"></div>
+        <div id="conteudo-char-analysis" style="display:none"></div>
       </div>
 
       <!-- HISTÓRICO DE COPIES -->
@@ -1193,7 +1224,8 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   <!-- PAINEL IMPORTAR TEXTO (colapsável) -->
   <div class="import-area" id="import-area" style="display:none;border-radius:0;border-left:none;border-right:none;border-top:none">
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Cole o texto gerado (formato <strong>**SLIDE X — FUNÇÃO**</strong>)</div>
-    <textarea id="import-texto" style="width:100%;min-height:90px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical" placeholder="**SLIDE 1 — GANCHO**&#10;texto...&#10;&#10;**SLIDE 2 — CONTEXTO**&#10;texto..."></textarea>
+    <textarea id="import-texto" style="width:100%;min-height:90px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical" placeholder="**SLIDE 1 — GANCHO**&#10;texto...&#10;&#10;**SLIDE 2 — CONTEXTO**&#10;texto..." oninput="updateImportCharCounter()"></textarea>
+    <div id="import-char-info" class="import-char-info"></div>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="btn btn-primary btn-sm" onclick="importarTextoNoEditor()">Carregar slides</button>
       <button class="btn btn-ghost btn-sm" onclick="toggleImport()">Cancelar</button>
@@ -1996,8 +2028,15 @@ async function gerarConteudo() {
       if (data.tipo === 'carrossel' || tipoGerado === 'carrossel') {
         localStorage.setItem('ultimoCarrossel', data.conteudo);
         if (btnEditor) btnEditor.style.display = '';
+        // Análise de caracteres por slide
+        const parsedForAnalysis = parseSlides(data.conteudo);
+        if (parsedForAnalysis.length) {
+          renderCharAnalysis(parsedForAnalysis, 'conteudo-char-analysis');
+          document.getElementById('conteudo-char-analysis').style.display = '';
+        }
       } else {
         if (btnEditor) btnEditor.style.display = 'none';
+        document.getElementById('conteudo-char-analysis').style.display = 'none';
       }
     } else {
       setStatus('conteudo', 'error', 'Erro: ' + data.erro);
@@ -2236,6 +2275,13 @@ async function carregarMetricas() {
 const CANVAS_W = 360;
 const CANVAS_H = 450;
 const EXPORT_MULT = 3; // → 1080 × 1350 px
+
+// ── Limites de caracteres por tipo de slide ───────────────────
+const SLIDE_LIMITS = {
+  capa:  90,   // headline da capa (parágrafo 1)
+  corpo: 280,  // texto de slides de conteúdo
+  label: 50    // tag de função do slide
+};
 
 const TEMPLATES = {
   noite:     { nome: '🌙 Noite',     bg: '#0c0c0f', textColor: '#e8e8f0', labelColor: '#7c6af7', font: 'Syne' },
@@ -2810,6 +2856,15 @@ async function importarTextoNoEditor() {
   const parsed = parseSlides(texto);
   if (!parsed.length) { toast('Nenhum slide encontrado. Use o formato **SLIDE 1 — GANCHO**', 'error'); return; }
 
+  // ── Char limit warnings ──────────────────────────────────────
+  const overLimit = parsed.filter((s, i) => {
+    const limit = i === 0 ? (SLIDE_LIMITS.capa + SLIDE_LIMITS.corpo) : SLIDE_LIMITS.corpo;
+    return s.texto.length > limit;
+  });
+  if (overLimit.length) {
+    toast(`⚠ ${overLimit.length} slide(s) com texto acima do ideal. Menos é mais!`, 'error');
+  }
+
   if (!fc) initFabricEditor();
   document.getElementById('import-area').style.display = 'none';
 
@@ -2828,40 +2883,20 @@ async function importarTextoNoEditor() {
     fc.backgroundColor = tpl.bg;
     fc.backgroundImage = null;
 
-    // Label
-    fc.add(new fabric.IText(s.label.toUpperCase(), {
-      left: 30, top: 36,
-      fontFamily: tpl.font || 'Syne', fontSize: 11,
-      fill: tpl.labelColor || '#7c6af7',
-      fontWeight: '700', charSpacing: 100,
-      selectable: true, name: 'label',
-    }));
-
-    // Body text
-    fc.add(new fabric.Textbox(s.texto, {
-      left: 30, top: 90,
-      width: CANVAS_W - 60,
-      fontFamily: tpl.font || 'Syne', fontSize: 22,
-      fill: tpl.textColor || '#ffffff',
-      lineHeight: 1.35,
-      splitByGrapheme: false, name: 'text',
-    }));
-
-    // Slide number
-    fc.add(new fabric.IText(`${i + 1}/${parsed.length}`, {
-      left: CANVAS_W - 50, top: CANVAS_H - 28,
-      fontFamily: tpl.font || 'Syne', fontSize: 11,
-      fill: (tpl.textColor || '#ffffff') + '66',
-      selectable: true, name: 'slidenum',
-    }));
+    // Slide 0 = layout de CAPA; demais = conteúdo padrão
+    if (i === 0) {
+      _renderCoverSlide(fc, s, tpl, parsed.length);
+    } else {
+      _renderContentSlide(fc, s, tpl, i, parsed.length);
+    }
 
     fc.renderAll();
     const thumb = fc.toDataURL({ format: 'jpeg', quality: 0.6, multiplier: 0.36 });
     const json  = fc.toJSON(['selectable','evented','name']);
-    edSlides.push({ json, thumb, bgColor: tpl.bg, bgImage: '' });
+    edSlides.push({ json, thumb, bgColor: tpl.bg, bgImage: '', isCover: i === 0 });
 
     const item = document.createElement('div');
-    item.className = 'slide-thumb-item' + (i === 0 ? ' active' : '');
+    item.className = 'slide-thumb-item' + (i === 0 ? ' active slide-is-cover' : '');
     item.id = `thumb-${i}`;
     item.onclick = () => switchToSlide(i);
     item.innerHTML = `
@@ -2882,6 +2917,180 @@ async function importarTextoNoEditor() {
   updateSlideBadge();
   document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
   toast(`${parsed.length} slides importados!`);
+}
+
+// ── Cover slide renderer (slide 0 — CAPA/GANCHO) ──────────────
+function _renderCoverSlide(fc, slide, tpl, totalSlides) {
+  // Gradient overlay para simular sombra de foto (funciona mesmo sem imagem)
+  const overlayH = Math.round(CANVAS_H * 0.72);
+  const overlay = new fabric.Rect({
+    left: 0, top: CANVAS_H - overlayH,
+    width: CANVAS_W, height: overlayH,
+    fill: new fabric.Gradient({
+      type: 'linear',
+      gradientUnits: 'pixels',
+      coords: { x1: 0, y1: 0, x2: 0, y2: overlayH },
+      colorStops: [
+        { offset: 0,    color: 'rgba(0,0,0,0)' },
+        { offset: 0.3,  color: 'rgba(0,0,0,0.65)' },
+        { offset: 1,    color: 'rgba(0,0,0,0.97)' }
+      ]
+    }),
+    selectable: false, evented: false, name: 'overlay'
+  });
+  fc.add(overlay);
+
+  // Brand — topo centro
+  fc.add(new fabric.IText('leonam\u2191alves', {
+    left: CANVAS_W / 2, top: 18,
+    originX: 'center',
+    fontFamily: 'Syne', fontSize: 13,
+    fill: '#ffffff', fontWeight: '600',
+    opacity: 0.88, charSpacing: 20, name: 'brand', selectable: true
+  }));
+
+  // Categoria — topo direita (extraída do label do slide)
+  const tag = (slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') || 'ANÁLISE').toUpperCase();
+  fc.add(new fabric.IText(tag, {
+    left: CANVAS_W - 20, top: 22,
+    originX: 'right',
+    fontFamily: 'DM Sans', fontSize: 9,
+    fill: '#ffffff', opacity: 0.42, charSpacing: 120,
+    name: 'cat-tag', selectable: true
+  }));
+
+  // Parsear o texto do slide em: headline, subtítulo e CTA
+  const paras = slide.texto.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+  const headline   = paras[0] || slide.texto;
+  const subParas   = paras.slice(1).filter(p => !/^→/.test(p));
+  const subtitle   = subParas.join('\n');
+  const cta        = paras.find(p => /^→/.test(p)) || '→ Deslize para entender a lógica.';
+
+  // Posicionamento dinâmico: headline sobe se houver subtítulo
+  const estLines   = Math.ceil(headline.length / 14); // ~14 chars por linha a 34px
+  const headlineH  = estLines * 34 * 1.2;
+  const ctaH       = 28;
+  const subH       = subtitle ? 50 : 0;
+  const gapBottom  = 20;
+  const headlineTop = Math.max(160, CANVAS_H - headlineH - subH - ctaH - gapBottom);
+
+  // Headline — grande e bold
+  fc.add(new fabric.Textbox(headline.toUpperCase(), {
+    left: 24, top: headlineTop,
+    width: CANVAS_W - 48,
+    fontFamily: tpl.font || 'Syne', fontSize: 34,
+    fill: tpl.textColor || '#ffffff', fontWeight: '800',
+    lineHeight: 1.15,
+    name: 'headline', selectable: true
+  }));
+
+  // Subtítulo (parágrafo 2+)
+  if (subtitle) {
+    fc.add(new fabric.Textbox(subtitle, {
+      left: 24, top: headlineTop + headlineH + 8,
+      width: CANVAS_W - 48,
+      fontFamily: 'DM Sans', fontSize: 13,
+      fill: (tpl.textColor || '#ffffff') + 'bb',
+      lineHeight: 1.45,
+      name: 'subtitle', selectable: true
+    }));
+  }
+
+  // CTA — rodapé
+  fc.add(new fabric.IText(cta, {
+    left: CANVAS_W / 2, top: CANVAS_H - 16,
+    originX: 'center', originY: 'bottom',
+    fontFamily: 'DM Sans', fontSize: 11,
+    fill: tpl.labelColor || '#a78bfa',
+    name: 'cta', selectable: true
+  }));
+}
+
+// ── Content slide renderer (slides 1, 2, 3…) ──────────────────
+function _renderContentSlide(fc, slide, tpl, idx, totalSlides) {
+  // Tag de função do slide (ex: CONTEXTO, VIRADA, PROVA)
+  const funcTag = slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '').toUpperCase();
+  fc.add(new fabric.IText(funcTag, {
+    left: 28, top: 34,
+    fontFamily: tpl.font || 'Syne', fontSize: 11,
+    fill: tpl.labelColor || '#7c6af7',
+    fontWeight: '700', charSpacing: 100,
+    selectable: true, name: 'label',
+  }));
+
+  // Separador leve abaixo do tag
+  fc.add(new fabric.Line([28, 58, CANVAS_W - 28, 58], {
+    stroke: tpl.labelColor || '#7c6af7',
+    strokeWidth: 1, opacity: 0.18,
+    selectable: false, evented: false, name: 'divider'
+  }));
+
+  // Corpo do texto
+  fc.add(new fabric.Textbox(slide.texto, {
+    left: 28, top: 72,
+    width: CANVAS_W - 56,
+    fontFamily: tpl.font || 'Syne', fontSize: 20,
+    fill: tpl.textColor || '#ffffff',
+    lineHeight: 1.38,
+    splitByGrapheme: false, name: 'text',
+  }));
+
+  // Numeração do slide — canto inferior direito
+  fc.add(new fabric.IText(`${idx + 1}/${totalSlides}`, {
+    left: CANVAS_W - 48, top: CANVAS_H - 26,
+    fontFamily: tpl.font || 'Syne', fontSize: 11,
+    fill: (tpl.textColor || '#ffffff') + '55',
+    selectable: true, name: 'slidenum',
+  }));
+}
+
+// ── Char analysis functions ────────────────────────────────────
+function analyzeSlideChars(slides) {
+  return slides.map((s, i) => {
+    const isCover = i === 0;
+    const limit   = isCover ? (SLIDE_LIMITS.capa + SLIDE_LIMITS.corpo) : SLIDE_LIMITS.corpo;
+    const count   = s.texto.length;
+    const pct     = count / limit;
+    const status  = count > limit ? 'over' : count > limit * 0.82 ? 'warn' : 'ok';
+    return { label: s.label, count, limit, pct, status, isCover };
+  });
+}
+
+function renderCharAnalysis(slides, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!slides.length) { el.innerHTML = ''; return; }
+  const analysis  = analyzeSlideChars(slides);
+  const overCount = analysis.filter(a => a.status === 'over').length;
+  const warnCount = analysis.filter(a => a.status === 'warn').length;
+  const summary   = overCount
+    ? `<span style="color:var(--danger)">⚠ ${overCount} slide(s) acima do limite — corte o texto!</span>`
+    : warnCount
+      ? `<span style="color:#f59e0b">${warnCount} slide(s) próximos do limite</span>`
+      : `<span style="color:var(--success)">✓ Todos dentro do limite</span>`;
+  el.innerHTML = `
+    <div class="char-analysis">
+      <div class="char-analysis-title">
+        <span>Análise — ${slides.length} slides</span>
+        ${summary}
+      </div>
+      ${analysis.map(a => {
+        const shortLabel = a.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') + (a.isCover ? ' (capa)' : '');
+        const barW = Math.min(a.pct * 100, 100).toFixed(0);
+        return `<div class="char-row ${a.status}">
+          <span class="cr-label">${shortLabel}</span>
+          <div class="char-bar"><div class="char-bar-fill" style="width:${barW}%"></div></div>
+          <span class="cr-count">${a.count}/${a.limit}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function updateImportCharCounter() {
+  const texto  = (document.getElementById('import-texto').value || '').trim();
+  if (!texto) { const el = document.getElementById('import-char-info'); if (el) el.innerHTML = ''; return; }
+  const slides = parseSlides(texto);
+  renderCharAnalysis(slides, 'import-char-info');
 }
 
 // ── Export ────────────────────────────────────────────────────────────────────
