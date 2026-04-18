@@ -2442,11 +2442,12 @@ function renderSlideEl(data) {
     badge = document.createElement('div');
     badge.style.cssText = `display:flex;align-items:center;gap:7px;background:rgba(0,0,0,0.42);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,0.14);border-radius:100px;padding:4px 11px 4px 5px;flex-shrink:0;`;
 
-    // Avatar circle
+    // Avatar circle — clicável para upload de foto de perfil
     const avatar = document.createElement('div');
     const uRaw = (username || '@leonamalves').replace('@','');
     const profileSrc = localStorage.getItem('edProfilePhoto');
-    avatar.style.cssText = `width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.28);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;background:rgba(124,106,247,0.55);`;
+    avatar.style.cssText = `width:28px;height:28px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.28);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;font-family:'DM Sans',sans-serif;background:rgba(124,106,247,0.55);cursor:pointer;position:relative;`;
+    avatar.title = 'Clique para adicionar foto de perfil';
     if (profileSrc) {
       const img = document.createElement('img');
       img.src = profileSrc; img.crossOrigin = 'anonymous';
@@ -2454,8 +2455,24 @@ function renderSlideEl(data) {
       img.onerror = () => { img.style.display='none'; avatar.textContent = uRaw.charAt(0).toUpperCase(); };
       avatar.appendChild(img);
     } else {
-      avatar.textContent = uRaw.charAt(0).toUpperCase();
+      // Placeholder com ícone de câmera
+      avatar.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" stroke="rgba(255,255,255,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" stroke="rgba(255,255,255,0.7)" stroke-width="2"/></svg>`;
     }
+    avatar.onclick = (e) => {
+      e.stopPropagation();
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'image/*';
+      inp.onchange = ev => {
+        const file = ev.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = re => {
+          localStorage.setItem('edProfilePhoto', re.target.result);
+          mountActiveSlide(true); // re-renderiza a capa
+        };
+        reader.readAsDataURL(file);
+      };
+      inp.click();
+    };
     badge.appendChild(avatar);
 
     // Username text
@@ -2733,25 +2750,16 @@ async function edGerarImagem() {
   const statusEl = document.getElementById('status-editor');
   statusEl.style.display = 'block';
   statusEl.className = 'status-box loading';
-  statusEl.textContent = 'Gerando imagem com IA...';
+  statusEl.textContent = '⟳ Gerando imagem com IA (direto do navegador)...';
   try {
-    const r = await fetch(`${API}/api/imagem/gerar`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
-    });
-    const data = await r.json();
-    if (data.ok && data.imagem) {
-      edSlides[activeIdx].bgImage = data.imagem;
-      mountActiveSlide(true);
-      renderThumbItem(activeIdx);
-      statusEl.className = 'status-box success';
-      statusEl.textContent = '✓ Imagem gerada!';
-      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
-      historyPush();
-    } else {
-      statusEl.className = 'status-box error';
-      statusEl.textContent = 'Erro: ' + (data.erro || 'falhou');
-    }
+    const dataUrl = await gerarImagemClientSide(prompt);
+    edSlides[activeIdx].bgImage = dataUrl;
+    mountActiveSlide(true);
+    renderThumbItem(activeIdx);
+    statusEl.className = 'status-box success';
+    statusEl.textContent = '✓ Imagem gerada!';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+    historyPush();
   } catch (err) {
     statusEl.className = 'status-box error';
     statusEl.textContent = 'Erro: ' + err.message;
@@ -3006,7 +3014,32 @@ function updateImportCharCounter() {
   renderCharAnalysis(parseSlides(texto), 'import-char-info');
 }
 
-// ── Image generation ──────────────────────────────────────────────────────────
+// ── Image generation (client-side via Pollinations — sem passar pela Railway) ──
+async function gerarImagemClientSide(promptTexto) {
+  const p = `${promptTexto.slice(0, 160)}, cinematic lighting, dark moody, professional photography, no text, no watermark`;
+  const seed = Math.floor(Math.random() * 1e6);
+  const models = ['flux', 'flux-realism', 'turbo'];
+  for (const model of models) {
+    try {
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(p)}?width=720&height=900&nologo=true&seed=${seed}&model=${model}&t=${Date.now()}`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(50000) });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const ct = r.headers.get('content-type') || '';
+      if (!ct.startsWith('image/')) throw new Error('resposta não é imagem');
+      const blob = await r.blob();
+      return await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result);
+        reader.onerror = () => rej(new Error('FileReader falhou'));
+        reader.readAsDataURL(blob);
+      });
+    } catch (e) {
+      console.warn(`Pollinations ${model} falhou:`, e.message);
+    }
+  }
+  throw new Error('Todas as fontes de imagem falharam');
+}
+
 function _buildSlidePrompt(slide, isCover) {
   const funcTag  = slide.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '').toUpperCase();
   const headline = slide.texto.split(/\n\n+/)[0]?.replace(/\*/g, '').slice(0, 80) || '';
@@ -3037,16 +3070,11 @@ async function _gerarImagensCarrossel(parsed) {
     if (i >= edSlides.length) break;
     const prompt = _buildSlidePrompt(parsed[i], i === 0);
     try {
-      const r = await fetch(`${API}/api/imagem/gerar`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
-      });
-      const data = await r.json();
-      if (!data.ok || !data.imagem) throw new Error(data.erro || 'sem imagem');
-      edSlides[i].bgImage = data.imagem;
+      const dataUrl = await gerarImagemClientSide(prompt);
+      edSlides[i].bgImage = dataUrl;
       renderThumbItem(i);
       if (i === activeIdx) mountActiveSlide(true);
-      console.log(`Slide ${i + 1} imagem OK (${data.fonte})`);
+      console.log(`Slide ${i + 1} imagem OK`);
     } catch (e) {
       console.warn(`Slide ${i + 1} imagem falhou:`, e.message);
     }
