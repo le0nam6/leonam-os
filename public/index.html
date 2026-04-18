@@ -431,24 +431,130 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 
 /* ─── EDITOR 3-COLUMN ────────────────────────────────────────── */
 .ed-main {
-  display: grid; grid-template-columns: 120px 1fr 240px;
+  display: grid; grid-template-columns: 195px 1fr 256px;
   flex: 1; min-height: 0; overflow: hidden;
 }
 
-.ed-slides-list {
+/* ─── LEFT PANEL ─────────────────────────────────────────────── */
+.ed-left-panel {
   background: var(--s1); border-right: 1px solid var(--border);
-  overflow-y: auto; padding: 10px 7px;
-  display: flex; flex-direction: column; gap: 8px; height: 100%;
+  display: flex; flex-direction: column; height: 100%; overflow: hidden;
 }
 
-.ed-canvas-area {
+.ep-slides-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 10px 6px; flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.ep-slides-head-label {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--dim); font-weight: 700;
+}
+.ep-add-btn {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: var(--accent-dim); border: 1px solid var(--border-hi);
+  color: var(--neon); font-size: 15px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  overflow: auto; padding: 28px; height: 100%; position: relative;
+  transition: all 0.15s; line-height: 1; padding: 0; font-family: inherit;
+}
+.ep-add-btn:hover { background: var(--accent-lt); color: #fff; border-color: var(--accent-lt); }
+
+.ed-slides-list {
+  overflow-y: auto; padding: 8px 7px;
+  display: flex; flex-direction: column; gap: 6px;
+  max-height: 38vh; flex-shrink: 0;
+}
+
+/* Feature sections */
+.ep-sections { border-top: 1px solid var(--border); overflow-y: auto; flex: 1; }
+
+.ep-section { border-bottom: 1px solid var(--border); }
+
+.ep-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; cursor: pointer;
+  font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--muted); font-weight: 700;
+  transition: color 0.15s; user-select: none;
+}
+.ep-section-header:hover { color: var(--text); }
+.ep-chevron { transition: transform 0.22s; font-style: normal; font-size: 11px; }
+.ep-section.open .ep-chevron { transform: rotate(180deg); }
+.ep-section-body { display: none; padding: 6px 10px 12px; }
+.ep-section.open .ep-section-body { display: block; }
+
+.ep-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; cursor: pointer;
+  font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+  color: var(--muted); font-weight: 700; transition: color 0.15s;
+  border-bottom: 1px solid var(--border);
+}
+.ep-toggle-row:hover { color: var(--text); }
+.ep-toggle-row.expandable { flex-wrap: wrap; gap: 0; }
+.ep-toggle-row .ep-row-main {
+  display: flex; align-items: center; justify-content: space-between; width: 100%;
+}
+.ep-toggle-expand { display: none; width: 100%; padding-top: 8px; }
+.ep-toggle-row.on .ep-toggle-expand { display: block; }
+
+/* Toggle switch */
+.ep-toggle {
+  width: 32px; height: 18px; border-radius: 9px;
+  background: var(--s3); border: 1px solid var(--border);
+  position: relative; transition: background 0.2s, border-color 0.2s;
+  flex-shrink: 0; cursor: pointer;
+}
+.ep-toggle::after {
+  content: ''; position: absolute;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--dim); top: 2px; left: 2px;
+  transition: transform 0.2s, background 0.2s;
+}
+.ep-toggle.on { background: var(--accent-lt); border-color: var(--accent-lt); }
+.ep-toggle.on::after { background: #fff; transform: translateX(14px); }
+
+/* Color palette */
+.palette-list { display: flex; flex-direction: column; gap: 4px; }
+.palette-item {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 8px; border-radius: 7px; cursor: pointer;
+  border: 1px solid transparent; transition: all 0.15s;
+}
+.palette-item:hover { background: var(--s2); border-color: var(--border); }
+.palette-item.active { border-color: var(--border-hi); background: var(--accent-dim); }
+.palette-swatches { display: flex; gap: 3px; }
+.swatch {
+  width: 16px; height: 16px; border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.06); flex-shrink: 0;
+}
+.palette-lbl { font-size: 11px; color: var(--muted); }
+
+/* Template chips */
+.tpl-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.tpl-chip {
+  padding: 4px 9px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--s2);
+  color: var(--muted); cursor: pointer; font-size: 11px;
+  font-family: 'DM Sans', sans-serif; font-weight: 500;
+  transition: all 0.15s; white-space: nowrap;
+}
+.tpl-chip:hover { border-color: rgba(255,255,255,0.12); color: var(--text); }
+.tpl-chip.active { border-color: var(--accent-lt); color: var(--neon); background: var(--accent-dim); }
+
+/* Canvas wrap with navigation arrows */
+.ed-canvas-wrap {
+  display: flex; align-items: center; justify-content: center;
+  position: relative; height: 100%; overflow: auto;
   background:
     radial-gradient(ellipse at 50% 30%, rgba(139,92,246,0.06) 0%, transparent 65%),
     repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(255,255,255,0.025) 28px),
     repeating-linear-gradient(90deg, transparent, transparent 27px, rgba(255,255,255,0.025) 28px),
     var(--bg);
+}
+.ed-canvas-area {
+  display: flex; align-items: center; justify-content: center;
+  padding: 28px; position: relative;
 }
 .ed-canvas-area canvas {
   border-radius: 8px;
@@ -457,6 +563,39 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
     0 24px 64px rgba(0,0,0,0.7),
     0 0 100px rgba(139,92,246,0.08);
 }
+.ed-nav-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--s2); border: 1px solid var(--border);
+  color: var(--text); font-size: 20px; line-height: 1;
+  cursor: pointer; z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.18s; opacity: 0.55; padding: 0;
+}
+.ed-nav-arrow:hover { background: var(--s3); border-color: var(--border-hi); opacity: 1; transform: translateY(-50%) scale(1.05); }
+.ed-nav-arrow:disabled { opacity: 0.12; cursor: not-allowed; }
+.ed-nav-arrow.left { left: 14px; }
+.ed-nav-arrow.right { right: 14px; }
+
+/* Slide counter badge */
+.ed-slide-badge {
+  position: absolute; top: 14px; right: 14px;
+  background: var(--s2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 10px;
+  font-size: 11px; color: var(--muted); font-weight: 600;
+  pointer-events: none; z-index: 5;
+}
+
+/* Creator info fields */
+.ep-creator-fields { display: flex; flex-direction: column; gap: 6px; }
+.ep-field label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); display: block; margin-bottom: 4px; font-weight: 700; }
+.ep-field input {
+  width: 100%; background: var(--s2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 9px; color: var(--text);
+  font-family: 'DM Sans', sans-serif; font-size: 12px; outline: none;
+  transition: border-color 0.15s;
+}
+.ep-field input:focus { border-color: rgba(139,92,246,0.5); }
 
 .ed-props {
   background: var(--s1); border-left: 1px solid var(--border);
@@ -1002,31 +1141,22 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 
   <!-- TOOLBAR -->
   <div class="ed-toolbar">
-    <!-- Adicionar elementos -->
-    <button class="tb-btn" onclick="edAddText()" title="Adicionar caixa de texto">T Texto</button>
-    <button class="tb-btn" onclick="edAddLabel()" title="Adicionar etiqueta [ FUNÇÃO ]">[ Label ]</button>
-    <button class="tb-btn" onclick="edAddImage()" title="Adicionar imagem">🖼 Imagem</button>
+    <button class="tb-btn" onclick="edAddText()" title="Texto">T Texto</button>
+    <button class="tb-btn" onclick="edAddLabel()" title="Label">[Label]</button>
+    <button class="tb-btn" onclick="edAddImage()" title="Imagem">🖼 Img</button>
     <button class="tb-btn" onclick="edAddRect()" title="Retângulo">▬ Rect</button>
     <button class="tb-btn" onclick="edAddCircle()" title="Círculo">● Círculo</button>
-    <button class="tb-btn" onclick="edAddSlideNum()" title="Número do slide">1/N</button>
+    <button class="tb-btn" onclick="edAddSlideNum()" title="Nº slide">1/N</button>
     <div class="tb-sep"></div>
-    <!-- Fundo -->
     <button class="tb-btn" onclick="document.getElementById('bg-color-pick').click()" title="Cor de fundo">🎨 Fundo</button>
     <input id="bg-color-pick" type="color" value="#0c0c0f" style="display:none" oninput="edSetBgColor(this.value)">
-    <button class="tb-btn" onclick="edSetBgImage()" title="Imagem de fundo">🖼 Bg img</button>
-    <button class="tb-btn" onclick="edGerarImagem()" title="Gerar imagem com IA">✦ Gerar bg</button>
+    <button class="tb-btn" onclick="edSetBgImage()" title="Imagem de fundo">🖼 Bg</button>
+    <button class="tb-btn" onclick="edGerarImagem()" title="Gerar fundo com IA">✦ Gerar bg</button>
     <div class="tb-sep"></div>
-    <!-- Templates -->
-    <span style="font-size:11px;color:var(--muted);flex-shrink:0">Template:</span>
-    <div class="template-btns" id="template-btns" style="flex-wrap:nowrap;overflow-x:auto;max-width:260px;padding-bottom:2px"></div>
-    <button class="tb-btn" onclick="toggleTemplateEditor()" title="Criar template">+ Criar</button>
-    <div class="tb-sep"></div>
-    <!-- Import -->
     <button class="tb-btn" onclick="toggleImport()">📥 Importar</button>
     <div class="tb-sep"></div>
-    <!-- Export -->
     <button class="tb-btn" onclick="exportCurrentSlide()">⬇ PNG</button>
-    <button class="tb-btn" id="btn-export-zip" onclick="exportAllSlides()" disabled>📁 ZIP todos</button>
+    <button class="tb-btn" id="btn-export-zip" onclick="exportAllSlides()" disabled>📦 ZIP</button>
     <button class="tb-btn" onclick="abrirInstagram()">📱 Instagram</button>
   </div>
 
@@ -1063,35 +1193,104 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   <!-- PAINEL IMPORTAR TEXTO (colapsável) -->
   <div class="import-area" id="import-area" style="display:none;border-radius:0;border-left:none;border-right:none;border-top:none">
     <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Cole o texto gerado (formato <strong>**SLIDE X — FUNÇÃO**</strong>)</div>
-    <textarea id="import-texto" style="width:100%;min-height:100px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical" placeholder="**SLIDE 1 — GANCHO**&#10;texto...&#10;&#10;**SLIDE 2 — CONTEXTO**&#10;texto..."></textarea>
+    <textarea id="import-texto" style="width:100%;min-height:90px;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;resize:vertical" placeholder="**SLIDE 1 — GANCHO**&#10;texto...&#10;&#10;**SLIDE 2 — CONTEXTO**&#10;texto..."></textarea>
     <div style="display:flex;gap:8px;margin-top:8px">
       <button class="btn btn-primary btn-sm" onclick="importarTextoNoEditor()">Carregar slides</button>
       <button class="btn btn-ghost btn-sm" onclick="toggleImport()">Cancelar</button>
     </div>
   </div>
 
-  <!-- LAYOUT PRINCIPAL: lista de slides | canvas | propriedades -->
+  <!-- LAYOUT PRINCIPAL -->
   <div class="ed-main">
 
-    <!-- LISTA DE SLIDES -->
-    <div class="ed-slides-list" id="slides-list">
-      <button class="tb-btn" onclick="edAddSlide()" style="width:100%;justify-content:center;font-size:11px;border:1px dashed var(--border);margin-bottom:4px">+ Slide</button>
+    <!-- LEFT PANEL (aiCarousels-style) -->
+    <div class="ed-left-panel">
+
+      <!-- Slides section -->
+      <div class="ep-slides-head">
+        <span class="ep-slides-head-label">Slides</span>
+        <button class="ep-add-btn" onclick="edAddSlide()" title="Adicionar slide">+</button>
+      </div>
+      <div class="ed-slides-list" id="slides-list"></div>
+
+      <!-- Feature sections -->
+      <div class="ep-sections">
+
+        <!-- Template -->
+        <div class="ep-section open" id="ep-tpl">
+          <div class="ep-section-header" onclick="toggleEpSection('ep-tpl')">
+            <span>Template</span><i class="ep-chevron">▾</i>
+          </div>
+          <div class="ep-section-body">
+            <div class="tpl-chips" id="template-btns"></div>
+            <button class="tb-btn" onclick="toggleTemplateEditor()" style="width:100%;justify-content:center;font-size:11px;border-style:dashed;margin-top:2px">+ Criar template</button>
+          </div>
+        </div>
+
+        <!-- Color Palette -->
+        <div class="ep-section" id="ep-palette">
+          <div class="ep-section-header" onclick="toggleEpSection('ep-palette')">
+            <span>Color Palette</span><i class="ep-chevron">▾</i>
+          </div>
+          <div class="ep-section-body">
+            <div class="palette-list" id="palette-list"></div>
+          </div>
+        </div>
+
+        <!-- Background Effects toggle -->
+        <div class="ep-toggle-row" id="ep-bgfx-row" onclick="toggleEpFeature('bgfx')">
+          <span>Background Effects</span>
+          <div class="ep-toggle" id="toggle-bgfx"></div>
+        </div>
+
+        <!-- Counter & Corners toggle -->
+        <div class="ep-toggle-row on" id="ep-counter-row" onclick="toggleEpFeature('counter')">
+          <span>Counter &amp; Corners</span>
+          <div class="ep-toggle on" id="toggle-counter"></div>
+        </div>
+
+        <!-- Creator Info toggle + fields -->
+        <div class="ep-toggle-row expandable on" id="ep-creator-row">
+          <div class="ep-row-main" onclick="toggleEpFeature('creator')">
+            <span>Creator Info</span>
+            <div class="ep-toggle on" id="toggle-creator"></div>
+          </div>
+          <div class="ep-toggle-expand" id="creator-fields">
+            <div class="ep-creator-fields">
+              <div class="ep-field">
+                <label>Nome</label>
+                <input id="creator-nome" type="text" placeholder="Leonam Alves" oninput="updateCreatorOverlay()">
+              </div>
+              <div class="ep-field">
+                <label>Handle / cargo</label>
+                <input id="creator-handle" type="text" placeholder="@leonamalves" oninput="updateCreatorOverlay()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /ep-sections -->
+    </div><!-- /ed-left-panel -->
+
+    <!-- CENTER: Canvas + navigation arrows -->
+    <div class="ed-canvas-wrap">
+      <button class="ed-nav-arrow left" id="nav-prev" onclick="navSlide(-1)" title="Slide anterior">‹</button>
+      <div class="ed-canvas-area">
+        <canvas id="main-canvas"></canvas>
+      </div>
+      <button class="ed-nav-arrow right" id="nav-next" onclick="navSlide(1)" title="Próximo slide">›</button>
+      <div class="ed-slide-badge" id="slide-badge">1/1</div>
     </div>
 
-    <!-- CANVAS FABRIC.JS -->
-    <div class="ed-canvas-area">
-      <canvas id="main-canvas"></canvas>
-    </div>
-
-    <!-- PAINEL DE PROPRIEDADES -->
+    <!-- RIGHT: Properties panel -->
     <div class="ed-props">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:12px">Propriedades</div>
+      <div class="ed-props-title">Propriedades</div>
       <div id="props-content"><div class="no-select-msg">Clique em um elemento<br>para editar</div></div>
     </div>
 
-  </div>
+  </div><!-- /ed-main -->
 
-  <div id="status-editor" class="status-box" style="display:none;position:fixed;bottom:20px;right:260px;z-index:200;min-width:240px"></div>
+  <div id="status-editor" class="status-box" style="display:none;position:fixed;bottom:20px;right:270px;z-index:200;min-width:240px"></div>
 
 </div>
 
@@ -2115,7 +2314,6 @@ function initFabricEditor() {
     edSlides[0].thumb = thumb;
 
     const listEl = document.getElementById('slides-list');
-    const addBtn = listEl.querySelector('button');
     const item = document.createElement('div');
     item.className = 'slide-thumb-item active';
     item.id = 'thumb-0';
@@ -2124,11 +2322,14 @@ function initFabricEditor() {
       <div class="thumb-num">1</div>
       <canvas class="thumb-preview" id="thumb-cv-0" width="72" height="90"></canvas>
       <button class="thumb-del" onclick="deleteSlide(event,0)" title="Deletar">✕</button>`;
-    listEl.insertBefore(item, addBtn);
+    listEl.appendChild(item);
     renderThumbItem(0);
   }
 
   renderTemplateBtns();
+  initPalettes();
+  updateNavArrows();
+  updateSlideBadge();
   updatePropsPanel();
 }
 
@@ -2158,7 +2359,6 @@ function edAddSlide() {
   activeIdx = idx;
 
   const listEl = document.getElementById('slides-list');
-  const addBtn = listEl.querySelector('button');
   const item = document.createElement('div');
   item.className = 'slide-thumb-item active';
   item.id = `thumb-${idx}`;
@@ -2167,9 +2367,11 @@ function edAddSlide() {
     <div class="thumb-num">${idx + 1}</div>
     <canvas class="thumb-preview" id="thumb-cv-${idx}" width="72" height="90"></canvas>
     <button class="thumb-del" onclick="deleteSlide(event,${idx})" title="Deletar slide">✕</button>`;
-  listEl.insertBefore(item, addBtn);
+  listEl.appendChild(item);
   updateThumb(idx);
   updatePropsPanel();
+  updateNavArrows();
+  updateSlideBadge();
   document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
 }
 
@@ -2192,6 +2394,8 @@ function switchToSlide(idx) {
     fc.renderAll();
     updatePropsPanel();
   }
+  updateNavArrows();
+  updateSlideBadge();
 }
 
 function renderThumbItem(idx) {
@@ -2215,7 +2419,6 @@ function deleteSlide(e, idx) {
   if (!confirm(`Deletar slide ${idx + 1}?`)) return;
   edSlides.splice(idx, 1);
   const listEl = document.getElementById('slides-list');
-  const addBtn = listEl.querySelector('button');
   listEl.querySelectorAll('.slide-thumb-item').forEach(el => el.remove());
   edSlides.forEach((_, i) => {
     const item = document.createElement('div');
@@ -2226,7 +2429,7 @@ function deleteSlide(e, idx) {
       <div class="thumb-num">${i + 1}</div>
       <canvas class="thumb-preview" id="thumb-cv-${i}" width="72" height="90"></canvas>
       <button class="thumb-del" onclick="deleteSlide(event,${i})" title="Deletar slide">✕</button>`;
-    listEl.insertBefore(item, addBtn);
+    listEl.appendChild(item);
     renderThumbItem(i);
   });
   const newActive = Math.min(idx, edSlides.length - 1);
@@ -2237,6 +2440,8 @@ function deleteSlide(e, idx) {
   } else {
     fc.clear(); fc.backgroundColor = s.bgColor || TEMPLATES[activeTemplate].bg; fc.renderAll();
   }
+  updateNavArrows();
+  updateSlideBadge();
   document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
 }
 
@@ -2612,7 +2817,6 @@ async function importarTextoNoEditor() {
   edSlides = [];
   activeIdx = 0;
   const listEl = document.getElementById('slides-list');
-  const addBtn = listEl.querySelector('button');
   listEl.querySelectorAll('.slide-thumb-item').forEach(el => el.remove());
   fc.clear();
 
@@ -2664,7 +2868,7 @@ async function importarTextoNoEditor() {
       <div class="thumb-num">${i + 1}</div>
       <canvas class="thumb-preview" id="thumb-cv-${i}" width="72" height="90"></canvas>
       <button class="thumb-del" onclick="deleteSlide(event,${i})" title="Deletar">✕</button>`;
-    listEl.insertBefore(item, addBtn);
+    listEl.appendChild(item);
   }
 
   // re-render all thumbs
@@ -2674,6 +2878,8 @@ async function importarTextoNoEditor() {
   activeIdx = 0;
   const s0 = edSlides[0];
   fc.loadFromJSON(s0.json, () => { fc.backgroundColor = s0.bgColor; fc.renderAll(); updatePropsPanel(); });
+  updateNavArrows();
+  updateSlideBadge();
   document.getElementById('btn-export-zip').disabled = edSlides.length < 2;
   toast(`${parsed.length} slides importados!`);
 }
@@ -2769,7 +2975,7 @@ function renderTemplateBtns() {
   container.innerHTML = '';
   Object.entries(TEMPLATES).forEach(([key, tpl]) => {
     const btn = document.createElement('button');
-    btn.className = 'template-btn' + (key === activeTemplate ? ' active' : '');
+    btn.className = 'tpl-chip' + (key === activeTemplate ? ' active' : '');
     btn.textContent = tpl.nome || key;
     btn.onclick = () => aplicarTemplate(key);
     if (tpl.isCustom) {
@@ -2777,7 +2983,7 @@ function renderTemplateBtns() {
       wrap.style.cssText = 'display:inline-flex;align-items:center;gap:2px';
       wrap.appendChild(btn);
       const del = document.createElement('button');
-      del.className = 'template-btn';
+      del.className = 'tpl-chip';
       del.style.cssText = 'padding:4px 7px;color:var(--danger);border-color:transparent;font-size:11px';
       del.title = 'Deletar template';
       del.textContent = '✕';
@@ -2829,6 +3035,163 @@ function deletarTemplate(key) {
   localStorage.setItem('customTemplates', JSON.stringify(customs));
   if (activeTemplate === key) aplicarTemplate('noite');
   else renderTemplateBtns();
+}
+
+// ── Left panel: accordion, toggles, palettes, nav ────────────────────────────
+
+function toggleEpSection(id) {
+  document.getElementById(id)?.classList.toggle('open');
+}
+
+// ep-bgfx, ep-counter, ep-creator
+const epFeatureState = { bgfx: false, counter: true, creator: true };
+
+function toggleEpFeature(feat) {
+  epFeatureState[feat] = !epFeatureState[feat];
+  const toggle = document.getElementById('toggle-' + feat);
+  const row = document.getElementById('ep-' + feat + '-row');
+  if (toggle) toggle.classList.toggle('on', epFeatureState[feat]);
+  if (row)    row.classList.toggle('on', epFeatureState[feat]);
+  // Apply effects
+  if (feat === 'counter') applyCounterVisibility();
+  if (feat === 'creator') applyCreatorVisibility();
+  if (feat === 'bgfx') applyBgFx();
+}
+
+function applyCounterVisibility() {
+  if (!fc) return;
+  const visible = epFeatureState.counter;
+  fc.getObjects().forEach(o => {
+    if (o.name === 'slidenum') { o.set('visible', visible); }
+  });
+  fc.renderAll(); updateThumb(activeIdx);
+}
+
+function applyCreatorVisibility() {
+  if (!fc) return;
+  const visible = epFeatureState.creator;
+  fc.getObjects().forEach(o => {
+    if (o.name === 'creator') { o.set('visible', visible); }
+  });
+  fc.renderAll(); updateThumb(activeIdx);
+  const fields = document.getElementById('creator-fields');
+  if (fields) fields.style.display = visible ? 'block' : 'none';
+}
+
+function applyBgFx() {
+  if (!fc) return;
+  if (epFeatureState.bgfx) {
+    const tpl = TEMPLATES[activeTemplate];
+    fc.getObjects().forEach(o => { if (o.name === 'bgfx') fc.remove(o); });
+    const grad = new fabric.Rect({
+      left: 0, top: 0, width: CANVAS_W, height: CANVAS_H,
+      fill: new fabric.Gradient({
+        type: 'linear',
+        gradientUnits: 'pixels',
+        coords: { x1: 0, y1: 0, x2: CANVAS_W, y2: CANVAS_H },
+        colorStops: [
+          { offset: 0, color: (tpl.labelColor || '#7c6af7') + '22' },
+          { offset: 1, color: 'transparent' }
+        ]
+      }),
+      selectable: false, evented: false, name: 'bgfx',
+    });
+    fc.add(grad);
+    fc.sendToBack(grad);
+  } else {
+    fc.getObjects().forEach(o => { if (o.name === 'bgfx') fc.remove(o); });
+  }
+  fc.renderAll(); updateThumb(activeIdx);
+}
+
+function updateCreatorOverlay() {
+  if (!fc || !epFeatureState.creator) return;
+  const nome = document.getElementById('creator-nome')?.value || '';
+  const handle = document.getElementById('creator-handle')?.value || '';
+  fc.getObjects().forEach(o => { if (o.name === 'creator') fc.remove(o); });
+  if (!nome && !handle) { fc.renderAll(); return; }
+  const tpl = TEMPLATES[activeTemplate];
+  const info = new fabric.IText((nome + (handle ? '  ' + handle : '')), {
+    left: 28, top: CANVAS_H - 30,
+    fontFamily: tpl.font || 'Syne', fontSize: 10,
+    fill: (tpl.textColor || '#ffffff') + 'aa', name: 'creator',
+    selectable: true, evented: true,
+  });
+  fc.add(info);
+  fc.renderAll(); updateThumb(activeIdx);
+}
+
+// Navigation arrows
+function navSlide(dir) {
+  const next = activeIdx + dir;
+  if (next < 0 || next >= edSlides.length) return;
+  switchToSlide(next);
+  // scroll thumb into view
+  const thumb = document.getElementById('thumb-' + next);
+  if (thumb) thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function updateNavArrows() {
+  const prev = document.getElementById('nav-prev');
+  const next = document.getElementById('nav-next');
+  if (prev) prev.disabled = activeIdx <= 0;
+  if (next) next.disabled = activeIdx >= edSlides.length - 1;
+}
+
+function updateSlideBadge() {
+  const badge = document.getElementById('slide-badge');
+  if (badge) badge.textContent = `${activeIdx + 1}/${edSlides.length}`;
+}
+
+// Color palettes
+const COLOR_PALETTES = [
+  { name: 'Dark Neon',    bg: '#07070d', text: '#f1f5f9', accent: '#8b5cf6', label: '#a78bfa' },
+  { name: 'Midnight',     bg: '#0c0c0f', text: '#e8e8f0', accent: '#7c6af7', label: '#7c6af7' },
+  { name: 'Gradient',     bg: '#1a1035', text: '#ffffff',  accent: '#f7a26a', label: '#f7a26a' },
+  { name: 'Fire',         bg: '#110800', text: '#fff5e6',  accent: '#f97316', label: '#f7a26a' },
+  { name: 'Editorial',    bg: '#f5f0e8', text: '#1a1208',  accent: '#8b6914', label: '#8b6914' },
+  { name: 'Clean White',  bg: '#ffffff', text: '#111111',  accent: '#7c3aed', label: '#888888' },
+  { name: 'Deep Blue',    bg: '#0a0f1e', text: '#e2e8f0',  accent: '#3b82f6', label: '#60a5fa' },
+  { name: 'Emerald',      bg: '#022c22', text: '#d1fae5',  accent: '#10b981', label: '#34d399' },
+  { name: 'Rose Dark',    bg: '#1c0a0f', text: '#fce7f3',  accent: '#f43f5e', label: '#fb7185' },
+  { name: 'Roxo',         bg: '#2a1a5e', text: '#f0eeff',  accent: '#7c3aed', label: '#c4b5fd' },
+];
+
+let activePaletteIdx = -1;
+
+function initPalettes() {
+  const list = document.getElementById('palette-list');
+  if (!list) return;
+  list.innerHTML = COLOR_PALETTES.map((p, i) => `
+    <div class="palette-item${i === activePaletteIdx ? ' active' : ''}" onclick="applyPalette(${i})">
+      <div class="palette-swatches">
+        <div class="swatch" style="background:${p.bg}"></div>
+        <div class="swatch" style="background:${p.text}"></div>
+        <div class="swatch" style="background:${p.accent}"></div>
+        <div class="swatch" style="background:${p.label}"></div>
+      </div>
+      <span class="palette-lbl">${p.name}</span>
+    </div>`).join('');
+}
+
+function applyPalette(idx) {
+  activePaletteIdx = idx;
+  const p = COLOR_PALETTES[idx];
+  if (!fc) return;
+  fc.backgroundColor = p.bg;
+  fc.getObjects().forEach(obj => {
+    if (obj.name === 'text')     obj.set({ fill: p.text });
+    if (obj.name === 'label')    obj.set({ fill: p.accent });
+    if (obj.name === 'slidenum') obj.set({ fill: p.text + '66' });
+    if (obj.name === 'creator')  obj.set({ fill: p.text + 'aa' });
+  });
+  // Also update the bg-color-pick
+  const pick = document.getElementById('bg-color-pick');
+  if (pick) pick.value = p.bg;
+  fc.renderAll();
+  updateThumb(activeIdx);
+  initPalettes(); // re-render to update active state
+  toast(`Paleta "${p.name}" aplicada`);
 }
 
 // ── History (Criar Conteúdo page) ────────────────────────────────────────────
