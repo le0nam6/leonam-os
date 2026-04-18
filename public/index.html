@@ -2399,7 +2399,15 @@ function _buildAccentHtml(text, accentColor) {
 // ── Slide renderer (HTML/CSS) ─────────────────────────────────────────────────
 function renderSlideEl(data) {
   const { headline = '', subtitle = '', body = '', isCover, bgColor, bgImage,
-          accentColor, username, topicLabel, funcTag = '', idx = 0, total = 1 } = data;
+          accentColor, username, topicLabel, funcTag = '', idx = 0, total = 1,
+          headlineFont, headlineColor, headlineFontSize,
+          bodyFont, bodyColor, bodyFontSize } = data;
+
+  const _hFont  = headlineFont  || 'Syne';
+  const _hColor = headlineColor || '#ffffff';
+  const _bFont  = bodyFont      || 'DM Sans';
+  const _bColor = bodyColor     || '#9CA3AF';
+  const _bSize  = bodyFontSize  || 12;
 
   const el = document.createElement('div');
   el.style.cssText = `width:${CANVAS_W}px;height:${CANVAS_H}px;position:relative;overflow:hidden;background:${bgColor || '#0c0c0f'};font-family:'DM Sans',sans-serif;box-sizing:border-box;flex-shrink:0;`;
@@ -2454,13 +2462,13 @@ function renderSlideEl(data) {
     const hlWrap = document.createElement('div');
     hlWrap.style.cssText = 'padding:0 22px 8px;flex-shrink:0;';
     const hl = document.createElement('div');
-    hl.style.cssText = `font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:#ffffff;line-height:1.15;word-break:break-word;`;
+    hl.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||34}px;font-weight:800;color:${_hColor};line-height:1.15;word-break:break-word;`;
     hl.innerHTML = _buildAccentHtml(headline.toUpperCase(), accentColor);
     hlWrap.appendChild(hl); layer.appendChild(hlWrap);
 
     if (subtitle) {
       const sub = document.createElement('div');
-      sub.style.cssText = `padding:0 22px 10px;font-family:'DM Sans',sans-serif;font-size:13px;color:rgba(255,255,255,0.65);line-height:1.45;flex-shrink:0;word-break:break-word;`;
+      sub.style.cssText = `padding:0 22px 10px;font-family:'${_bFont}',sans-serif;font-size:${_bSize+1}px;color:${_bColor};line-height:1.45;flex-shrink:0;word-break:break-word;`;
       sub.textContent = subtitle; layer.appendChild(sub);
     }
   } else {
@@ -2470,11 +2478,12 @@ function renderSlideEl(data) {
     imgBox.textContent = '🖼'; layer.appendChild(imgBox);
 
     const hLen = headline.replace(/\*/g, '').length;
-    const hSize = hLen > 90 ? 20 : hLen > 65 ? 23 : hLen > 45 ? 27 : hLen > 28 ? 30 : 34;
+    const hSizeAuto = hLen > 90 ? 20 : hLen > 65 ? 23 : hLen > 45 ? 27 : hLen > 28 ? 30 : 34;
+    const hSize = headlineFontSize || hSizeAuto;
     const hlWrap = document.createElement('div');
     hlWrap.style.cssText = 'padding:12px 22px 0;flex-shrink:0;';
     const hl = document.createElement('div');
-    hl.style.cssText = `font-family:'Syne',sans-serif;font-size:${hSize}px;font-weight:800;color:#ffffff;line-height:1.18;word-break:break-word;`;
+    hl.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${hSize}px;font-weight:800;color:${_hColor};line-height:1.18;word-break:break-word;`;
     hl.innerHTML = _buildAccentHtml(headline.toUpperCase(), accentColor);
     hlWrap.appendChild(hl); layer.appendChild(hlWrap);
 
@@ -2484,7 +2493,7 @@ function renderSlideEl(data) {
 
     if (body) {
       const bodyEl = document.createElement('div');
-      bodyEl.style.cssText = `padding:0 22px;font-family:'DM Sans',sans-serif;font-size:12px;color:#9CA3AF;line-height:1.58;overflow:hidden;flex-shrink:1;word-break:break-word;`;
+      bodyEl.style.cssText = `padding:0 22px;font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};line-height:1.58;overflow:hidden;flex-shrink:1;word-break:break-word;`;
       bodyEl.textContent = body; layer.appendChild(bodyEl);
     }
 
@@ -2713,10 +2722,19 @@ function updatePropsPanel() {
   const data = edSlides[activeIdx];
   if (!data) { container.innerHTML = '<div class="no-select-msg">Nenhum slide</div>'; return; }
   const bgHex = (data.bgColor || '#0c0c0f').match(/^#/) ? data.bgColor : '#0c0c0f';
+  const hColorHex = (data.headlineColor || '#ffffff');
+  const bColorHex = (data.bodyColor || '#9CA3AF');
+  const hFont = data.headlineFont || 'Syne';
+  const bFont = data.bodyFont || 'DM Sans';
+  const hFontSize = data.headlineFontSize || '';
+  const bFontSize = data.bodyFontSize || 12;
   const escHl = (data.headline || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const escSub = (data.subtitle || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const escBody = (data.body || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const taStyle = 'width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:12px;font-family:"DM Sans",sans-serif;resize:vertical;outline:none;margin-top:4px;';
+  const selStyle = 'width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;font-family:"DM Sans",sans-serif;outline:none;cursor:pointer;margin-top:4px;';
+  const FONTS = ['Syne','DM Sans','Space Grotesk','Inter','Playfair Display','Bebas Neue'];
+  const fontOpts = f => FONTS.map(fn => `<option value="${fn}"${fn===f?' selected':''}>${fn}</option>`).join('');
 
   container.innerHTML = `
     <div class="props-group">
@@ -2728,6 +2746,36 @@ function updatePropsPanel() {
          <textarea rows="2" oninput="updateSlideField(${activeIdx},'subtitle',this.value)" style="${taStyle}">${escSub}</textarea></div>`
       : `<div class="props-group"><div class="props-label">Corpo do texto</div>
          <textarea rows="4" oninput="updateSlideField(${activeIdx},'body',this.value)" style="${taStyle}">${escBody}</textarea></div>`}
+
+    <div class="props-group">
+      <div class="props-label">Tipografia — título</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+        <select onchange="updateSlideField(${activeIdx},'headlineFont',this.value)" style="${selStyle};flex:1">${fontOpts(hFont)}</select>
+        <input type="color" value="${hColorHex}" oninput="updateSlideField(${activeIdx},'headlineColor',this.value)" title="Cor do título" style="width:30px;height:30px;border:1px solid var(--border);border-radius:6px;padding:1px;background:var(--s2);cursor:pointer;flex-shrink:0">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <input type="range" min="14" max="56" value="${hFontSize||34}"
+          oninput="this.nextElementSibling.textContent=this.value+'px';updateSlideField(${activeIdx},'headlineFontSize',+this.value)"
+          style="flex:1;accent-color:var(--neon)">
+        <span style="font-size:11px;color:var(--muted);min-width:34px">${hFontSize||34}px</span>
+        <button class="props-btn" onclick="updateSlideField(${activeIdx},'headlineFontSize',null)" title="Auto" style="padding:2px 7px;font-size:10px">Auto</button>
+      </div>
+    </div>
+
+    <div class="props-group">
+      <div class="props-label">Tipografia — corpo</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+        <select onchange="updateSlideField(${activeIdx},'bodyFont',this.value)" style="${selStyle};flex:1">${fontOpts(bFont)}</select>
+        <input type="color" value="${bColorHex}" oninput="updateSlideField(${activeIdx},'bodyColor',this.value)" title="Cor do corpo" style="width:30px;height:30px;border:1px solid var(--border);border-radius:6px;padding:1px;background:var(--s2);cursor:pointer;flex-shrink:0">
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <input type="range" min="10" max="22" value="${bFontSize}"
+          oninput="this.nextElementSibling.textContent=this.value+'px';updateSlideField(${activeIdx},'bodyFontSize',+this.value)"
+          style="flex:1;accent-color:var(--neon)">
+        <span style="font-size:11px;color:var(--muted);min-width:34px">${bFontSize}px</span>
+      </div>
+    </div>
+
     <div class="props-group">
       <div class="props-label">Cor de fundo</div>
       <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
