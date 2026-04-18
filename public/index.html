@@ -2398,7 +2398,7 @@ function _buildAccentHtml(text, accentColor) {
 
 // ── Slide renderer (HTML/CSS) ─────────────────────────────────────────────────
 function renderSlideEl(data) {
-  const { headline = '', subtitle = '', body = '', isCover, bgColor, bgImage,
+  const { headline = '', subtitle = '', body = '', isCover, bgColor, bgImage, imgSrc,
           accentColor, username, topicLabel, funcTag = '', idx = 0, total = 1,
           headlineFont, headlineColor, headlineFontSize,
           bodyFont, bodyColor, bodyFontSize } = data;
@@ -2424,7 +2424,10 @@ function renderSlideEl(data) {
   if (isCover) {
     overlay.style.cssText = `position:absolute;inset:0;z-index:1;background:linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.52) 30%,rgba(0,0,0,0.96) 100%);`;
   } else {
-    overlay.style.cssText = `position:absolute;inset:0;z-index:1;background:rgba(12,12,15,${bgImage ? '0.52' : '0.0'});`;
+    // Com bgImage: degradê forte embaixo (texto legível) e quase transparente em cima (imagem aparece)
+    overlay.style.cssText = bgImage
+      ? `position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(12,12,15,0.97) 0%,rgba(12,12,15,0.75) 40%,rgba(12,12,15,0.18) 75%,rgba(12,12,15,0.0) 100%);`
+      : `position:absolute;inset:0;z-index:1;background:rgba(12,12,15,0);`;
   }
   el.appendChild(overlay);
 
@@ -2523,38 +2526,55 @@ function renderSlideEl(data) {
       sub.textContent = subtitle; layer.appendChild(sub);
     }
   } else {
-    // Image placeholder — dois botões: gerar com IA ou subir do computador
-    const imgBox = document.createElement('div');
-    imgBox.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.18);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;`;
+    // Área de imagem: se já tem imgSrc mostra inline, senão mostra botões
+    if (imgSrc) {
+      // Imagem encaixada no quadrado — clicável para trocar
+      const imgWrap = document.createElement('div');
+      imgWrap.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;border-radius:12px;overflow:hidden;position:relative;cursor:pointer;`;
+      const imgEl = document.createElement('img');
+      imgEl.src = imgSrc; imgEl.crossOrigin = 'anonymous';
+      imgEl.style.cssText = `width:100%;height:100%;object-fit:cover;display:block;`;
+      const imgOverlay = document.createElement('div');
+      imgOverlay.style.cssText = `position:absolute;inset:0;background:rgba(0,0,0,0);transition:background 0.15s;display:flex;align-items:center;justify-content:center;opacity:0;font-size:10px;color:#fff;font-family:'DM Sans',sans-serif;letter-spacing:0.05em;`;
+      imgOverlay.textContent = 'Trocar imagem';
+      imgWrap.onmouseenter = () => { imgOverlay.style.background = 'rgba(0,0,0,0.5)'; imgOverlay.style.opacity = '1'; };
+      imgWrap.onmouseleave = () => { imgOverlay.style.background = 'rgba(0,0,0,0)'; imgOverlay.style.opacity = '0'; };
+      imgWrap.onclick = (e) => { e.stopPropagation(); edEscolherImagem(); };
+      imgWrap.appendChild(imgEl);
+      imgWrap.appendChild(imgOverlay);
+      layer.appendChild(imgWrap);
+    } else {
+      // Placeholder com dois botões: gerar com IA ou subir do computador
+      const imgBox = document.createElement('div');
+      imgBox.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.18);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;`;
 
-    const imgBoxLabel = document.createElement('div');
-    imgBoxLabel.style.cssText = `font-size:10px;letter-spacing:0.07em;color:rgba(255,255,255,0.25);font-family:'DM Sans',sans-serif;text-transform:uppercase;`;
-    imgBoxLabel.textContent = 'Imagem do slide';
-    imgBox.appendChild(imgBoxLabel);
+      const imgBoxLabel = document.createElement('div');
+      imgBoxLabel.style.cssText = `font-size:10px;letter-spacing:0.07em;color:rgba(255,255,255,0.25);font-family:'DM Sans',sans-serif;text-transform:uppercase;`;
+      imgBoxLabel.textContent = 'Imagem do slide';
+      imgBox.appendChild(imgBoxLabel);
 
-    const imgBoxBtns = document.createElement('div');
-    imgBoxBtns.style.cssText = `display:flex;gap:8px;`;
+      const imgBoxBtns = document.createElement('div');
+      imgBoxBtns.style.cssText = `display:flex;gap:8px;`;
 
-    // Botão IA
-    const btnIA = document.createElement('button');
-    btnIA.style.cssText = `display:flex;align-items:center;gap:5px;background:rgba(124,106,247,0.18);border:1px solid rgba(124,106,247,0.4);border-radius:8px;padding:7px 12px;font-size:11px;color:#c4b5fd;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;`;
-    btnIA.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="#c4b5fd"/></svg> Gerar com IA`;
-    btnIA.onmouseenter = () => { btnIA.style.background = 'rgba(124,106,247,0.3)'; btnIA.style.borderColor = 'rgba(124,106,247,0.7)'; };
-    btnIA.onmouseleave = () => { btnIA.style.background = 'rgba(124,106,247,0.18)'; btnIA.style.borderColor = 'rgba(124,106,247,0.4)'; };
-    btnIA.onclick = (e) => { e.stopPropagation(); edGerarImagem(); };
+      const btnIA = document.createElement('button');
+      btnIA.style.cssText = `display:flex;align-items:center;gap:5px;background:rgba(124,106,247,0.18);border:1px solid rgba(124,106,247,0.4);border-radius:8px;padding:7px 12px;font-size:11px;color:#c4b5fd;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;`;
+      btnIA.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" fill="#c4b5fd"/></svg> Gerar com IA`;
+      btnIA.onmouseenter = () => { btnIA.style.background = 'rgba(124,106,247,0.3)'; btnIA.style.borderColor = 'rgba(124,106,247,0.7)'; };
+      btnIA.onmouseleave = () => { btnIA.style.background = 'rgba(124,106,247,0.18)'; btnIA.style.borderColor = 'rgba(124,106,247,0.4)'; };
+      btnIA.onclick = (e) => { e.stopPropagation(); edEscolherImagem(); };
 
-    // Botão Upload
-    const btnUp = document.createElement('button');
-    btnUp.style.cssText = `display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:7px 12px;font-size:11px;color:rgba(255,255,255,0.55);font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;`;
-    btnUp.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="rgba(255,255,255,0.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Subir foto`;
-    btnUp.onmouseenter = () => { btnUp.style.background = 'rgba(255,255,255,0.08)'; btnUp.style.borderColor = 'rgba(255,255,255,0.3)'; btnUp.style.color = '#fff'; };
-    btnUp.onmouseleave = () => { btnUp.style.background = 'rgba(255,255,255,0.04)'; btnUp.style.borderColor = 'rgba(255,255,255,0.15)'; btnUp.style.color = 'rgba(255,255,255,0.55)'; };
-    btnUp.onclick = (e) => { e.stopPropagation(); edUploadImagem(); };
+      const btnUp = document.createElement('button');
+      btnUp.style.cssText = `display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:7px 12px;font-size:11px;color:rgba(255,255,255,0.55);font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;`;
+      btnUp.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="rgba(255,255,255,0.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Subir foto`;
+      btnUp.onmouseenter = () => { btnUp.style.background = 'rgba(255,255,255,0.08)'; btnUp.style.borderColor = 'rgba(255,255,255,0.3)'; btnUp.style.color = '#fff'; };
+      btnUp.onmouseleave = () => { btnUp.style.background = 'rgba(255,255,255,0.04)'; btnUp.style.borderColor = 'rgba(255,255,255,0.15)'; btnUp.style.color = 'rgba(255,255,255,0.55)'; };
+      btnUp.onclick = (e) => { e.stopPropagation(); edEscolherImagem(); };
 
-    imgBoxBtns.appendChild(btnIA);
-    imgBoxBtns.appendChild(btnUp);
-    imgBox.appendChild(imgBoxBtns);
-    layer.appendChild(imgBox);
+      imgBoxBtns.appendChild(btnIA);
+      imgBoxBtns.appendChild(btnUp);
+      imgBox.appendChild(imgBoxBtns);
+      layer.appendChild(imgBox);
+    }
 
     const hLen = headline.replace(/\*/g, '').length;
     const hSizeAuto = hLen > 90 ? 20 : hLen > 65 ? 23 : hLen > 45 ? 27 : hLen > 28 ? 30 : 34;
@@ -2767,10 +2787,60 @@ function edSetBgImage() {
   input.click();
 }
 
-async function edGerarImagem() {
+// Modal de escolha: fonte (IA / upload) + posição (quadrado / fundo)
+function edEscolherImagem() {
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);';
+
+  const box = document.createElement('div');
+  box.style.cssText = 'background:#13131f;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:22px 18px 16px;width:292px;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 60px rgba(0,0,0,0.6);';
+
+  box.innerHTML = `
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#fff;font-family:'Syne',sans-serif;letter-spacing:0.02em;">Adicionar imagem</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:'DM Sans',sans-serif;margin-top:3px;">Escolha a fonte e onde encaixar</div>
+    </div>
+  `;
+
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;';
+
+  const opts = [
+    { label: '✦ IA', sub: 'Gerar → Quadrado', ia: true,  modo: 'quad', c: '#c4b5fd', bg: 'rgba(124,106,247,0.15)', br: 'rgba(124,106,247,0.4)' },
+    { label: '✦ IA', sub: 'Gerar → Fundo',    ia: true,  modo: 'bg',   c: '#c4b5fd', bg: 'rgba(124,106,247,0.15)', br: 'rgba(124,106,247,0.4)' },
+    { label: '📁 Subir', sub: 'Foto → Quadrado', ia: false, modo: 'quad', c: '#94a3b8', bg: 'rgba(255,255,255,0.04)', br: 'rgba(255,255,255,0.15)' },
+    { label: '📁 Subir', sub: 'Foto → Fundo',    ia: false, modo: 'bg',   c: '#94a3b8', bg: 'rgba(255,255,255,0.04)', br: 'rgba(255,255,255,0.15)' },
+  ];
+
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.style.cssText = `display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:${opt.bg};border:1px solid ${opt.br};border-radius:10px;padding:10px 12px;cursor:pointer;transition:all 0.15s;text-align:left;`;
+    btn.innerHTML = `<span style="font-size:12px;font-weight:600;color:${opt.c};font-family:'DM Sans',sans-serif;">${opt.label}</span><span style="font-size:10px;color:rgba(255,255,255,0.38);font-family:'DM Sans',sans-serif;">${opt.sub}</span>`;
+    btn.onmouseenter = () => { btn.style.filter = 'brightness(1.3)'; btn.style.transform = 'translateY(-1px)'; };
+    btn.onmouseleave = () => { btn.style.filter = ''; btn.style.transform = ''; };
+    btn.onclick = () => {
+      document.body.removeChild(modal);
+      if (opt.ia) _executarGerarImagem(opt.modo);
+      else         _executarUploadImagem(opt.modo);
+    };
+    grid.appendChild(btn);
+  });
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,0.3);font-size:11px;font-family:"DM Sans",sans-serif;cursor:pointer;text-align:center;padding:2px 0;';
+  cancelBtn.textContent = 'Cancelar';
+  cancelBtn.onclick = () => document.body.removeChild(modal);
+  modal.onclick = (e) => { if (e.target === modal) document.body.removeChild(modal); };
+
+  box.appendChild(grid);
+  box.appendChild(cancelBtn);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+}
+
+async function _executarGerarImagem(modo) {
   const slide = edSlides[activeIdx];
   if (!slide) return;
-  // Monta prompt automático a partir do conteúdo do slide — sem dialog
   const h = (slide.headline || '').replace(/\*/g, '').slice(0, 100);
   const b = (slide.body || slide.subtitle || '').replace(/\*/g, '').slice(0, 60);
   const autoPrompt = `${h}${b ? ', ' + b : ''}, editorial photograph, dark moody studio lighting, no text`;
@@ -2781,7 +2851,13 @@ async function edGerarImagem() {
   statusEl.textContent = '⟳ Gerando imagem com IA...';
   try {
     const dataUrl = await gerarImagemClientSide(autoPrompt);
-    edSlides[activeIdx].bgImage = dataUrl;
+    if (modo === 'quad') {
+      edSlides[activeIdx].imgSrc  = dataUrl;
+      edSlides[activeIdx].bgImage = '';
+    } else {
+      edSlides[activeIdx].bgImage = dataUrl;
+      edSlides[activeIdx].imgSrc  = '';
+    }
     mountActiveSlide(true);
     renderThumbItem(activeIdx);
     statusEl.className = 'status-box success';
@@ -2794,14 +2870,20 @@ async function edGerarImagem() {
   }
 }
 
-function edUploadImagem() {
+function _executarUploadImagem(modo) {
   const inp = document.createElement('input');
   inp.type = 'file'; inp.accept = 'image/*';
   inp.onchange = e => {
     const file = e.target.files[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      edSlides[activeIdx].bgImage = ev.target.result;
+      if (modo === 'quad') {
+        edSlides[activeIdx].imgSrc  = ev.target.result;
+        edSlides[activeIdx].bgImage = '';
+      } else {
+        edSlides[activeIdx].bgImage = ev.target.result;
+        edSlides[activeIdx].imgSrc  = '';
+      }
       mountActiveSlide(true);
       renderThumbItem(activeIdx);
       historyPush();
@@ -2810,6 +2892,10 @@ function edUploadImagem() {
   };
   inp.click();
 }
+
+// Atalho para toolbar: gera diretamente como fundo (comportamento legado)
+async function edGerarImagem() { _executarGerarImagem('bg'); }
+function edUploadImagem()       { _executarUploadImagem('bg'); }
 
 // ── Properties panel ──────────────────────────────────────────────────────────
 function updatePropsPanel() {
@@ -3011,8 +3097,7 @@ async function importarTextoNoEditor() {
   updateNavArrows();
   updateSlideBadge();
   historyPush();
-  toast(`${parsed.length} slides importados! Gerando imagens…`);
-  _gerarImagensCarrossel(parsed);
+  toast(`${parsed.length} slides importados!`);
 }
 
 // ── Char analysis ──────────────────────────────────────────────────────────────
