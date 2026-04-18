@@ -512,10 +512,314 @@ async function buscarNotasVault(tema) {
   }));
 }
 
+// ── FRAMEWORKS DE CONTEÚDO ───────────────────────────────────────────────────
+function gerarInstrucaoFramework(framework) {
+  const blocos = {
+    'leonam': '', // estilo padrão — já definido em estiloBase
+
+    'eter-aida': `
+════════════════════════════════
+FRAMEWORK: ETER PLAYBOOK — AIDA + TENSÃO IDEOLÓGICA + SCAMPER
+════════════════════════════════
+MOTOR DO CONTEÚDO: Visão de Mundo + Tensão Ideológica
+• Visão de Mundo = a crença central do autor sobre como o mercado funciona de verdade
+• Tensão Ideológica = o conflito entre essa visão e o que o mercado aceita como verdade — esse conflito gera atenção e pertencimento
+
+ESTRUTURA AIDA:
+A — ATENÇÃO: Gancho que provoca a tensão ideológica. Não "isso é importante" — é "aqui está o que você acredita de errado e por quê".
+I — INTERESSE: Aprofunda a tensão. Mostra o que o leitor não vê, não sabe ou não quer admitir. O mecanismo oculto do problema.
+D — DESEJO: Apresenta a Visão de Mundo correta como mundo possível. Uma nova lente — não lista de dicas.
+A — AÇÃO: CTA de pertencimento ou próximo passo. Não "compre agora" — "se você acredita nisso, seu próximo passo é X".
+
+ESCALA DE CRENÇA — identifique o degrau do leitor e escreva para ele:
+1. Desconhecimento — não sabe que o problema existe
+2. Reconhecimento — percebe o sintoma, não a causa
+3. Compreensão — entende a causa, não sabe o que fazer
+4. Convicção — sabe o que fazer, precisa de clareza/coragem
+5. Pertencimento — já acredita, quer comunidade e validação
+
+MULTIPLICADOR SCAMPER — escolha UM para o ângulo:
+S - Substituir: trocar uma crença dominante por nova
+C - Combinar: fundir dois conceitos que o mercado trata como separados
+A - Adaptar: pegar ideia de outro campo e aplicar ao contexto do leitor
+M - Modificar: radicalizar ou minimizar um conceito existente
+P - Para outro uso: mostrar o uso correto do que o leitor usa errado
+E - Eliminar: tirar o que o mercado acha essencial e mostrar que não precisa
+R - Reverter: mostrar o oposto do que todos fazem e por que funciona
+
+TIPO DE CONTEÚDO:
+• PORTA (alcance): tese contraintuitiva que atrai quem não te conhece
+• CONSTRUÇÃO (crença): aprofunda convicção, eleva escala de crença de 2 para 4
+• PERTENCIMENTO (comunidade): valida quem já acredita, cria identidade de grupo
+
+ANTES DE ESCREVER, decida explicitamente: Tensão Ideológica central? Degrau da Escala de Crença? SCAMPER escolhido? Tipo de conteúdo?
+`,
+
+    'dan-koe': `
+════════════════════════════════
+FRAMEWORK: DAN KOE — FILOSOFIA + NEGÓCIO + IDENTIDADE
+════════════════════════════════
+PRINCÍPIOS OBRIGATÓRIOS:
+• Abre com declaração contrária ao senso comum — não pergunta, afirmação
+• Sintetiza filosofia (estoicismo, pensamento sistêmico) com aplicação prática de negócio — sem forçar
+• Segunda pessoa com autoridade tranquila: "você está preso porque..." — diagnóstico, não acusação
+• Cada parágrafo autossuficiente — pode ser retirado e funcionar como citação isolada
+• Frases curtas. Alto impacto por linha. Zero desperdício.
+• Identidade como produto central: o leitor não compra técnica, compra uma forma de ver o mundo
+• Sem urgência artificial — o leitor chega à conclusão sozinho pela lógica empilhada
+• Tese central: trabalho criativo e construção do negócio são inseparáveis da construção da identidade
+
+ESTRUTURA:
+1. Afirmação de abertura paradoxal (1-2 linhas máximo)
+2. Diagnóstico: por que a maioria pensa diferente e qual é o erro
+3. Reframe: a lente correta para ver o problema
+4. Princípios (3-5) — cada um em linha própria, peso máximo por linha
+5. Aplicação: como implementar hoje, não abstratamente
+6. Fechamento filosófico: não CTA comercial — chamada à ação interna
+
+TOM: mentor que já passou pelo que descreve. Ritmo deliberado.
+`,
+
+    'caderno-jonas': `
+════════════════════════════════
+FRAMEWORK: CADERNO DO JONAS — ENSAIO INTIMISTA
+════════════════════════════════
+PRINCÍPIOS OBRIGATÓRIOS:
+• Abre com cena ou memória específica e aparentemente banal — que depois revela ponto de entrada para reflexão maior
+• NUNCA abre com pergunta retórica, promessa de valor ou afirmação polêmica
+• Fluxo contínuo de pensamento — sem subtítulos excessivos, sem bullets, sem estrutura rígida
+• Tom de conversa entre amigos inteligentes — íntimo, sem urgência, não performático
+• O leitor sai sentindo que passou tempo com alguém, não que aprendeu algo (mesmo que tenha)
+• Mistura referências literárias ou culturais com observações cotidianas — naturalmente
+• Parágrafos médios a longos com pausas deliberadas — vírgulas para respiração
+• Sem CTA comercial — fechamento que ecoa a abertura (círculo)
+
+ESTRUTURA:
+1. Cena/memória de abertura (específica, concreta, aparentemente banal)
+2. Primeira virada: como essa cena se liga a algo maior
+3. Desenvolvimento em fluxo — pensamento processando, não lista
+4. Segunda virada ou paradoxo — onde a reflexão chega a lugar inesperado
+5. Fechamento circular — ecoa a abertura, sem CTA
+
+TOM: confessional, devagar, sem urgência. Leitura lenta.
+`,
+
+    'henri-armelin': `
+════════════════════════════════
+FRAMEWORK: HENRI ARMELIN — INTELECTUAL ACESSÍVEL / PRECISÃO CONCEITUAL
+════════════════════════════════
+PRINCÍPIOS OBRIGATÓRIOS:
+• Abre com paradoxo ou contradição que o mercado comete
+• DEFINE os termos que usa antes de usá-los — não assume que o leitor entende igual
+• Didático sem ser condescendente — o leitor sente que está aprendendo, não sendo ensinado
+• Vocabulário preciso e sofisticado, mas organizado — sem jargão gratuito
+• Estrutura linear clara: cada seção avança logicamente da anterior
+• Exemplos reais de mercado: cases, marcas, situações concretas
+• Constrói confiança intelectual — o leitor termina sentindo que o autor domina o assunto
+
+ESTRUTURA POR SEÇÃO:
+1. Contexto/problema: o que o mercado faz errado e por quê é problema
+2. Conceito: defina o termo/framework com precisão antes de avançar
+3. Exemplo: case real que demonstra o conceito
+4. Princípio extraído: o que o leitor leva para seu contexto
+5. Aplicação prática: exercício ou checklist concreto
+
+TOM: professor que também é praticante. Ritmo médio, linear.
+`,
+
+    'tay-dantas': `
+════════════════════════════════
+FRAMEWORK: TAY DANTAS — TÁTICO, TRANSFORMAÇÃO DIRETA
+════════════════════════════════
+PRINCÍPIOS OBRIGATÓRIOS:
+• Abre com número, afirmação polêmica ou promessa de transformação clara e mensurável
+• Energia alta, direto ao ponto — sem aquecimento
+• Frases muito curtas. Parágrafos de 1-2 linhas máximo.
+• Identifica erros comuns antes de mostrar o caminho certo
+• Estrutura com passos numerados ou lista de erros vs. soluções
+• Cada conteúdo termina com algo concreto que o leitor pode fazer hoje — não abstrato
+• CTA direto e específico: "Salva esse post", "Comenta X", "Faz isso hoje"
+
+ESTRUTURA:
+1. Gancho: número + afirmação polêmica ("3 erros que fazem seu negócio faturar menos")
+2. Validação do problema: por que isso acontece (2-3 linhas, rápido)
+3. Erros listados com solução imediata para cada um
+4. Virada: o que fazer diferente
+5. CTA direto
+
+TOM: mentor no jogo agora, compartilhando o que funciona hoje. Leitura rápida.
+`,
+
+    'davi-ribas': `
+════════════════════════════════
+FRAMEWORK: DAVI RIBAS / ETER — AFORÍSTICO, ESTÉTICA COMO ESTRATÉGIA
+════════════════════════════════
+PRINCÍPIOS OBRIGATÓRIOS:
+• Cada frase lapidada — sem nada desnecessário, peso em cada palavra
+• Abre com afirmação aparentemente simples que esconde tensão profunda
+• Tom calmamente subversivo: questiona o óbvio sem gritar
+• Não explica demais — deixa o leitor completar o raciocínio
+• Frases quase aforísticas — funcionam como citações isoladas
+• Silêncio entre ideias é parte do estilo — espaço em branco textual
+• Fusão entre forma (como a mensagem é construída) e conteúdo (o que ela diz)
+• Vocabulário de design e cultura — não de guru de marketing
+
+ESTRUTURA:
+1. Afirmação de abertura: simples, aparentemente óbvia, tensão escondida
+2. Desconstrução silenciosa: 2-3 linhas que revelam o que a abertura escondia
+3. Virada: onde a lente muda completamente
+4. Síntese: frase final que condensa tudo — deve funcionar como citação sozinha
+
+TOM: estético, filosófico, levemente provocador. Leitura rápida, densa.
+`,
+
+    'schwartz': `
+════════════════════════════════
+FRAMEWORK: EUGENE SCHWARTZ — 5 NÍVEIS DE CONSCIÊNCIA DO MERCADO
+════════════════════════════════
+ANTES DE ESCREVER, identifique o nível do público e escreva especificamente para ele:
+
+NÍVEL 1 — COMPLETAMENTE INCONSCIENTE
+Leitor não sabe que tem o problema. Abre com história ou contraste antes/depois que desperta o reconhecimento — sem mencionar a solução ainda.
+
+NÍVEL 2 — CONSCIENTE DO PROBLEMA, NÃO DA SOLUÇÃO
+Sente a dor, não sabe o que fazer. Nomeie a dor com precisão, valide que é real, então sinalize que existe saída.
+
+NÍVEL 3 — CONSCIENTE DA SOLUÇÃO, NÃO DO PRODUTO
+Sabe que existe solução, não sabe que você tem. Posicione seu ângulo/framework como a melhor rota.
+
+NÍVEL 4 — CONSCIENTE DO PRODUTO, NÃO DOS DETALHES
+Sabe da sua abordagem, precisa de especificidade. Foco em mecanismo, prova, resultado mensurável.
+
+NÍVEL 5 — TOTALMENTE CONSCIENTE
+Só precisa da oferta certa. Seja direto, urgência real, proposta cristalina.
+
+SOFISTICAÇÃO DO MERCADO:
+Se o mercado já viu muitas mensagens similares: diferencie pelo mecanismo, inverta a crença dominante, use especificidade extrema.
+
+PRINCÍPIOS:
+• Especificidade sempre vence generalidade
+• Toda afirmação de benefício deve ser crível e verificável
+• O leitor compra com emoção e justifica com lógica — entregue ambos
+`,
+
+    'halbert': `
+════════════════════════════════
+FRAMEWORK: GARY HALBERT — ABERTURA EMOCIONAL / STORYTELLING VISCERAL
+════════════════════════════════
+PRINCÍPIOS OBRIGATÓRIOS:
+• Abre com a dor mais visceral e específica do leitor — cirúrgico, não genérico
+• Storytelling pessoal ou de caso real que espelha exatamente a situação do leitor
+• "So What?" test: todo parágrafo deve fazer o leitor avançar — se pode cortar sem perda, corta
+• Urgência e especificidade em tudo — números reais, situações reais, nomes reais
+• Bullets de medo e desejo alternados: "Você vai continuar fazendo X... ou vai finalmente Y"
+• Prova social e casos reais como combustível, não decoração
+• Fechamento com promessa clara e CTA sem ambiguidade
+• Headline carrega o benefício principal — é o anúncio do anúncio
+
+ESTRUTURA:
+1. Headline: benefício específico e urgente
+2. Abertura emocional: dor visceral narrada com especificidade
+3. História de identificação: o leitor se vê na situação
+4. Revelação: por que a dor existe (crença errada ou inimigo externo)
+5. Solução + prova: o que funciona e por quê
+6. Bullets de benefício/medo alternados
+7. CTA direto com urgência real
+
+TOM: íntimo, urgente, como carta de um amigo que descobriu algo importante.
+`,
+
+    'kennedy': `
+════════════════════════════════
+FRAMEWORK: DAN KENNEDY — DIRECT RESPONSE / ROI OBRIGATÓRIO
+════════════════════════════════
+PRINCÍPIOS OBRIGATÓRIOS:
+• Todo conteúdo tem propósito de resposta — o leitor age, não apenas "pensa"
+• USP cristalina: por que isso e não o genérico do mercado?
+• Urgência e escassez apenas quando reais — nunca fabricadas
+• Valor ancorado antes de qualquer CTA
+• Garantia ou promessa específica de resultado
+• P.S. estratégico: resume benefício principal + urgência (é sempre relido)
+• Cada palavra trabalha pela ação — sem palavras decorativas
+• Público-alvo hiper-específico: quanto mais segmentado, mais poderoso
+
+ESTRUTURA:
+1. Headline com benefício + especificidade + audiência
+2. Identificação imediata do leitor-alvo ("Se você é X que enfrenta Y...")
+3. Problema amplificado: custo específico de não resolver
+4. Solução com mecanismo único
+5. Prova: números, casos, antes/depois
+6. Oferta: o que inclui, o que garante
+7. CTA com próximo passo específico
+8. P.S.: benefício principal + urgência em 2 linhas
+
+TOM: direto, sem rodeios, respeita o tempo do leitor.
+`,
+
+    'sugarman': `
+════════════════════════════════
+FRAMEWORK: JOE SUGARMAN — SLIPPERY SLIDE / TRIGGERS PSICOLÓGICOS
+════════════════════════════════
+PRINCÍPIO CENTRAL — SLIPPERY SLIDE:
+Cada frase escrita para uma única finalidade: fazer o leitor ler a próxima. O texto inteiro é uma rampa escorregadia — o leitor desce sem perceber.
+
+COMO CRIAR A RAMPA:
+• Curiosity gaps: deixe lacunas de informação que só se fecham na frase seguinte
+• Cada parágrafo termina com "isca" para o próximo
+• Revelações em camadas — nunca entregue tudo de uma vez
+• Primeira frase: mais curta possível, fácil de começar
+• Subcabeçalhos funcionam como minigancho, não resumo
+
+TRIGGERS PSICOLÓGICOS (use os que se aplicam):
+1. CONSISTÊNCIA: "Como você já sabe que X é verdade, então Y faz sentido"
+2. ENVOLVIMENTO: faça o leitor se comprometer com algo pequeno antes
+3. URGÊNCIA: baseada em razão específica, nunca fabricada
+4. EXCLUSIVIDADE: o leitor faz parte de um grupo seleto que entende isso
+5. PROVA SOCIAL: casos específicos, não genéricos
+6. AUTORIDADE: por que o autor tem credibilidade para dizer isso
+7. RAZÃO: sempre dê uma razão para o que pede — "porque..." sempre aumenta aceitação
+
+ESPECIFICIDADE SENSORIAL:
+Descreva conceitos tão específica e sensorialmente que o leitor "experimenta" antes de decidir. Não "você vai melhorar" — "você vai saber exatamente o que dizer quando o cliente perguntar por preço".
+
+TOM: conversacional, curioso, como revelação de insider.
+`,
+
+    'hopkins': `
+════════════════════════════════
+FRAMEWORK: CLAUDE HOPKINS — ADVERTISING CIENTÍFICO / PROVA E ESPECIFICIDADE
+════════════════════════════════
+PRINCÍPIOS OBRIGATÓRIOS (do Scientific Advertising):
+• Especificidade sempre vence generalidade: "aumenta faturamento em 40%" > "aumenta muito"
+• Toda afirmação de benefício deve ser testável e crível — sem hipérbole
+• Cada headline carrega o benefício completo — quem só lê o título entende a oferta
+• Educa enquanto persuade — leitor mais informado compra mais, não menos
+• Nomeie o mecanismo: não só o que funciona, mas por que funciona
+• Zero desperdício — cada palavra serve a um propósito
+• Oferta irresistível: o leitor deve sentir que seria irracional não agir
+
+ESTRUTURA:
+1. Headline: benefício específico e mensurável
+2. Educação: ensine algo que o concorrente não ensina
+3. Mecanismo: como funciona (não magia — processo)
+4. Prova: resultado verificável, número real
+5. Oferta: clara, justa, específica
+6. Razão para agir agora: baseada em fato, não em pressão fabricada
+
+TOM: honesto, específico, educativo — o leitor sente que está sendo respeitado.
+`,
+  };
+
+  return blocos[framework] || '';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 app.post('/api/conteudo/gerar', upload.any(), async (req, res) => {
   const tema = req.body.tema;
   const tipo = req.body.tipo;
   const angulo = req.body.angulo;
+  const framework = req.body.framework || 'leonam';
   const briefing = req.body.briefing || '';
   const urls = req.body.urls ? JSON.parse(req.body.urls) : [];
   if (!tema) return res.status(400).json({ erro: 'Tema obrigatório' });
@@ -573,6 +877,8 @@ ESTILO DE ESCRITA (obrigatório replicar):
 - ANALOGIAS: máximo UMA por peça. Evitar: caçador/fazendeiro, terreno alugado, construir casa na areia, plantar sementes, maratona vs sprint
 - Assina como "Leo" ou "Leonam" no final`;
 
+    const secaoFramework = gerarInstrucaoFramework(framework);
+
     const secaoBriefing = temFontePrincipal ? `
 ════════════════════════════════
 MATÉRIA-PRIMA OBRIGATÓRIA (briefing, links e docs fornecidos pelo Leonam)
@@ -592,6 +898,7 @@ ${contextoVault.slice(0, 3000)}`;
       prompt = `Você é o ghostwriter do Leonam Alves. Escreva um carrossel de Instagram no estilo dele.
 
 ${estiloBase}
+${secaoFramework}
 ${secaoBriefing}
 ════════════════════════════════
 PADRÕES EDITORIAIS DOS CARROSSÉIS DO LEONAM
@@ -640,6 +947,7 @@ ${secaoVault}
       prompt = `Você é o ghostwriter do Leonam Alves. Sua única tarefa é replicar o estilo exato dele.
 
 ${estiloBase}
+${secaoFramework}
 ${secaoBriefing}
 ════════════════════════════════
 EXEMPLO REAL DE NEWSLETTER DO LEONAM
@@ -737,7 +1045,7 @@ EXEMPLOS REAIS DO LEONAM (últimos ${label} — calibre formato, tamanho e voz c
 
     // Salva no histórico (silencioso em caso de falha)
     try {
-      await supabase.from('historico_conteudo').insert({ tema, tipo, angulo: angulo || '', conteudo });
+      await supabase.from('historico_conteudo').insert({ tema, tipo, angulo: angulo || '', conteudo, framework: framework || 'leonam' });
     } catch (_) {}
 
     res.json({ ok: true, conteudo, notasUsadas, tema, tipo });

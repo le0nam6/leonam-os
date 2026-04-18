@@ -974,6 +974,33 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
         </div>
       </div>
 
+      <!-- FRAMEWORK / ESTILO -->
+      <div style="margin-bottom:20px">
+        <label>Framework / Estilo de escrita</label>
+        <select id="conteudo-framework" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+          <optgroup label="── Voz padrão">
+            <option value="leonam" selected>✦ Estilo Leonam (padrão)</option>
+          </optgroup>
+          <optgroup label="── Framework de conteúdo">
+            <option value="eter-aida">Eter Playbook — AIDA + Tensão Ideológica + SCAMPER</option>
+          </optgroup>
+          <optgroup label="── Inspirações de criadores">
+            <option value="dan-koe">Dan Koe — Filosofia + Identidade + Negócio</option>
+            <option value="caderno-jonas">Caderno do Jonas — Ensaio intimista</option>
+            <option value="henri-armelin">Henri Armelin — Intelectual acessível</option>
+            <option value="tay-dantas">Tay Dantas — Tático e direto</option>
+            <option value="davi-ribas">Davi Ribas / Eter — Aforístico, estético</option>
+          </optgroup>
+          <optgroup label="── Copywriters clássicos">
+            <option value="schwartz">Eugene Schwartz — 5 níveis de consciência</option>
+            <option value="halbert">Gary Halbert — Abertura emocional / storytelling</option>
+            <option value="kennedy">Dan Kennedy — Direct response / ROI</option>
+            <option value="sugarman">Joe Sugarman — Slippery slide</option>
+            <option value="hopkins">Claude Hopkins — Advertising científico</option>
+          </optgroup>
+        </select>
+      </div>
+
       <!-- CONTEXTO ADICIONAL -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
         <div style="font-size:12px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:14px">Contexto adicional (opcional mas recomendado)</div>
@@ -1761,6 +1788,7 @@ async function gerarConteudo() {
   const tema = document.getElementById('conteudo-tema').value.trim();
   const tipo = document.getElementById('conteudo-tipo').value;
   const angulo = document.getElementById('conteudo-angulo').value;
+  const framework = (document.getElementById('conteudo-framework') || {}).value || 'leonam';
   if (!tema) return toast('Digite um tema', 'error');
 
   const btn = document.getElementById('btn-gerar');
@@ -1772,7 +1800,7 @@ async function gerarConteudo() {
     const res = await fetch(`${API}/api/conteudo/gerar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tema, tipo, angulo })
+      body: JSON.stringify({ tema, tipo, angulo, framework })
     });
     const data = await res.json();
     if (data.ok) {
@@ -2020,6 +2048,7 @@ async function gerarConteudo() {
   const tema = (document.getElementById('conteudo-tema').value || '').trim();
   const tipo = document.getElementById('conteudo-tipo').value;
   const angulo = document.getElementById('conteudo-angulo').value;
+  const framework = (document.getElementById('conteudo-framework') || {}).value || 'leonam';
   const briefingEl = document.getElementById('ctx-briefing');
   const briefing = briefingEl ? briefingEl.value.trim() : '';
 
@@ -2027,7 +2056,8 @@ async function gerarConteudo() {
 
   const btn = document.getElementById('btn-gerar');
   btn.disabled = true;
-  setStatus('conteudo', 'loading', '<span class="spinner"></span>Buscando vault, processando contexto e gerando...');
+  const frameworkLabel = document.getElementById('conteudo-framework')?.selectedOptions[0]?.text || '';
+  setStatus('conteudo', 'loading', `<span class="spinner"></span>Buscando vault, processando contexto e gerando${frameworkLabel ? ' [' + frameworkLabel + ']' : ''}...`);
   document.getElementById('resultado-conteudo').style.display = 'none';
 
   try {
@@ -2036,6 +2066,7 @@ async function gerarConteudo() {
     formData.append('tema', tema);
     formData.append('tipo', tipo);
     formData.append('angulo', angulo);
+    formData.append('framework', framework);
     if (briefing) formData.append('briefing', briefing);
     if (typeof urlsContexto !== 'undefined' && urlsContexto.length) formData.append('urls', JSON.stringify(urlsContexto));
     if (typeof pdfsContexto !== 'undefined') pdfsContexto.forEach((f, i) => formData.append('pdf_' + i, f));
