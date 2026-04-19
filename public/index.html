@@ -2692,7 +2692,7 @@ function _buildAccentHtml(text, accentColor) {
 }
 
 // ── Slide renderer (HTML/CSS) ─────────────────────────────────────────────────
-function renderSlideEl(data) {
+function renderSlideEl(data, isExport = false) {
   const { headline = '', subtitle = '', body = '', isCover, bgColor, bgImage, imgSrc,
           accentColor, username, topicLabel, funcTag = '', idx = 0, total = 1,
           headlineFont, headlineColor, headlineFontSize,
@@ -3222,8 +3222,8 @@ function renderSlideEl(data) {
       imgWrap.appendChild(imgOverlay);
       imgWrap.appendChild(replaceBtn);
       imgElem = imgWrap;
-    } else {
-      // Placeholder
+    } else if (!isExport) {
+      // Placeholder — só no editor, nunca no export
       const imgBox = document.createElement('div');
       if (isHoriz) {
         imgBox.style.cssText = `width:${imgBlockW}px;flex-shrink:0;align-self:stretch;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.18);border-radius:${imgRadius}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;`;
@@ -3305,11 +3305,11 @@ function renderSlideEl(data) {
       : `flex:1;display:flex;flex-direction:column;overflow:hidden;`;
 
     if (imgPos === 'top' || imgPos === 'left') {
-      contentArea.appendChild(imgElem);
+      if (imgElem) contentArea.appendChild(imgElem);
       contentArea.appendChild(textBlock);
     } else { // bottom or right
       contentArea.appendChild(textBlock);
-      contentArea.appendChild(imgElem);
+      if (imgElem) contentArea.appendChild(imgElem);
     }
     layer.appendChild(contentArea);
   }
@@ -4197,7 +4197,7 @@ async function _captureSlide(el) {
 async function exportCurrentSlide() {
   const data = edSlides[activeIdx];
   if (!data) return;
-  const el = renderSlideEl(data);
+  const el = renderSlideEl(data, true);
   try {
     const dataUrl = await _captureSlide(el);
     const a = document.createElement('a');
@@ -4217,7 +4217,7 @@ async function exportAllSlides() {
   const pasta = zip.folder('carrossel');
   for (let i = 0; i < edSlides.length; i++) {
     statusEl.textContent = `Exportando ${i + 1}/${edSlides.length}...`;
-    const el = renderSlideEl(edSlides[i]);
+    const el = renderSlideEl(edSlides[i], true);
     try {
       const dataUrl = await _captureSlide(el);
       pasta.file(`slide-${String(i + 1).padStart(2, '0')}.png`, dataUrl.split(',')[1], { base64: true });
