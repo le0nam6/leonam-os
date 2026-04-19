@@ -2774,7 +2774,9 @@ function renderSlideEl(data) {
   // ── LAYOUT HELPERS ────────────────────────────────────────────────────────────
   function _uBadge(el2, user) {
     const b = document.createElement('div');
-    b.style.cssText = `background:rgba(0,0,0,0.52);border:1px solid rgba(255,255,255,0.13);border-radius:9px;padding:3px 8px;font-size:8px;color:#fff;letter-spacing:0.04em;white-space:nowrap;align-self:flex-start;font-family:'DM Sans',sans-serif;`;
+    // position:absolute so it doesn't participate in flex flow and
+    // doesn't interfere with justify-content (contentAlign)
+    b.style.cssText = `position:absolute;bottom:10px;left:16px;background:rgba(0,0,0,0.52);border:1px solid rgba(255,255,255,0.13);border-radius:9px;padding:3px 8px;font-size:8px;color:#fff;letter-spacing:0.04em;white-space:nowrap;font-family:'DM Sans',sans-serif;`;
     b.textContent = user || '@leonamalves'; el2.appendChild(b);
   }
   function _solidBg(el2, color) {
@@ -2789,7 +2791,7 @@ function renderSlideEl(data) {
     el.style.cssText += ';display:flex;flex-direction:column;';
     _solidBg(el, bgColor);
     const lyr = document.createElement('div');
-    lyr.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:${contentAlign};padding:${pad}px;`;
+    lyr.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:${contentAlign};padding:${pad}px ${pad}px ${Math.max(pad, 32)}px;`;
     const tagEl = document.createElement('div');
     tagEl.style.cssText = `align-self:${textAlign==='center'?'center':textAlign==='right'?'flex-end':'flex-start'};background:${accentColor||'rgba(34,197,94,0.15)'};border:1px solid ${accentColor||'rgba(34,197,94,0.4)'};border-radius:20px;padding:3px 10px;font-size:8px;font-weight:700;color:${accentColor||'#16a34a'};letter-spacing:0.08em;text-transform:uppercase;font-family:'DM Sans',sans-serif;margin-bottom:10px;`;
     tagEl.textContent = funcTag || 'RESUMO'; lyr.appendChild(tagEl);
@@ -2811,7 +2813,6 @@ function renderSlideEl(data) {
       row.appendChild(check); row.appendChild(txt); itemsGrid.appendChild(row);
     });
     lyr.appendChild(itemsGrid);
-    const sp = document.createElement('div'); sp.style.flex = '1'; lyr.appendChild(sp);
     _uBadge(lyr, username); el.appendChild(lyr); return el;
   }
 
@@ -2821,7 +2822,7 @@ function renderSlideEl(data) {
     el.style.cssText += ';display:flex;flex-direction:column;';
     _solidBg(el, bgColor);
     const lyr = document.createElement('div');
-    lyr.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:${pad}px;align-items:center;justify-content:${contentAlign};`;
+    lyr.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:${pad}px ${pad}px ${Math.max(pad, 32)}px;align-items:center;justify-content:${contentAlign};`;
     const tF = document.createElement('div');
     tF.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||17}px;font-weight:800;color:${_hColor};text-align:${textAlign};margin-bottom:12px;word-break:break-word;`;
     tF.innerHTML = _buildAccentHtml(headline, accentColor); lyr.appendChild(tF);
@@ -2841,7 +2842,6 @@ function renderSlideEl(data) {
         lyr.appendChild(arr);
       }
     });
-    const sp = document.createElement('div'); sp.style.flex = '1'; lyr.appendChild(sp);
     _uBadge(lyr, username); el.appendChild(lyr); return el;
   }
 
@@ -2983,7 +2983,9 @@ function renderSlideEl(data) {
 
   // Content layer
   const layer = document.createElement('div');
-  layer.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;`;
+  // Capa tem layout fixo (logo + spacer + headline). Slides normais respeitam contentAlign.
+  const _layerJustify = isCover ? 'flex-start' : contentAlign;
+  layer.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:${_layerJustify};`;
 
   // Top row: badge + tag
   const topRow = document.createElement('div');
@@ -3677,7 +3679,10 @@ function updatePropsPanel() {
 function updateSlideField(idx, field, value) {
   if (!edSlides[idx]) return;
   edSlides[idx][field] = value;
-  if (idx === activeIdx) mountActiveSlide(true); // skip props rebuild to keep focus
+  if (idx === activeIdx) {
+    mountActiveSlide(true); // re-renders slide
+    updatePropsPanel();     // updates button active states in the panel
+  }
   renderThumbItem(idx);
 }
 
