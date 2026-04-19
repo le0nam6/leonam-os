@@ -2544,10 +2544,11 @@ let activeLayout = 'default';
 function renderLayoutBtns() {
   const container = document.getElementById('layout-btns');
   if (!container) return;
+  const current = edSlides[activeIdx]?.layout || 'default';
   container.innerHTML = '';
   Object.entries(LAYOUTS).forEach(([key, ly]) => {
     const btn = document.createElement('button');
-    btn.className = 'layout-btn' + (key === activeLayout ? ' active' : '');
+    btn.className = 'layout-btn' + (key === current ? ' active' : '');
     btn.innerHTML = `<span style="font-size:16px;line-height:1">${ly.icon}</span><span>${ly.nome}</span>`;
     btn.onclick = () => aplicarLayout(key);
     container.appendChild(btn);
@@ -2555,11 +2556,13 @@ function renderLayoutBtns() {
 }
 
 function aplicarLayout(nome) {
-  activeLayout = nome;
+  if (!edSlides[activeIdx]) return;
+  edSlides[activeIdx].layout = nome;
   renderLayoutBtns();
-  edSlides.forEach(s => { s.layout = nome; });
   mountActiveSlide(true);
-  rebuildSlideList();
+  renderThumbItem(activeIdx);
+  updatePropsPanel();
+  historyPush();
 }
 
 // edSlides: [{ label, headline, subtitle, body, isCover, funcTag, bgColor, bgImage, accentColor, username, topicLabel, idx, total }]
@@ -2639,7 +2642,9 @@ function renderSlideEl(data) {
           headlineFont, headlineColor, headlineFontSize,
           bodyFont, bodyColor, bodyFontSize,
           bgPosX = 50, bgPosY = 50, imgPosX = 50, imgPosY = 50,
-          layout = 'default' } = data;
+          layout = 'default',
+          textAlign = 'left', contentAlign = 'flex-start', paddingInner = 18,
+          checklistCols = 1, statFontSize = 72 } = data;
 
   const _hFont  = headlineFont  || 'Syne';
   const _hColor = headlineColor || '#ffffff';
@@ -2780,40 +2785,45 @@ function renderSlideEl(data) {
 
   // ── CHECKLIST LAYOUT ─────────────────────────────────────────────────────────
   if (layout === 'checklist') {
+    const pad = paddingInner;
     el.style.cssText += ';display:flex;flex-direction:column;';
     _solidBg(el, bgColor);
     const lyr = document.createElement('div');
-    lyr.style.cssText = 'position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:16px 18px;';
+    lyr.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;justify-content:${contentAlign};padding:${pad}px;`;
     const tagEl = document.createElement('div');
-    tagEl.style.cssText = `align-self:flex-start;background:${accentColor||'rgba(124,106,247,0.2)'};border:1px solid ${accentColor||'rgba(124,106,247,0.4)'};border-radius:20px;padding:3px 10px;font-size:8px;font-weight:700;color:${accentColor||'#c4b5fd'};letter-spacing:0.08em;text-transform:uppercase;font-family:'DM Sans',sans-serif;margin-bottom:10px;`;
+    tagEl.style.cssText = `align-self:${textAlign==='center'?'center':textAlign==='right'?'flex-end':'flex-start'};background:${accentColor||'rgba(34,197,94,0.15)'};border:1px solid ${accentColor||'rgba(34,197,94,0.4)'};border-radius:20px;padding:3px 10px;font-size:8px;font-weight:700;color:${accentColor||'#16a34a'};letter-spacing:0.08em;text-transform:uppercase;font-family:'DM Sans',sans-serif;margin-bottom:10px;`;
     tagEl.textContent = funcTag || 'RESUMO'; lyr.appendChild(tagEl);
     const titleEl = document.createElement('div');
-    titleEl.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||20}px;font-weight:800;color:${_hColor};line-height:1.2;margin-bottom:12px;word-break:break-word;`;
+    titleEl.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||20}px;font-weight:800;color:${_hColor};line-height:1.2;margin-bottom:12px;word-break:break-word;text-align:${textAlign};`;
     titleEl.innerHTML = _buildAccentHtml(headline, accentColor); lyr.appendChild(titleEl);
     const items = (body || subtitle || '').split(/\n+/).filter(l => l.trim().length > 2);
+    const itemsGrid = document.createElement('div');
+    itemsGrid.style.cssText = `display:grid;grid-template-columns:repeat(${checklistCols},1fr);gap:6px 14px;`;
     items.forEach(item => {
       const row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;flex-shrink:0;';
+      row.style.cssText = 'display:flex;align-items:flex-start;gap:8px;';
       const check = document.createElement('div');
-      check.style.cssText = `width:18px;height:18px;border-radius:5px;border:1.5px solid ${accentColor||'rgba(34,197,94,0.6)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;`;
-      check.innerHTML = `<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="${accentColor||'#a78bfa'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
+      check.style.cssText = `width:16px;height:16px;border-radius:4px;border:1.5px solid ${accentColor||'rgba(34,197,94,0.6)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;`;
+      check.innerHTML = `<svg width="9" height="9" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="${accentColor||'#22c55e'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
       const txt = document.createElement('div');
-      txt.style.cssText = `font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};line-height:1.45;word-break:break-word;flex:1;`;
+      txt.style.cssText = `font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};line-height:1.4;word-break:break-word;`;
       txt.textContent = item.replace(/^[\d.\-*•]+\s*/, '');
-      row.appendChild(check); row.appendChild(txt); lyr.appendChild(row);
+      row.appendChild(check); row.appendChild(txt); itemsGrid.appendChild(row);
     });
+    lyr.appendChild(itemsGrid);
     const sp = document.createElement('div'); sp.style.flex = '1'; lyr.appendChild(sp);
     _uBadge(lyr, username); el.appendChild(lyr); return el;
   }
 
   // ── FUNNEL LAYOUT ─────────────────────────────────────────────────────────────
   if (layout === 'funnel') {
+    const pad = paddingInner;
     el.style.cssText += ';display:flex;flex-direction:column;';
     _solidBg(el, bgColor);
     const lyr = document.createElement('div');
-    lyr.style.cssText = 'position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:14px 18px;align-items:center;';
+    lyr.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:${pad}px;align-items:center;justify-content:${contentAlign};`;
     const tF = document.createElement('div');
-    tF.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||17}px;font-weight:800;color:${_hColor};text-align:center;margin-bottom:12px;word-break:break-word;`;
+    tF.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||17}px;font-weight:800;color:${_hColor};text-align:${textAlign};margin-bottom:12px;word-break:break-word;`;
     tF.innerHTML = _buildAccentHtml(headline, accentColor); lyr.appendChild(tF);
     const stages = (body || subtitle || '').split(/\n+/).filter(l => l.trim().length > 1).slice(0, 5);
     const fc = [accentColor||'#7c6af7','#6366f1','#8b5cf6','#a78bfa','#c4b5fd'];
@@ -2837,19 +2847,21 @@ function renderSlideEl(data) {
 
   // ── QUOTE LAYOUT ──────────────────────────────────────────────────────────────
   if (layout === 'quote') {
+    const pad = paddingInner;
+    const hAlign = textAlign === 'left' ? 'flex-start' : textAlign === 'right' ? 'flex-end' : 'center';
     el.style.cssText += ';display:flex;flex-direction:column;';
     _solidBg(el, bgColor);
     const lyr = document.createElement('div');
-    lyr.style.cssText = 'position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;';
+    lyr.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:${hAlign};justify-content:${contentAlign};padding:${pad}px;`;
     const qi = document.createElement('div');
-    qi.style.cssText = `font-size:52px;color:${accentColor||'rgba(124,106,247,0.4)'};line-height:1;margin-bottom:8px;font-family:Georgia,serif;`;
+    qi.style.cssText = `font-size:52px;color:${accentColor||'rgba(34,197,94,0.5)'};line-height:1;margin-bottom:8px;font-family:Georgia,serif;`;
     qi.textContent = '"'; lyr.appendChild(qi);
     const qt = document.createElement('div');
-    qt.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||22}px;font-weight:700;color:${_hColor};line-height:1.35;text-align:center;word-break:break-word;margin-bottom:14px;`;
+    qt.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||22}px;font-weight:700;color:${_hColor};line-height:1.35;text-align:${textAlign};word-break:break-word;margin-bottom:14px;`;
     qt.innerHTML = _buildAccentHtml(headline, accentColor); lyr.appendChild(qt);
     if (body || subtitle) {
       const at = document.createElement('div');
-      at.style.cssText = `font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};text-align:center;`;
+      at.style.cssText = `font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};text-align:${textAlign};`;
       at.textContent = '— ' + (body || subtitle); lyr.appendChild(at);
     }
     const ub = document.createElement('div');
@@ -2860,13 +2872,15 @@ function renderSlideEl(data) {
 
   // ── STAT LAYOUT ───────────────────────────────────────────────────────────────
   if (layout === 'stat') {
+    const pad = paddingInner;
+    const hAlign = textAlign === 'left' ? 'flex-start' : textAlign === 'right' ? 'flex-end' : 'center';
     el.style.cssText += ';display:flex;flex-direction:column;';
     _solidBg(el, bgColor);
     const lyr = document.createElement('div');
-    lyr.style.cssText = 'position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 24px;';
+    lyr.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:${hAlign};justify-content:${contentAlign};padding:${pad}px;`;
     const lines = headline.replace(/\*/g,'').split('\n');
     const sn = document.createElement('div');
-    sn.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:72px;font-weight:900;color:${accentColor||_hColor};line-height:1;text-align:center;margin-bottom:4px;`;
+    sn.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${statFontSize}px;font-weight:900;color:${accentColor||_hColor};line-height:1;text-align:${textAlign};margin-bottom:4px;`;
     sn.textContent = lines[0] || ''; lyr.appendChild(sn);
     if (lines[1]) {
       const sl = document.createElement('div');
@@ -2886,12 +2900,13 @@ function renderSlideEl(data) {
 
   // ── COMPARISON LAYOUT ─────────────────────────────────────────────────────────
   if (layout === 'comparison') {
+    const pad = paddingInner;
     el.style.cssText += ';display:flex;flex-direction:column;';
     _solidBg(el, bgColor);
     const lyr = document.createElement('div');
-    lyr.style.cssText = 'position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:14px 14px;';
+    lyr.style.cssText = `position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:${pad}px;`;
     const tc = document.createElement('div');
-    tc.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||18}px;font-weight:800;color:${_hColor};margin-bottom:10px;word-break:break-word;`;
+    tc.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||18}px;font-weight:800;color:${_hColor};margin-bottom:10px;word-break:break-word;text-align:${textAlign};`;
     tc.innerHTML = _buildAccentHtml(headline, accentColor); lyr.appendChild(tc);
     const cols = document.createElement('div');
     cols.style.cssText = 'display:flex;gap:8px;flex:1;';
@@ -3282,6 +3297,7 @@ function mountActiveSlide(skipPropsUpdate) {
   if (!data) return;
   host.innerHTML = '';
   host.appendChild(renderSlideEl(data));
+  renderLayoutBtns(); // reflect this slide's layout in the selector
   if (!skipPropsUpdate) updatePropsPanel();
 }
 
@@ -3586,6 +3602,60 @@ function updatePropsPanel() {
       <div class="props-label">Cor de destaque</div>
       <div class="accent-swatches" id="accent-swatches-props" style="margin-top:4px"></div>
     </div>
+    <div class="props-group">
+      <div class="props-label">Alinhamento do texto</div>
+      <div style="display:flex;gap:4px;margin-top:6px">
+        ${['left','center','right'].map(a => {
+          const icons = {left:'⬛ Esq.',center:'☰ Centro',right:'Dir. ⬛'};
+          const active = (data.textAlign||'left') === a;
+          return `<button onclick="updateSlideField(${activeIdx},'textAlign','${a}')" style="flex:1;padding:5px 0;border-radius:7px;border:1.5px solid ${active?'var(--accent-lt)':'var(--border)'};background:${active?'var(--accent-dim)':'var(--s2)'};color:${active?'var(--accent)':'var(--muted)'};font-size:10px;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif">${icons[a]}</button>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="props-group">
+      <div class="props-label">Posição vertical do conteúdo</div>
+      <div style="display:flex;gap:4px;margin-top:6px">
+        ${['flex-start','center','flex-end'].map(a => {
+          const labels = {'flex-start':'↑ Topo','center':'⊕ Meio','flex-end':'↓ Baixo'};
+          const active = (data.contentAlign||'flex-start') === a;
+          return `<button onclick="updateSlideField(${activeIdx},'contentAlign','${a}')" style="flex:1;padding:5px 0;border-radius:7px;border:1.5px solid ${active?'var(--accent-lt)':'var(--border)'};background:${active?'var(--accent-dim)':'var(--s2)'};color:${active?'var(--accent)':'var(--muted)'};font-size:10px;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif">${labels[a]}</button>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="props-group">
+      <div class="props-label">Padding interno</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <input type="range" min="8" max="48" value="${data.paddingInner||18}"
+          oninput="this.nextElementSibling.textContent=this.value+'px';updateSlideField(${activeIdx},'paddingInner',+this.value)"
+          style="flex:1;accent-color:var(--neon)">
+        <span style="font-size:11px;color:var(--muted);min-width:34px">${data.paddingInner||18}px</span>
+      </div>
+    </div>
+
+    ${(data.layout === 'checklist') ? `
+    <div class="props-group">
+      <div class="props-label">Colunas (Resumo)</div>
+      <div style="display:flex;gap:4px;margin-top:6px">
+        ${[1,2].map(c => {
+          const active = (data.checklistCols||1) === c;
+          return `<button onclick="updateSlideField(${activeIdx},'checklistCols',${c})" style="flex:1;padding:5px 0;border-radius:7px;border:1.5px solid ${active?'var(--accent-lt)':'var(--border)'};background:${active?'var(--accent-dim)':'var(--s2)'};color:${active?'var(--accent)':'var(--muted)'};font-size:11px;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif">${c} coluna${c>1?'s':''}</button>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+
+    ${(data.layout === 'stat') ? `
+    <div class="props-group">
+      <div class="props-label">Tamanho do número</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+        <input type="range" min="40" max="96" value="${data.statFontSize||72}"
+          oninput="this.nextElementSibling.textContent=this.value+'px';updateSlideField(${activeIdx},'statFontSize',+this.value)"
+          style="flex:1;accent-color:var(--neon)">
+        <span style="font-size:11px;color:var(--muted);min-width:34px">${data.statFontSize||72}px</span>
+      </div>
+    </div>` : ''}
+
     <div class="props-group" style="margin-top:auto">
       <button class="props-btn danger" onclick="deleteSlide({stopPropagation:()=>{}},${activeIdx})" style="width:100%;justify-content:center">🗑 Deletar este slide</button>
     </div>`;
@@ -3855,19 +3925,40 @@ async function _gerarImagensCarrossel(parsed) {
 }
 
 // ── Export ─────────────────────────────────────────────────────────────────────
+
+// Monta el num container fora da tela, aguarda fonts + layout e captura com html-to-image.
+// NÃO muta o cssText do el para position:fixed — isso quebra os filhos position:absolute.
+async function _captureSlide(el) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = `position:fixed;top:0;left:-${CANVAS_W + 20}px;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:hidden;pointer-events:none;z-index:-1;`;
+  wrap.appendChild(el);
+  document.body.appendChild(wrap);
+  // Garante que fontes do Google Fonts estão prontas e o browser pintou 1 frame
+  try { await document.fonts.ready; } catch(_) {}
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  try {
+    return await htmlToImage.toPng(el, {
+      pixelRatio: EXPORT_MULT,
+      cacheBust: true,
+      width: CANVAS_W,
+      height: CANVAS_H,
+      style: { margin: '0', flexShrink: '0' },
+    });
+  } finally {
+    document.body.removeChild(wrap);
+  }
+}
+
 async function exportCurrentSlide() {
   const data = edSlides[activeIdx];
   if (!data) return;
   const el = renderSlideEl(data);
-  el.style.cssText += ';position:fixed;top:-9999px;left:-9999px;';
-  document.body.appendChild(el);
   try {
-    const dataUrl = await htmlToImage.toPng(el, { pixelRatio: EXPORT_MULT, cacheBust: true });
+    const dataUrl = await _captureSlide(el);
     const a = document.createElement('a');
     a.download = `slide-${activeIdx + 1}.png`;
     a.href = dataUrl; a.click();
   } catch (err) { toast('Erro ao exportar: ' + err.message, 'error'); }
-  finally { document.body.removeChild(el); }
 }
 
 async function exportAllSlides() {
@@ -3882,13 +3973,10 @@ async function exportAllSlides() {
   for (let i = 0; i < edSlides.length; i++) {
     statusEl.textContent = `Exportando ${i + 1}/${edSlides.length}...`;
     const el = renderSlideEl(edSlides[i]);
-    el.style.cssText += ';position:fixed;top:-9999px;left:-9999px;';
-    document.body.appendChild(el);
     try {
-      const dataUrl = await htmlToImage.toPng(el, { pixelRatio: EXPORT_MULT, cacheBust: true });
+      const dataUrl = await _captureSlide(el);
       pasta.file(`slide-${String(i + 1).padStart(2, '0')}.png`, dataUrl.split(',')[1], { base64: true });
     } catch (err) { console.warn(`Export slide ${i + 1}:`, err.message); }
-    finally { document.body.removeChild(el); }
   }
   const blob = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
