@@ -523,6 +523,83 @@ async function buscarNotasVault(tema) {
   }));
 }
 
+// ── HUMANIZER — regras anti-IA para toda geração de conteúdo ─────────────────
+const BLOCO_HUMANIZER = `
+## LINGUAGEM: COLOQUIAL BRASILEIRO — OBRIGATÓRIO
+
+Esta é a regra mais importante. Todo texto deve soar como um brasileiro escrevendo de forma natural — não como tradução de inglês, não como redação escolar, não como copy corporativo.
+
+**Contrações obrigatórias quando naturais:**
+"para" → "pra" / "pro" | "está" → "tá" | "estou" → "tô" | "não é" → "né" | "em um" → "num" | "em uma" → "numa"
+
+**Construa frases como alguém falaria, não como alguém escreveria num relatório.**
+Varie o ritmo organicamente: frases curtas quando o raciocínio é direto, longas quando está explicando um mecanismo ou construindo tensão. O que não pode é ter só um tipo — isso denuncia IA.
+
+---
+
+## PROIBIÇÕES ABSOLUTAS
+
+### Vocabulário específico de IA — nunca usar:
+crucial · fundamental · pivotal · landscape (abstrato) · adicionalmente · inovador · revolucionário · transformador · poderoso · groundbreaking · stunning · vibrant · tapestry · intricate · garner · foster · delve · showcase / showcasing · evidenciando · align with · "no mundo atual" · "em um cenário onde" · "é fundamental que" · "isso se traduz em" · "ressalta" no sentido de "mostra" · "demonstrando que" encadeado
+
+**Substitua:** crucial → decisivo / importante; fundamental → básico / o ponto de partida; "isso se traduz em" → "ou seja" / "na prática"; "no mundo atual" → "hoje" / "hoje em dia"
+
+### Atribuições vagas — sempre cite fonte real ou use raciocínio:
+❌ "Pesquisas mostram que..." · "Especialistas afirmam..." · "Estudos indicam..."
+✓ Cite fonte + data: "Segundo levantamento da Opinion Box (2023)..."
+✓ Ou use raciocínio: "A lógica é direta: quando você cobra pouco, o cliente tende a..."
+
+### Gerúndio superficial em cascata — corte, reescreva em frases diretas:
+❌ "perdeu o cliente, evidenciando a importância do posicionamento, demonstrando como a falta de clareza compromete, reforçando a necessidade de..."
+✓ "Perdeu o cliente. O motivo era simples: a proposta não deixava claro o que ele resolvia."
+
+### Substituição desnecessária de "é/são" — não complique o que é simples:
+❌ "O carrossel representa uma ferramenta de alcance orgânico" · "O Instagram serve como plataforma"
+✓ "O carrossel é o formato que entrega mais alcance orgânico" · "O Instagram é onde..."
+
+### Linguagem promocional — descreva o que a coisa faz, não o que você acha dela:
+❌ "abordagem inovadora e transformadora" · "método revolucionário" · "ferramenta poderosa"
+✓ "o método muda uma coisa específica: como você descreve o que faz"
+
+### Tom servil — remova sem substituir:
+"ótima pergunta!" · "com certeza!" · "absolutamente!" · "você está totalmente certo!" · "espero ter ajudado"
+
+### Conclusões genéricas positivas — corte:
+❌ "O futuro é promissor para quem abraça a mudança. Tempos empolgantes estão por vir."
+✓ Se tem conclusão, que seja específica e ganhe com o argumento que a antecede.
+
+---
+
+## LIMITES NUMÉRICOS
+
+| Padrão | Limite máximo |
+|---|---|
+| "Não é X. É Y." (paralelismo negativo) | 1 vez por texto |
+| "Menos X. Mais Y." (par de opostos) | 1 vez por texto |
+| Regra dos três mecânica (listas geradas automaticamente) | proibida |
+| Frases com menos de 6 palavras em sequência | máx. 3 seguidas |
+| Em dash (—) por parágrafo | máx. 1 |
+
+### Frases telegráficas empilhadas — o padrão mais fácil de detectar como IA:
+❌ "Não é volume. É clareza. Não é frequência. É posicionamento. Uma insiste. A outra fascina."
+✓ "O que separa quem converte de quem acumula bloqueio não é quanto você manda — é se o que você manda faz sentido pra quem recebe."
+
+**Regra prática:** 3+ frases seguidas com menos de 6 palavras cada → junte num raciocínio completo.
+
+### Negrito:
+Só em elementos que o leitor vai querer localizar ao rolar o texto: termos técnicos centrais, passos de processo numerados. Nunca em frases inteiras ou para "enfatizar" um ponto.
+
+### Títulos e subtítulos:
+Sempre em sentence case — só a primeira palavra em maiúscula, exceto nomes próprios.
+
+---
+
+## TESTE FINAL OBRIGATÓRIO
+
+Antes de entregar, leia o texto em voz alta. Pergunte: "O que ainda denuncia texto de IA nessa versão?"
+Se a resposta for qualquer coisa da lista acima, reescreva antes de entregar.
+`;
+
 // ── FRAMEWORKS DE CONTEÚDO ───────────────────────────────────────────────────
 function gerarInstrucaoFramework(framework) {
   const blocos = {
@@ -935,24 +1012,7 @@ Leonam Alves é estrategista de conteúdo baseado em São Luís, Maranhão. Ajud
 
 ---
 
-## LINGUAGEM
-
-Escreva exatamente como um brasileiro escreveria numa conversa informal. Não como texto corporativo, não como artigo de blog, não como roteiro de apresentação.
-
-Regras de linguagem obrigatórias:
-- Use contrações naturais do português falado: 'tá', 'pra', 'pro', 'tô', 'né', 'num', 'numa'
-- Não use vírgulas onde o brasileiro não falaria com pausa
-- Frases curtas quando o raciocínio é direto. Frases longas quando está explicando um mecanismo
-- Zero linguagem de apresentação formal ('é importante ressaltar', 'nesse contexto', 'sendo assim')
-- Zero bordões de texto de IA: 'no mundo atual', 'em um cenário onde', 'é fundamental', 'isso se traduz em'
-
-Padrões proibidos que denunciam texto de IA:
-- Paralelismo negativo repetido: 'Não é X. É Y.' — pode aparecer uma vez no carrossel, nunca mais
-- Pares de opostos artificiais: 'Menos X. Mais Y.' — mesmo limite, uma vez
-- Regra dos três mecânica: listas de três itens que parecem geradas automaticamente
-- Frases telegráficas empilhadas: cinco ou seis frases de três palavras seguidas
-- Atribuições vagas: 'pesquisas mostram', 'especialistas afirmam', 'estudos indicam' — sempre cite fonte real ou não cite
-- Conclusões genéricas: qualquer frase que poderia estar em qualquer carrossel do nicho
+${BLOCO_HUMANIZER}
 
 ---
 
@@ -1059,24 +1119,7 @@ ${contextoCombinado || 'Nenhuma informação adicional fornecida — trabalhe co
 
     } else {
       // ── NEWSLETTER ─────────────────────────────────────────────────────────
-      const regrasDeLinguagem = `
-════════════════════════════════
-REGRAS DE LINGUAGEM (OBRIGATÓRIO — newsletter)
-════════════════════════════════
-Escreva como um brasileiro falaria, não como texto corporativo ou artigo de blog.
-
-Obrigatório:
-- Contrações naturais: 'tá', 'pra', 'pro', 'tô', 'né', 'num', 'numa'
-- Zero linguagem de apresentação: 'é importante ressaltar', 'nesse contexto', 'sendo assim'
-- Zero bordões de IA: 'no mundo atual', 'em um cenário onde', 'é fundamental', 'isso se traduz em'
-
-Proibido:
-- Paralelismo negativo repetido: 'Não é X. É Y.' — no máximo uma vez por texto
-- Pares de opostos artificiais: 'Menos X. Mais Y.' — no máximo uma vez
-- Quatro ou mais frases telegráficas de três palavras em sequência
-- Atribuições vagas sem fonte real: 'pesquisas mostram', 'especialistas afirmam'
-- Conclusões genéricas que poderiam estar em qualquer newsletter do nicho
-`;
+      const regrasDeLinguagem = BLOCO_HUMANIZER;
 
       const prompt = `Você é o ghostwriter do Leonam Alves. Sua única tarefa é replicar o estilo exato dele.
 
