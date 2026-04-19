@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
 const os = require('os');
+const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const Anthropic = require('@anthropic-ai/sdk');
 
@@ -16,6 +17,60 @@ const upload = multer({ dest: path.join(os.tmpdir(), 'leonamos-uploads') });
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
+
+const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || '';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
+const AUTH_SECRET    = process.env.AUTH_SECRET    || 'leonam-os-dev-secret';
+const TOKEN_TTL      = 30 * 24 * 60 * 60 * 1000; // 30 dias
+
+function gerarToken(email) {
+  const payload = Buffer.from(`${email}:${Date.now()}`).toString('base64url');
+  const sig = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function verificarToken(token) {
+  if (!token || typeof token !== 'string') return false;
+  const dot = token.lastIndexOf('.');
+  if (dot < 1) return false;
+  const payload = token.slice(0, dot);
+  const sig     = token.slice(dot + 1);
+  const expected = crypto.createHmac('sha256', AUTH_SECRET).update(payload).digest('base64url');
+  try {
+    if (!crypto.timingSafeEqual(Buffer.from(sig, 'base64url'), Buffer.from(expected, 'base64url'))) return false;
+  } catch { return false; }
+  try {
+    const decoded = Buffer.from(payload, 'base64url').toString();
+    const ts = parseInt(decoded.split(':').pop());
+    return Date.now() - ts < TOKEN_TTL;
+  } catch { return false; }
+}
+
+// Login público
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body || {};
+  if (!ADMIN_EMAIL) return res.status(500).json({ ok: false, erro: 'Servidor sem credenciais configuradas.' });
+  if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+    return res.json({ ok: true, token: gerarToken(email) });
+  }
+  return res.status(401).json({ ok: false, erro: 'E-mail ou senha incorretos.' });
+});
+
+// Verifica token (usado pelo front na inicialização)
+app.get('/api/auth/check', (req, res) => {
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (verificarToken(token)) return res.json({ ok: true });
+  return res.status(401).json({ ok: false });
+});
+
+// Middleware de proteção para todas as outras rotas /api/*
+app.use('/api', (req, res, next) => {
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  if (!verificarToken(token)) return res.status(401).json({ ok: false, erro: 'Não autenticado.' });
+  next();
+});
 
 const GEMINI_KEY = process.env.GEMINI_KEY;
 const GROQ_KEY = process.env.GROQ_KEY;

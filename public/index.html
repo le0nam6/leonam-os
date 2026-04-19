@@ -935,6 +935,47 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 </head>
 <body>
 
+<!-- ── LOGIN SCREEN ────────────────────────────────────────────────────────── -->
+<div id="login-screen" style="
+  position:fixed;inset:0;z-index:99999;
+  background:#0a0a0e;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Sans',sans-serif;
+">
+  <div style="
+    width:100%;max-width:380px;padding:0 24px;
+  ">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;
+        background:linear-gradient(120deg,#fff 0%,#8b5cf6 100%);
+        -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+        margin-bottom:6px">Leonam OS</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.35);letter-spacing:0.04em">Acesso restrito</div>
+    </div>
+
+    <div style="background:#13131a;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px 24px">
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,0.4);font-weight:700;margin-bottom:7px">E-mail</label>
+        <input id="login-email" type="email" autocomplete="email" placeholder="seu@email.com"
+          style="width:100%;box-sizing:border-box;background:#0a0a0e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s"
+          onfocus="this.style.borderColor='rgba(139,92,246,0.6)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,0.4);font-weight:700;margin-bottom:7px">Senha</label>
+        <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••"
+          style="width:100%;box-sizing:border-box;background:#0a0a0e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s"
+          onfocus="this.style.borderColor='rgba(139,92,246,0.6)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'"
+          onkeydown="if(event.key==='Enter')_loginSubmit()">
+      </div>
+      <button onclick="_loginSubmit()" id="login-btn"
+        style="width:100%;padding:12px;border:none;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity 0.2s">
+        Entrar
+      </button>
+      <div id="login-error" style="margin-top:12px;font-size:12px;color:#f87171;text-align:center;display:none"></div>
+    </div>
+  </div>
+</div>
+
 <div class="sidebar">
   <button class="sidebar-toggle" onclick="toggleSidebar()" title="Recolher menu">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
@@ -1590,6 +1631,84 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 const API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:3747'
   : 'https://leonam-os-production.up.railway.app';
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+(function() {
+  // Intercepta fetch para enviar token em todas as chamadas /api/
+  const _origFetch = window.fetch.bind(window);
+  window.fetch = function(url, opts = {}) {
+    const token = localStorage.getItem('auth_token');
+    if (token && typeof url === 'string' && url.includes('/api/')) {
+      opts = { ...opts, headers: { ...(opts.headers || {}), 'Authorization': `Bearer ${token}` } };
+    }
+    return _origFetch(url, opts).then(res => {
+      if (res.status === 401) _mostrarLogin();
+      return res;
+    });
+  };
+})();
+
+function _mostrarLogin() {
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
+function _esconderLogin() {
+  const el = document.getElementById('login-screen');
+  el.style.transition = 'opacity 0.3s';
+  el.style.opacity = '0';
+  setTimeout(() => { el.style.display = 'none'; el.style.opacity = '1'; }, 300);
+}
+
+async function _loginSubmit() {
+  const btn   = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  if (!email || !password) { errEl.textContent = 'Preencha e-mail e senha.'; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+  errEl.style.display = 'none';
+
+  try {
+    const r = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const data = await r.json();
+    if (data.ok && data.token) {
+      localStorage.setItem('auth_token', data.token);
+      _esconderLogin();
+    } else {
+      errEl.textContent = data.erro || 'Credenciais inválidas.';
+      errEl.style.display = 'block';
+    }
+  } catch (e) {
+    errEl.textContent = 'Servidor offline. Tente novamente.';
+    errEl.style.display = 'block';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Entrar';
+}
+
+// Verifica sessão ao carregar
+(async function _checkAuth() {
+  const token = localStorage.getItem('auth_token');
+  if (!token) return; // já mostra login screen por padrão
+  try {
+    const r = await fetch(`${API}/api/auth/check`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (r.ok) _esconderLogin();
+    // Se 401, o interceptor já chama _mostrarLogin()
+  } catch {
+    // servidor offline → fica na tela de login
+  }
+})();
+
 let pdfFile = null;
 let tipoAtual = 'todos';
 let buscaAtual = '';
