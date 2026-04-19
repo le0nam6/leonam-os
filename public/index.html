@@ -3815,8 +3815,14 @@ function updateSlideField(idx, field, value) {
   if (!edSlides[idx]) return;
   edSlides[idx][field] = value;
   if (idx === activeIdx) {
-    mountActiveSlide(true); // re-renders slide
-    updatePropsPanel();     // updates button active states in the panel
+    mountActiveSlide(true);
+    // Só reconstrói o painel se o foco NÃO estiver num input vivo —
+    // reconstruir enquanto o usuário digita destrói o textarea e perde o foco.
+    const tag  = document.activeElement?.tagName;
+    const type = document.activeElement?.type;
+    const liveInput = tag === 'TEXTAREA' ||
+      (tag === 'INPUT' && (type === 'text' || type === 'range' || type === 'color'));
+    if (!liveInput) updatePropsPanel();
   }
   renderThumbItem(idx);
 }
