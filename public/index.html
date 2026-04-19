@@ -2704,7 +2704,9 @@ function renderSlideEl(data) {
           headlineFontWeight = 800,
           logoPosX = 50, logoPosY = 22, logoW = 116,
           logoText = '', logoFont = '', logoWeight = 700, logoColor = '#ffffff', logoHidden = false,
-          imgBlockOffset = 0 } = data;
+          imgBlockOffset = 0,
+          imgPos = 'top',
+          imgBlockH = 158, imgBlockW = 140, imgRadius = 12 } = data;
 
   const _hFont  = headlineFont  || 'Syne';
   const _hColor = headlineColor || '#ffffff';
@@ -3150,16 +3152,25 @@ function renderSlideEl(data) {
       sub.textContent = subtitle; layer.appendChild(sub);
     }
   } else {
-    // Área de imagem: se já tem imgSrc mostra inline, senão mostra botões
+    // ── Content slide ──────────────────────────────────────────────────────────
+    const isHoriz = imgPos === 'left' || imgPos === 'right';
+    const pad = paddingInner || 18;
+
+    // ── Build image element ────────────────────────────────────────────────────
+    let imgElem;
     if (imgSrc) {
-      // Imagem encaixada no quadrado — drag para reposicionar, click para trocar
       const imgWrap = document.createElement('div');
-      imgWrap.style.cssText = `margin:${10 + imgBlockOffset}px auto 0;width:316px;height:158px;flex-shrink:0;border-radius:12px;overflow:hidden;position:relative;cursor:grab;`;
+      if (isHoriz) {
+        imgWrap.style.cssText = `width:${imgBlockW}px;flex-shrink:0;align-self:stretch;border-radius:${imgRadius}px;overflow:hidden;position:relative;cursor:grab;`;
+      } else {
+        const mTop = imgPos === 'top' ? 10 + imgBlockOffset : 0;
+        const mBot = imgPos === 'bottom' ? 10 : 0;
+        imgWrap.style.cssText = `width:calc(100% - ${pad*2}px);height:${imgBlockH}px;flex-shrink:0;margin:${mTop}px auto ${mBot}px;border-radius:${imgRadius}px;overflow:hidden;position:relative;cursor:grab;`;
+      }
       const imgEl = document.createElement('img');
       imgEl.src = imgSrc; imgEl.crossOrigin = 'anonymous';
       imgEl.style.cssText = `width:100%;height:100%;object-fit:cover;object-position:${imgPosX}% ${imgPosY}%;display:block;pointer-events:none;`;
 
-      // Overlay: hint de reposicionamento + botão de troca no canto
       const imgOverlay = document.createElement('div');
       imgOverlay.style.cssText = `position:absolute;inset:0;background:rgba(0,0,0,0);transition:background 0.15s;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;`;
       imgOverlay.innerHTML = `<span style="font-size:10px;color:#fff;font-family:'DM Sans',sans-serif;letter-spacing:0.05em;background:rgba(0,0,0,0.6);padding:4px 10px;border-radius:20px;">↔ Arrasta para reposicionar</span>`;
@@ -3172,7 +3183,6 @@ function renderSlideEl(data) {
       imgWrap.onmouseenter = () => { imgOverlay.style.background = 'rgba(0,0,0,0.35)'; imgOverlay.style.opacity = '1'; replaceBtn.style.opacity = '1'; };
       imgWrap.onmouseleave = () => { imgOverlay.style.background = 'rgba(0,0,0,0)'; imgOverlay.style.opacity = '0'; replaceBtn.style.opacity = '0'; };
 
-      // Drag to reposition
       let iDrag = false, iSX, iSY, iSPX, iSPY, iMoved = false;
       imgWrap.addEventListener('mousedown', e => {
         if (e.button !== 0 || e.target === replaceBtn) return;
@@ -3199,7 +3209,7 @@ function renderSlideEl(data) {
             renderThumbItem(activeIdx);
             historyPush();
           } else if (!iMoved) {
-            edEscolherImagem(); // click sem arrastar → troca
+            edEscolherImagem();
           }
           document.removeEventListener('mousemove', onMove);
           document.removeEventListener('mouseup', onUp);
@@ -3211,11 +3221,17 @@ function renderSlideEl(data) {
       imgWrap.appendChild(imgEl);
       imgWrap.appendChild(imgOverlay);
       imgWrap.appendChild(replaceBtn);
-      layer.appendChild(imgWrap);
+      imgElem = imgWrap;
     } else {
-      // Placeholder com dois botões: gerar com IA ou subir do computador
+      // Placeholder
       const imgBox = document.createElement('div');
-      imgBox.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.18);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;`;
+      if (isHoriz) {
+        imgBox.style.cssText = `width:${imgBlockW}px;flex-shrink:0;align-self:stretch;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.18);border-radius:${imgRadius}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;`;
+      } else {
+        const mTop = imgPos === 'top' ? 10 + imgBlockOffset : 0;
+        const mBot = imgPos === 'bottom' ? 10 : 0;
+        imgBox.style.cssText = `width:calc(100% - ${pad*2}px);height:${imgBlockH}px;flex-shrink:0;margin:${mTop}px auto ${mBot}px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.18);border-radius:${imgRadius}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;`;
+      }
 
       const imgBoxLabel = document.createElement('div');
       imgBoxLabel.style.cssText = `font-size:10px;letter-spacing:0.07em;color:rgba(255,255,255,0.25);font-family:'DM Sans',sans-serif;text-transform:uppercase;`;
@@ -3223,7 +3239,7 @@ function renderSlideEl(data) {
       imgBox.appendChild(imgBoxLabel);
 
       const imgBoxBtns = document.createElement('div');
-      imgBoxBtns.style.cssText = `display:flex;gap:8px;`;
+      imgBoxBtns.style.cssText = `display:flex;gap:8px;flex-wrap:wrap;justify-content:center;`;
 
       const btnIA = document.createElement('button');
       btnIA.style.cssText = `display:flex;align-items:center;gap:5px;background:rgba(124,106,247,0.18);border:1px solid rgba(124,106,247,0.4);border-radius:8px;padding:7px 12px;font-size:11px;color:#c4b5fd;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;`;
@@ -3242,31 +3258,60 @@ function renderSlideEl(data) {
       imgBoxBtns.appendChild(btnIA);
       imgBoxBtns.appendChild(btnUp);
       imgBox.appendChild(imgBoxBtns);
-      layer.appendChild(imgBox);
+      imgElem = imgBox;
+    }
+
+    // ── Build text element ─────────────────────────────────────────────────────
+    const textBlock = document.createElement('div');
+    if (isHoriz) {
+      textBlock.style.cssText = `flex:1;overflow:hidden;display:flex;flex-direction:column;padding:${pad}px;`;
+    } else {
+      textBlock.style.cssText = `flex:1;display:flex;flex-direction:column;overflow:hidden;`;
     }
 
     const hLen = headline.replace(/\*/g, '').length;
     const hSizeAuto = hLen > 90 ? 20 : hLen > 65 ? 23 : hLen > 45 ? 27 : hLen > 28 ? 30 : 34;
-    const hSize = headlineFontSize || hSizeAuto;
+    const hSize = headlineFontSize || (isHoriz ? Math.min(hSizeAuto, 22) : hSizeAuto);
     const hlWrap = document.createElement('div');
-    hlWrap.style.cssText = 'padding:12px 22px 0;flex-shrink:0;';
+    hlWrap.style.cssText = isHoriz ? 'flex-shrink:0;' : `padding:12px ${pad}px 0;flex-shrink:0;`;
     const hl = document.createElement('div');
     hl.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${hSize}px;font-weight:${headlineFontWeight};color:${_hColor};line-height:1.18;word-break:break-word;`;
     hl.innerHTML = _buildAccentHtml(headline.toUpperCase(), accentColor);
-    hlWrap.appendChild(hl); layer.appendChild(hlWrap);
+    hlWrap.appendChild(hl);
+    textBlock.appendChild(hlWrap);
 
     const divider = document.createElement('div');
-    divider.style.cssText = 'margin:8px 22px;height:1px;background:rgba(255,255,255,0.08);flex-shrink:0;';
-    layer.appendChild(divider);
+    divider.style.cssText = isHoriz
+      ? 'margin:6px 0;height:1px;background:rgba(255,255,255,0.08);flex-shrink:0;'
+      : `margin:8px ${pad}px;height:1px;background:rgba(255,255,255,0.08);flex-shrink:0;`;
+    textBlock.appendChild(divider);
 
     if (body) {
       const bodyEl = document.createElement('div');
-      bodyEl.style.cssText = `padding:0 22px;font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};line-height:1.58;overflow:hidden;flex-shrink:1;word-break:break-word;`;
-      bodyEl.textContent = body; layer.appendChild(bodyEl);
+      bodyEl.style.cssText = isHoriz
+        ? `font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};line-height:1.5;overflow:hidden;flex-shrink:1;word-break:break-word;`
+        : `padding:0 ${pad}px;font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};line-height:1.58;overflow:hidden;flex-shrink:1;word-break:break-word;`;
+      bodyEl.textContent = body;
+      textBlock.appendChild(bodyEl);
     }
+    const tSpacer = document.createElement('div');
+    tSpacer.style.flex = '1';
+    textBlock.appendChild(tSpacer);
 
-    const spacer = document.createElement('div');
-    spacer.style.flex = '1'; layer.appendChild(spacer);
+    // ── Assemble into contentArea ──────────────────────────────────────────────
+    const contentArea = document.createElement('div');
+    contentArea.style.cssText = isHoriz
+      ? `flex:1;display:flex;flex-direction:row;overflow:hidden;`
+      : `flex:1;display:flex;flex-direction:column;overflow:hidden;`;
+
+    if (imgPos === 'top' || imgPos === 'left') {
+      contentArea.appendChild(imgElem);
+      contentArea.appendChild(textBlock);
+    } else { // bottom or right
+      contentArea.appendChild(textBlock);
+      contentArea.appendChild(imgElem);
+    }
+    layer.appendChild(contentArea);
   }
 
   // Pagination counter (multiple styles)
@@ -3718,14 +3763,46 @@ function updatePropsPanel() {
       `}
     </div>` : ''}
 
-    ${(!data.isCover && data.imgSrc) ? `
+    ${!data.isCover ? `
     <div class="props-group" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-      <div class="props-label" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--neon)">🖼 Posição da imagem</div>
-      <div class="props-label" style="margin-top:8px">Deslocamento vertical <span class="img-off-val" style="color:var(--dim);font-weight:400">(${data.imgBlockOffset||0}px)</span></div>
+      <div class="props-label" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--neon)">🖼 Bloco de imagem</div>
+
+      <div class="props-label" style="margin-top:8px">Posição</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:4px">
+        ${[['top','↑ Cima'],['bottom','↓ Baixo'],['left','← Esquerda'],['right','Direita →']].map(([v,l]) => {
+          const active = (data.imgPos||'top') === v;
+          return `<button onclick="updateSlideField(${activeIdx},'imgPos','${v}')"
+            style="padding:5px 0;border-radius:7px;border:1.5px solid ${active?'var(--accent-lt)':'var(--border)'};background:${active?'var(--accent-dim)':'var(--s2)'};color:${active?'var(--accent)':'var(--muted)'};font-size:11px;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif">${l}</button>`;
+        }).join('')}
+      </div>
+
+      ${((data.imgPos||'top')==='top'||(data.imgPos||'top')==='bottom') ? `
+      <div class="props-label" style="margin-top:10px">Altura <span style="color:var(--dim);font-weight:400">(${data.imgBlockH||158}px)</span></div>
+      <input type="range" min="60" max="280" value="${data.imgBlockH||158}"
+        oninput="this.parentElement.querySelector('.img-h-val').textContent=this.value+'px';updateSlideField(${activeIdx},'imgBlockH',+this.value)"
+        style="width:100%;accent-color:var(--neon);margin-top:4px">
+      <span class="img-h-val" style="font-size:11px;color:var(--muted)">${data.imgBlockH||158}px</span>
+      ` : `
+      <div class="props-label" style="margin-top:10px">Largura <span style="color:var(--dim);font-weight:400">(${data.imgBlockW||140}px)</span></div>
+      <input type="range" min="60" max="220" value="${data.imgBlockW||140}"
+        oninput="this.parentElement.querySelector('.img-w-val').textContent=this.value+'px';updateSlideField(${activeIdx},'imgBlockW',+this.value)"
+        style="width:100%;accent-color:var(--neon);margin-top:4px">
+      <span class="img-w-val" style="font-size:11px;color:var(--muted)">${data.imgBlockW||140}px</span>
+      `}
+
+      <div class="props-label" style="margin-top:10px">Border radius <span style="color:var(--dim);font-weight:400">(${data.imgRadius!==undefined?data.imgRadius:12}px)</span></div>
+      <input type="range" min="0" max="80" value="${data.imgRadius!==undefined?data.imgRadius:12}"
+        oninput="this.parentElement.querySelector('.img-r-val').textContent=this.value+'px';updateSlideField(${activeIdx},'imgRadius',+this.value)"
+        style="width:100%;accent-color:var(--neon);margin-top:4px">
+      <span class="img-r-val" style="font-size:11px;color:var(--muted)">${data.imgRadius!==undefined?data.imgRadius:12}px</span>
+
+      ${data.imgSrc && (data.imgPos||'top')==='top' ? `
+      <div class="props-label" style="margin-top:10px">Deslocamento vertical <span class="img-off-val" style="color:var(--dim);font-weight:400">(${data.imgBlockOffset||0}px)</span></div>
       <input type="range" min="-150" max="200" value="${data.imgBlockOffset||0}"
         oninput="this.parentElement.querySelector('.img-off-val').textContent='('+this.value+'px)';updateSlideField(${activeIdx},'imgBlockOffset',+this.value)"
         style="width:100%;accent-color:var(--neon);margin-top:4px">
-      <button onclick="updateSlideField(${activeIdx},'imgBlockOffset',0)" style="margin-top:6px;font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--s2);color:var(--muted);cursor:pointer;">Resetar posição</button>
+      <button onclick="updateSlideField(${activeIdx},'imgBlockOffset',0)" style="margin-top:6px;font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--s2);color:var(--muted);cursor:pointer;">Resetar</button>
+      ` : ''}
     </div>` : ''}
 
     <div class="props-group">
