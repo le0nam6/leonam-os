@@ -3369,8 +3369,10 @@ function renderSlideEl(data, isExport = false) {
     const pad = paddingInner || 18;
 
     // ── Build image element ────────────────────────────────────────────────────
+    // Se bgImage está ativo, o fundo JÁ é a imagem — nunca renderiza bloco interno
     let imgElem;
-    if (imgSrc) {
+    const _showImgBlock = !bgImage; // só mostra bloco quando NÃO há fundo de imagem
+    if (_showImgBlock && imgSrc) {
       const imgWrap = document.createElement('div');
       if (isHoriz) {
         imgWrap.style.cssText = `width:${imgBlockW}px;flex-shrink:0;align-self:stretch;border-radius:${imgRadius}px;overflow:hidden;position:relative;cursor:grab;`;
@@ -3434,8 +3436,8 @@ function renderSlideEl(data, isExport = false) {
       imgWrap.appendChild(imgOverlay);
       imgWrap.appendChild(replaceBtn);
       imgElem = imgWrap;
-    } else if (!isExport) {
-      // Placeholder — só no editor, nunca no export
+    } else if (_showImgBlock && !isExport) {
+      // Placeholder — só no editor sem bgImage, nunca no export
       const imgBox = document.createElement('div');
       if (isHoriz) {
         imgBox.style.cssText = `width:${imgBlockW}px;flex-shrink:0;align-self:stretch;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.18);border-radius:${imgRadius}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;`;
@@ -3742,6 +3744,7 @@ function edSetBgImage() {
     const reader = new FileReader();
     reader.onload = ev => {
       edSlides[activeIdx].bgImage = ev.target.result;
+      edSlides[activeIdx].imgSrc  = ''; // fundo e bloco de imagem são mutuamente exclusivos
       mountActiveSlide(true);
       renderThumbItem(activeIdx);
       historyPush();
@@ -4348,6 +4351,7 @@ async function _gerarImagensCarrossel(parsed) {
     try {
       const dataUrl = await gerarImagemClientSide(prompt);
       edSlides[i].bgImage = dataUrl;
+      edSlides[i].imgSrc  = ''; // fundo e bloco de imagem são mutuamente exclusivos
       renderThumbItem(i);
       if (i === activeIdx) mountActiveSlide(true);
       console.log(`Slide ${i + 1} imagem OK`);
