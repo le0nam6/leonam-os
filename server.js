@@ -1115,18 +1115,20 @@ Antes de retornar o carrossel, verifique mentalmente:
 
 ## FORMATO DE ENTREGA
 
-SLIDE 1 — HOOK
+OBRIGATÓRIO: cada cabeçalho de slide DEVE usar exatamente este padrão — com os dois asteriscos antes e depois, e um rótulo após o traço. Sem exceções.
+
+**SLIDE 1 — HOOK**
 [texto]
 
-SLIDE 2
+**SLIDE 2 — [rótulo descritivo]**
 [texto]
 
 ...
 
-SLIDE [N-1] — GATILHO DE SALVAMENTO
+**SLIDE [N-1] — GATILHO DE SALVAMENTO**
 [texto]
 
-SLIDE [N] — CTA
+**SLIDE [N] — CTA**
 [texto]
 
 LEGENDA
@@ -1142,31 +1144,31 @@ Use esses exemplos pra calibrar voz, ritmo e estrutura. Não replique o tema —
 
 EXEMPLO 1 — ângulo: análise de caso / tema: precificação
 
-SLIDE 1 — HOOK
+**SLIDE 1 — HOOK**
 Uma designer dobrou o preço cobrado por identidade visual.
 A fila de espera cresceu.
 
-SLIDE 2
+**SLIDE 2 — CONTEXTO**
 Ela achava que ia perder cliente. Perdeu alguns.
 Os que ficaram pagaram o dobro, questionaram metade e indicaram pessoas com o mesmo perfil.
 Conclusão dela, três meses depois: "Deveria ter feito isso antes."
 
-SLIDE 3
+**SLIDE 3 — MECANISMO**
 O que acontece quando você cobra pouco não é só dinheiro que sai — é o tipo de cliente que entra.
 Cliente de preço baixo tende a questionar tudo, mudar de ideia no meio do processo e tratar revisão como serviço ilimitado. Não porque é mal-intencionado. Porque pagou pouco e inconscientemente atribui pouco valor ao que recebeu.
 
-SLIDE 4
+**SLIDE 4 — INVERSÃO**
 Cobrar mais muda o filtro.
 Chega quem já entende que precisa do serviço, já fez as contas e já decidiu investir. A negociação muda porque a postura de quem compra é diferente desde o início.
 
-SLIDE 5 — GATILHO DE SALVAMENTO
+**SLIDE 5 — GATILHO DE SALVAMENTO**
 Antes de subir o preço, três perguntas pra saber se faz sentido agora:
 1. Meu portfólio mostra o nível de trabalho que quero cobrar ou o que eu cobrava antes?
 2. Minha proposta explica o que eu entrego ou só lista o que eu faço?
 3. Meus últimos clientes me indicaram pra alguém?
 Se qualquer uma for não, ajusta isso primeiro. O preço vem depois.
 
-SLIDE 6 — CTA
+**SLIDE 6 — CTA**
 Você já subiu o preço e se surpreendeu com o resultado?
 Me conta nos comentários.
 
@@ -1180,32 +1182,32 @@ A única forma de mudar o perfil de cliente é mudar o que você cobra. Não qua
 
 EXEMPLO 2 — ângulo: contraintuitivo / tema: portfólio como argumento de venda
 
-SLIDE 1 — HOOK
+**SLIDE 1 — HOOK**
 Dois designers com portfólio no mesmo nível técnico.
 Um fecha todo mês. O outro fica esperando indicação.
 
-SLIDE 2
+**SLIDE 2 — CONTEXTO**
 O que muda não tá no trabalho. Tá no que está escrito ao redor dele.
 Um explica o problema que existia antes do projeto começar e a decisão que foi tomada pra resolver. O outro deixa a imagem falar sozinha.
 Imagem não fala sozinha.
 
-SLIDE 3
+**SLIDE 3 — ARGUMENTO**
 Portfólio mostra o que você entrega. Não mostra como você pensa.
 Pra quem vai contratar, o raciocínio importa mais do que o resultado final. Porque é o raciocínio que vai resolver o problema que o cliente ainda não sabe que tem.
 
-SLIDE 4
+**SLIDE 4 — ONDE APARECE**
 A diferença aparece em três lugares específicos:
 O contexto antes do projeto começar. A decisão que foi tomada e por quê. O que mudou depois que o trabalho foi entregue.
 Sem isso, o portfólio é uma pasta bonita. Não é argumento de venda.
 
-SLIDE 5 — GATILHO DE SALVAMENTO
+**SLIDE 5 — GATILHO DE SALVAMENTO**
 Pega o seu portfólio agora e passa por isso:
 1. Cada projeto explica o problema que existia antes?
 2. Tem pelo menos uma decisão de design explicada em palavras, não só em imagem?
 3. Tem algum retorno real do cliente sobre o que mudou depois?
 Se não, você tá mostrando o resultado e escondendo o argumento.
 
-SLIDE 6 — CTA
+**SLIDE 6 — CTA**
 Me manda o link do seu portfólio nos comentários.
 Vou dar uma olhada e responder o que tá faltando.
 
