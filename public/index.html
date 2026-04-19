@@ -956,7 +956,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
         </div>
         <div style="flex:1">
           <label>Tipo</label>
-          <select id="conteudo-tipo" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+          <select id="conteudo-tipo" onchange="toggleOpcoesTipo(this.value)" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
             <option value="carrossel">Carrossel Instagram</option>
             <option value="substack">Artigo Substack</option>
           </select>
@@ -999,6 +999,25 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
             <option value="hopkins">Claude Hopkins — Advertising científico</option>
           </optgroup>
         </select>
+      </div>
+
+      <!-- DENSIDADE + CTA (só para carrossel) -->
+      <div id="opcoes-carrossel" style="display:flex;gap:12px;margin-bottom:20px">
+        <div style="flex:1">
+          <label>Densidade do carrossel</label>
+          <select id="conteudo-densidade" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+            <option value="direto">Direto — 7 a 9 slides (insight rápido)</option>
+            <option value="analitico">Analítico — 12 a 15 slides (desconstrução)</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <label>Objetivo do CTA</label>
+          <select id="conteudo-objetivo-cta" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none">
+            <option value="salvamento">Salvamento</option>
+            <option value="comentario">Comentário com resposta</option>
+            <option value="dm">DM com palavra-chave</option>
+          </select>
+        </div>
       </div>
 
       <!-- CONTEXTO ADICIONAL -->
@@ -1993,6 +2012,11 @@ async function ingerirYoutube() {
 let urlsContexto = [];
 let pdfsContexto = [];
 
+function toggleOpcoesTipo(tipo) {
+  const el = document.getElementById('opcoes-carrossel');
+  if (el) el.style.display = tipo === 'carrossel' ? 'flex' : 'none';
+}
+
 function adicionarURL() {
   const input = document.getElementById('ctx-url');
   const url = (input.value || '').trim();
@@ -2067,6 +2091,10 @@ async function gerarConteudo() {
     formData.append('tipo', tipo);
     formData.append('angulo', angulo);
     formData.append('framework', framework);
+    if (tipo === 'carrossel') {
+      formData.append('densidade', (document.getElementById('conteudo-densidade') || {}).value || 'direto');
+      formData.append('objetivo_cta', (document.getElementById('conteudo-objetivo-cta') || {}).value || 'salvamento');
+    }
     if (briefing) formData.append('briefing', briefing);
     if (typeof urlsContexto !== 'undefined' && urlsContexto.length) formData.append('urls', JSON.stringify(urlsContexto));
     if (typeof pdfsContexto !== 'undefined') pdfsContexto.forEach((f, i) => formData.append('pdf_' + i, f));
