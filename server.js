@@ -125,7 +125,7 @@ async function chamarClaude(prompt, opts = {}) {
 
 async function chamarClaudeComSystem(systemPrompt, userPrompt, opts = {}) {
   const msg = await anthropic.messages.create({
-    model: opts.model || 'claude-3-7-sonnet-20250219',
+    model: opts.model || 'claude-sonnet-4-5-20250929',
     max_tokens: opts.maxTokens || 2000,
     temperature: opts.temperature ?? 0.6,
     system: systemPrompt,
@@ -1240,7 +1240,7 @@ OBJETIVO DO CTA: ${ctaLabel}
 INFORMAÇÕES ADICIONAIS (dados, contexto, insight central que deve aparecer):
 ${contextoCombinado || 'Nenhuma informação adicional fornecida — trabalhe com observação e mecanismo baseado no tema.'}${frameworkExtra}`;
 
-      conteudo = await chamarClaudeComSystem(SYSTEM_CARROSSEL, userMsg, { model: 'claude-3-7-sonnet-20250219', maxTokens: 2000, temperature: 0.6 });
+      conteudo = await chamarClaudeComSystem(SYSTEM_CARROSSEL, userMsg, { model: 'claude-sonnet-4-5-20250929', maxTokens: 2000, temperature: 0.6 });
 
     } else {
       // ── NEWSLETTER ─────────────────────────────────────────────────────────
@@ -1377,7 +1377,7 @@ REGRAS ABSOLUTAS:
 ${secaoVault}`;
 
       const promptFinal = prompt + (exemplosAnteriores ? `\n\n════════════════════════════════\nEXEMPLOS APROVADOS (calibre formato e voz)\n════════════════════════════════\n${exemplosAnteriores}` : '');
-      conteudo = await chamarClaude(promptFinal, { model: 'claude-3-7-sonnet-20250219', maxTokens: 4096, temperature: 0.7 });
+      conteudo = await chamarClaude(promptFinal, { model: 'claude-sonnet-4-5-20250929', maxTokens: 4096, temperature: 0.7 });
     }
     const notasUsadas = notas.map(n => n.arquivo);
 
