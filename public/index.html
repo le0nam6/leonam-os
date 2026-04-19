@@ -6,6 +6,62 @@
 <title>LeonamIA</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
+/* ── SF Pro (San Francisco) — todas as variantes via local() ─────────────────
+   Funciona em macOS/iOS onde a fonte está instalada pelo sistema ou pelo
+   pacote Apple SF Pro Fonts (developer.apple.com/fonts).
+   Fallback: HelveticaNeue (visualmente muito próximo).
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* SF Pro Display — Thin → Black */
+@font-face{font-family:'SF Pro Display';font-weight:100;src:local('SFProDisplay-Ultralight'),local('SF Pro Display Ultralight'),local('.SFNS-Ultralight'),local('HelveticaNeue-UltraLight')}
+@font-face{font-family:'SF Pro Display';font-weight:200;src:local('SFProDisplay-Thin'),local('SF Pro Display Thin'),local('.SFNS-Thin')}
+@font-face{font-family:'SF Pro Display';font-weight:300;src:local('SFProDisplay-Light'),local('SF Pro Display Light'),local('.SFNS-Light'),local('HelveticaNeue-Light')}
+@font-face{font-family:'SF Pro Display';font-weight:400;src:local('SFProDisplay-Regular'),local('SF Pro Display Regular'),local('.SFNS-Regular'),local('HelveticaNeue')}
+@font-face{font-family:'SF Pro Display';font-weight:500;src:local('SFProDisplay-Medium'),local('SF Pro Display Medium'),local('.SFNS-Medium'),local('HelveticaNeue-Medium')}
+@font-face{font-family:'SF Pro Display';font-weight:600;src:local('SFProDisplay-Semibold'),local('SF Pro Display Semibold'),local('.SFNS-Semibold')}
+@font-face{font-family:'SF Pro Display';font-weight:700;src:local('SFProDisplay-Bold'),local('SF Pro Display Bold'),local('.SFNS-Bold'),local('HelveticaNeue-Bold')}
+@font-face{font-family:'SF Pro Display';font-weight:800;src:local('SFProDisplay-Heavy'),local('SF Pro Display Heavy'),local('.SFNS-Heavy')}
+@font-face{font-family:'SF Pro Display';font-weight:900;src:local('SFProDisplay-Black'),local('SF Pro Display Black'),local('.SFNS-Black')}
+
+/* SF Compact Display — variante condensada/compressed */
+@font-face{font-family:'SF Compact Display';font-weight:100;src:local('SFCompactDisplay-Ultralight'),local('SF Compact Display Ultralight')}
+@font-face{font-family:'SF Compact Display';font-weight:200;src:local('SFCompactDisplay-Thin'),local('SF Compact Display Thin')}
+@font-face{font-family:'SF Compact Display';font-weight:300;src:local('SFCompactDisplay-Light'),local('SF Compact Display Light')}
+@font-face{font-family:'SF Compact Display';font-weight:400;src:local('SFCompactDisplay-Regular'),local('SF Compact Display Regular')}
+@font-face{font-family:'SF Compact Display';font-weight:500;src:local('SFCompactDisplay-Medium'),local('SF Compact Display Medium')}
+@font-face{font-family:'SF Compact Display';font-weight:600;src:local('SFCompactDisplay-Semibold'),local('SF Compact Display Semibold')}
+@font-face{font-family:'SF Compact Display';font-weight:700;src:local('SFCompactDisplay-Bold'),local('SF Compact Display Bold')}
+@font-face{font-family:'SF Compact Display';font-weight:800;src:local('SFCompactDisplay-Heavy'),local('SF Compact Display Heavy')}
+@font-face{font-family:'SF Compact Display';font-weight:900;src:local('SFCompactDisplay-Black'),local('SF Compact Display Black')}
+
+/* SF Pro Text — otimizada para tamanhos pequenos */
+@font-face{font-family:'SF Pro Text';font-weight:300;src:local('SFProText-Light'),local('SF Pro Text Light'),local('.SFNSText-Light')}
+@font-face{font-family:'SF Pro Text';font-weight:400;src:local('SFProText-Regular'),local('SF Pro Text Regular'),local('.SFNSText-Regular')}
+@font-face{font-family:'SF Pro Text';font-weight:500;src:local('SFProText-Medium'),local('SF Pro Text Medium'),local('.SFNSText-Medium')}
+@font-face{font-family:'SF Pro Text';font-weight:600;src:local('SFProText-Semibold'),local('SF Pro Text Semibold'),local('.SFNSText-Semibold')}
+@font-face{font-family:'SF Pro Text';font-weight:700;src:local('SFProText-Bold'),local('SF Pro Text Bold'),local('.SFNSText-Bold')}
+@font-face{font-family:'SF Pro Text';font-weight:800;src:local('SFProText-Heavy'),local('SF Pro Text Heavy'),local('.SFNSText-Heavy')}
+
+/* SF Compact Text — condensada para tamanhos pequenos */
+@font-face{font-family:'SF Compact Text';font-weight:300;src:local('SFCompactText-Light'),local('SF Compact Text Light')}
+@font-face{font-family:'SF Compact Text';font-weight:400;src:local('SFCompactText-Regular'),local('SF Compact Text Regular')}
+@font-face{font-family:'SF Compact Text';font-weight:500;src:local('SFCompactText-Medium'),local('SF Compact Text Medium')}
+@font-face{font-family:'SF Compact Text';font-weight:600;src:local('SFCompactText-Semibold'),local('SF Compact Text Semibold')}
+@font-face{font-family:'SF Compact Text';font-weight:700;src:local('SFCompactText-Bold'),local('SF Compact Text Bold')}
+@font-face{font-family:'SF Compact Text';font-weight:800;src:local('SFCompactText-Heavy'),local('SF Compact Text Heavy')}
+
+/* SF Pro Rounded */
+@font-face{font-family:'SF Pro Rounded';font-weight:100;src:local('SFProRounded-Ultralight'),local('SF Pro Rounded Ultralight')}
+@font-face{font-family:'SF Pro Rounded';font-weight:200;src:local('SFProRounded-Thin'),local('SF Pro Rounded Thin')}
+@font-face{font-family:'SF Pro Rounded';font-weight:300;src:local('SFProRounded-Light'),local('SF Pro Rounded Light')}
+@font-face{font-family:'SF Pro Rounded';font-weight:400;src:local('SFProRounded-Regular'),local('SF Pro Rounded Regular')}
+@font-face{font-family:'SF Pro Rounded';font-weight:500;src:local('SFProRounded-Medium'),local('SF Pro Rounded Medium')}
+@font-face{font-family:'SF Pro Rounded';font-weight:600;src:local('SFProRounded-Semibold'),local('SF Pro Rounded Semibold')}
+@font-face{font-family:'SF Pro Rounded';font-weight:700;src:local('SFProRounded-Bold'),local('SF Pro Rounded Bold')}
+@font-face{font-family:'SF Pro Rounded';font-weight:800;src:local('SFProRounded-Heavy'),local('SF Pro Rounded Heavy')}
+@font-face{font-family:'SF Pro Rounded';font-weight:900;src:local('SFProRounded-Black'),local('SF Pro Rounded Black')}
+</style>
+<style>
 /* ─── DESIGN TOKENS ─────────────────────────────────────────── */
 :root {
   --bg:          #f8fafc;
@@ -2644,7 +2700,11 @@ function renderSlideEl(data) {
           bgPosX = 50, bgPosY = 50, imgPosX = 50, imgPosY = 50,
           layout = 'default',
           textAlign = 'left', contentAlign = 'flex-start', paddingInner = 18,
-          checklistCols = 1, statFontSize = 72 } = data;
+          checklistCols = 1, statFontSize = 72,
+          headlineFontWeight = 800,
+          logoPosX = 50, logoPosY = 22, logoW = 116,
+          logoText = '', logoFont = '', logoWeight = 700, logoColor = '#ffffff',
+          imgBlockOffset = 0 } = data;
 
   const _hFont  = headlineFont  || 'Syne';
   const _hColor = headlineColor || '#ffffff';
@@ -3052,14 +3112,26 @@ function renderSlideEl(data) {
   layer.appendChild(topRow);
 
   if (isCover) {
-    // Logo
+    // Logo — posição livre (position:absolute) controlada por logoPosX/logoPosY
     const logoWrap = document.createElement('div');
-    logoWrap.style.cssText = 'display:flex;justify-content:center;padding:10px 0 0;flex-shrink:0;';
-    const logo = document.createElement('img');
-    logo.src = '/logo-branco.png'; logo.crossOrigin = 'anonymous';
-    logo.style.cssText = 'width:116px;height:auto;object-fit:contain;';
-    logo.onerror = () => { logoWrap.style.display = 'none'; };
-    logoWrap.appendChild(logo); layer.appendChild(logoWrap);
+    logoWrap.style.cssText = `position:absolute;left:${logoPosX}%;top:${logoPosY}%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;`;
+
+    if (logoText) {
+      // Modo texto — renderiza a logo como texto com fonte/peso/cor customizáveis
+      const _lFont = logoFont || _hFont;
+      const lTxt = document.createElement('div');
+      lTxt.style.cssText = `font-family:'${_lFont}',sans-serif;font-size:${logoW * 0.26}px;font-weight:${logoWeight};color:${logoColor};letter-spacing:-0.02em;white-space:nowrap;line-height:1;`;
+      lTxt.textContent = logoText;
+      logoWrap.appendChild(lTxt);
+    } else {
+      // Modo imagem — /logo-branco.png
+      const logo = document.createElement('img');
+      logo.src = '/logo-branco.png'; logo.crossOrigin = 'anonymous';
+      logo.style.cssText = `width:${logoW}px;height:auto;object-fit:contain;display:block;`;
+      logo.onerror = () => { logoWrap.style.display = 'none'; };
+      logoWrap.appendChild(logo);
+    }
+    layer.appendChild(logoWrap);
 
     const spacer = document.createElement('div');
     spacer.style.flex = '1';
@@ -3082,7 +3154,7 @@ function renderSlideEl(data) {
     if (imgSrc) {
       // Imagem encaixada no quadrado — drag para reposicionar, click para trocar
       const imgWrap = document.createElement('div');
-      imgWrap.style.cssText = `margin:10px auto 0;width:316px;height:158px;flex-shrink:0;border-radius:12px;overflow:hidden;position:relative;cursor:grab;`;
+      imgWrap.style.cssText = `margin:${10 + imgBlockOffset}px auto 0;width:316px;height:158px;flex-shrink:0;border-radius:12px;overflow:hidden;position:relative;cursor:grab;`;
       const imgEl = document.createElement('img');
       imgEl.src = imgSrc; imgEl.crossOrigin = 'anonymous';
       imgEl.style.cssText = `width:100%;height:100%;object-fit:cover;object-position:${imgPosX}% ${imgPosY}%;display:block;pointer-events:none;`;
@@ -3179,7 +3251,7 @@ function renderSlideEl(data) {
     const hlWrap = document.createElement('div');
     hlWrap.style.cssText = 'padding:12px 22px 0;flex-shrink:0;';
     const hl = document.createElement('div');
-    hl.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${hSize}px;font-weight:800;color:${_hColor};line-height:1.18;word-break:break-word;`;
+    hl.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${hSize}px;font-weight:${headlineFontWeight};color:${_hColor};line-height:1.18;word-break:break-word;`;
     hl.innerHTML = _buildAccentHtml(headline.toUpperCase(), accentColor);
     hlWrap.appendChild(hl); layer.appendChild(hlWrap);
 
@@ -3550,8 +3622,17 @@ function updatePropsPanel() {
   const escBody = (data.body || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const taStyle = 'width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:12px;font-family:"DM Sans",sans-serif;resize:vertical;outline:none;margin-top:4px;';
   const selStyle = 'width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:12px;font-family:"DM Sans",sans-serif;outline:none;cursor:pointer;margin-top:4px;';
-  const FONTS = ['Syne','DM Sans','Space Grotesk','Inter','Playfair Display','Bebas Neue'];
-  const fontOpts = f => FONTS.map(fn => `<option value="${fn}"${fn===f?' selected':''}>${fn}</option>`).join('');
+  const FONT_GROUPS = [
+    { label: 'Google Fonts', fonts: ['Syne','DM Sans','Space Grotesk','Inter','Playfair Display','Bebas Neue'] },
+    { label: 'SF Pro — Display', fonts: ['SF Pro Display','SF Compact Display','SF Pro Rounded'] },
+    { label: 'SF Pro — Text', fonts: ['SF Pro Text','SF Compact Text'] },
+  ];
+  const ALL_FONTS = FONT_GROUPS.flatMap(g => g.fonts);
+  const fontOpts = f => FONT_GROUPS.map(g =>
+    `<optgroup label="${g.label}">${g.fonts.map(fn=>`<option value="${fn}"${fn===f?' selected':''}>${fn}</option>`).join('')}</optgroup>`
+  ).join('');
+  const WEIGHTS = [[100,'Thin'],[200,'Ultralight'],[300,'Light'],[400,'Regular'],[500,'Medium'],[600,'Semibold'],[700,'Bold'],[800,'Heavy'],[900,'Black']];
+  const weightOpts = w => WEIGHTS.map(([v,n])=>`<option value="${v}"${v===(w||800)?' selected':''}>${n} (${v})</option>`).join('');
 
   container.innerHTML = `
     <div class="props-group">
@@ -3569,6 +3650,10 @@ function updatePropsPanel() {
       <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
         <select onchange="updateSlideField(${activeIdx},'headlineFont',this.value)" style="${selStyle};flex:1">${fontOpts(hFont)}</select>
         <input type="color" value="${hColorHex}" oninput="updateSlideField(${activeIdx},'headlineColor',this.value)" title="Cor do título" style="width:30px;height:30px;border:1px solid var(--border);border-radius:6px;padding:1px;background:var(--s2);cursor:pointer;flex-shrink:0">
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+        <select onchange="updateSlideField(${activeIdx},'headlineFontWeight',+this.value)" style="${selStyle};flex:1;margin-top:0">${weightOpts(data.headlineFontWeight)}</select>
+        <span style="font-size:10px;color:var(--dim);white-space:nowrap">peso</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
         <input type="range" min="14" max="56" value="${hFontSize||34}"
@@ -3592,6 +3677,49 @@ function updatePropsPanel() {
         <span style="font-size:11px;color:var(--muted);min-width:34px">${bFontSize}px</span>
       </div>
     </div>
+
+    ${data.isCover ? `
+    <div class="props-group" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+      <div class="props-label" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--neon)">⬡ Logo</div>
+      <div style="margin-top:8px">
+        <div class="props-label">Texto da logo <span style="color:var(--dim);font-weight:400">(vazio = imagem PNG)</span></div>
+        <input type="text" value="${(data.logoText||'').replace(/"/g,'&quot;')}" placeholder="Ex: LeonamIA"
+          oninput="updateSlideField(${activeIdx},'logoText',this.value)"
+          style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:12px;font-family:'DM Sans',sans-serif;outline:none;margin-top:4px;box-sizing:border-box">
+      </div>
+      ${data.logoText ? `
+      <div style="display:flex;gap:6px;align-items:center;margin-top:8px">
+        <select onchange="updateSlideField(${activeIdx},'logoFont',this.value)" style="${selStyle};flex:1;margin-top:0">${fontOpts(data.logoFont||hFont)}</select>
+        <input type="color" value="${(data.logoColor||'#ffffff')}" oninput="updateSlideField(${activeIdx},'logoColor',this.value)" title="Cor da logo" style="width:30px;height:30px;border:1px solid var(--border);border-radius:6px;padding:1px;background:var(--s2);cursor:pointer;flex-shrink:0">
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
+        <select onchange="updateSlideField(${activeIdx},'logoWeight',+this.value)" style="${selStyle};flex:1;margin-top:0">${weightOpts(data.logoWeight||700)}</select>
+        <span style="font-size:10px;color:var(--dim);white-space:nowrap">peso</span>
+      </div>` : ''}
+      <div class="props-label" style="margin-top:10px">Tamanho <span style="color:var(--dim);font-weight:400">(${data.logoW||116}px)</span></div>
+      <input type="range" min="40" max="280" value="${data.logoW||116}"
+        oninput="this.parentElement.querySelector('.logo-w-val').textContent=this.value+'px';updateSlideField(${activeIdx},'logoW',+this.value)"
+        style="width:100%;accent-color:var(--neon);margin-top:4px">
+      <span class="logo-w-val" style="font-size:11px;color:var(--muted)">${data.logoW||116}px</span>
+      <div class="props-label" style="margin-top:10px">Posição horizontal <span class="logo-x-val" style="color:var(--dim);font-weight:400">(${data.logoPosX??50}%)</span></div>
+      <input type="range" min="0" max="100" value="${data.logoPosX??50}"
+        oninput="this.parentElement.querySelector('.logo-x-val').textContent='('+this.value+'%)';updateSlideField(${activeIdx},'logoPosX',+this.value)"
+        style="width:100%;accent-color:var(--neon);margin-top:4px">
+      <div class="props-label" style="margin-top:8px">Posição vertical <span class="logo-y-val" style="color:var(--dim);font-weight:400">(${data.logoPosY??22}%)</span></div>
+      <input type="range" min="0" max="90" value="${data.logoPosY??22}"
+        oninput="this.parentElement.querySelector('.logo-y-val').textContent='('+this.value+'%)';updateSlideField(${activeIdx},'logoPosY',+this.value)"
+        style="width:100%;accent-color:var(--neon);margin-top:4px">
+    </div>` : ''}
+
+    ${(!data.isCover && data.imgSrc) ? `
+    <div class="props-group" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+      <div class="props-label" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--neon)">🖼 Posição da imagem</div>
+      <div class="props-label" style="margin-top:8px">Deslocamento vertical <span class="img-off-val" style="color:var(--dim);font-weight:400">(${data.imgBlockOffset||0}px)</span></div>
+      <input type="range" min="-150" max="200" value="${data.imgBlockOffset||0}"
+        oninput="this.parentElement.querySelector('.img-off-val').textContent='('+this.value+'px)';updateSlideField(${activeIdx},'imgBlockOffset',+this.value)"
+        style="width:100%;accent-color:var(--neon);margin-top:4px">
+      <button onclick="updateSlideField(${activeIdx},'imgBlockOffset',0)" style="margin-top:6px;font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:var(--s2);color:var(--muted);cursor:pointer;">Resetar posição</button>
+    </div>` : ''}
 
     <div class="props-group">
       <div class="props-label">Cor de fundo</div>
