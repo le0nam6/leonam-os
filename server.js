@@ -523,17 +523,17 @@ async function buscarNotasVault(tema) {
   }));
 }
 
-// ── HUMANIZER — regras anti-IA para toda geração de conteúdo ─────────────────
+// ── HUMANIZER v3.1 — regras anti-IA para toda geração de conteúdo ───────────
 const BLOCO_HUMANIZER = `
 ## LINGUAGEM: COLOQUIAL BRASILEIRO — OBRIGATÓRIO
 
-Esta é a regra mais importante. Todo texto deve soar como um brasileiro escrevendo de forma natural — não como tradução de inglês, não como redação escolar, não como copy corporativo.
+Esta é a regra mais importante. Todo texto deve soar como um brasileiro escrevendo de forma natural. Não como tradução de inglês, não como redação escolar, não como copy corporativo.
 
 **Contrações obrigatórias quando naturais:**
 "para" → "pra" / "pro" | "está" → "tá" | "estou" → "tô" | "não é" → "né" | "em um" → "num" | "em uma" → "numa"
 
 **Construa frases como alguém falaria, não como alguém escreveria num relatório.**
-Varie o ritmo organicamente: frases curtas quando o raciocínio é direto, longas quando está explicando um mecanismo ou construindo tensão. O que não pode é ter só um tipo — isso denuncia IA.
+Varie o ritmo organicamente: frases curtas quando o raciocínio é direto, longas quando está explicando um mecanismo ou construindo tensão. O que não pode é ter só um tipo: quando todas as frases têm o mesmo tamanho, denuncia IA.
 
 ---
 
@@ -578,11 +578,14 @@ crucial · fundamental · pivotal · landscape (abstrato) · adicionalmente · i
 | "Menos X. Mais Y." (par de opostos) | 1 vez por texto |
 | Regra dos três mecânica (listas geradas automaticamente) | proibida |
 | Frases com menos de 6 palavras em sequência | máx. 3 seguidas |
-| Em dash (—) por parágrafo | máx. 1 |
+| Travessão (—) | proibido em qualquer contexto |
+
+**Travessão — proibido sem exceção:**
+Substitua sempre por vírgula, ponto ou reescreva a frase inteira. Se a frase depende do travessão pra funcionar, é sinal que precisa ser reescrita, não pontuada diferente.
 
 ### Frases telegráficas empilhadas — o padrão mais fácil de detectar como IA:
 ❌ "Não é volume. É clareza. Não é frequência. É posicionamento. Uma insiste. A outra fascina."
-✓ "O que separa quem converte de quem acumula bloqueio não é quanto você manda — é se o que você manda faz sentido pra quem recebe."
+✓ "O problema não é quantidade de mensagem: é o que você escreve na primeira. Frequência alta com proposta vaga só acumula bloqueio. E clareza na primeira mensagem costuma dispensar todo o resto."
 
 **Regra prática:** 3+ frases seguidas com menos de 6 palavras cada → junte num raciocínio completo.
 
@@ -591,6 +594,42 @@ Só em elementos que o leitor vai querer localizar ao rolar o texto: termos téc
 
 ### Títulos e subtítulos:
 Sempre em sentence case — só a primeira palavra em maiúscula, exceto nomes próprios.
+
+---
+
+## NARRAÇÃO VS. CENA
+
+IA narra. Humano constrói cena.
+
+Narração descreve o que aconteceu de fora, como um relato. Cena coloca o leitor dentro da situação, com voz, perspectiva e detalhe concreto.
+
+**Narração (IA):**
+> Um designer perdeu dois clientes em três semanas. Sua conclusão foi que precisava espaçar mais as mensagens.
+
+**Cena (humano):**
+> Um designer perdeu dois clientes em três semanas. Conclusão dele na hora: "Eu podia ter espaçado mais as mensagens..."
+
+A diferença está nas aspas e nas reticências. Elas transformam uma paráfrase em pensamento real de uma pessoa real. O leitor para de ler sobre alguém e começa a se reconhecer naquela voz.
+
+Sempre que o texto descreve uma situação vivida por alguém, cheque se dá pra colocar a voz desse alguém em cena: falas internas, dúvidas, conclusões precipitadas, erros de raciocínio. Tudo isso ganha força como pensamento do personagem, não como narração de quem escreve.
+
+---
+
+## PERSPECTIVA EM CHECKLISTS E PERGUNTAS REFLEXIVAS
+
+Quando o texto traz um checklist ou uma lista de perguntas que o leitor deve se fazer, a perspectiva correta é a primeira pessoa, não a segunda.
+
+**Segunda pessoa (distanciado, parece instrução de manual):**
+> 1. Tá claro o problema que você resolve?
+> 2. Tem resultado concreto na mensagem ou só o que você oferece?
+
+**Primeira pessoa (o leitor pensa junto, não recebe ordem):**
+> 1. Tá claro o problema que eu resolvo?
+> 2. Tem resultado concreto na mensagem ou é só uma descrição do que eu ofereço?
+
+A primeira pessoa no checklist transforma instrução em reflexão. O leitor não está sendo orientado por alguém de fora: ele está pensando em voz alta. Isso muda completamente a relação com o conteúdo.
+
+Regra prática: se o checklist é pra o leitor aplicar em si mesmo, escreva na voz dele, não na sua.
 
 ---
 
