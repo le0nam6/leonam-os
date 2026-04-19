@@ -3938,9 +3938,31 @@ async function _captureSlide(el) {
   wrap.style.cssText = `position:fixed;top:0;left:-${CANVAS_W + 20}px;width:${CANVAS_W}px;height:${CANVAS_H}px;overflow:hidden;pointer-events:none;z-index:-1;`;
   wrap.appendChild(el);
   document.body.appendChild(wrap);
-  // Garante que fontes do Google Fonts estão prontas e o browser pintou 1 frame
+
+  // 1. Aguarda fontes do Google Fonts
   try { await document.fonts.ready; } catch(_) {}
+
+  // 2. Aguarda todas as <img> carregarem (ou falharem) — essencial para a capa
+  //    que tem logo.png e foto de perfil. Imagem com erro é substituída por
+  //    div transparente para não travar o html-to-image.
+  const imgs = Array.from(el.querySelectorAll('img'));
+  await Promise.all(imgs.map(img => {
+    if (img.complete) return Promise.resolve();
+    return new Promise(resolve => {
+      img.onload  = resolve;
+      img.onerror = () => {
+        // Substitui img quebrada por div invisível — evita erro no html-to-image
+        const ph = document.createElement('div');
+        ph.style.cssText = `width:${img.width||img.style.width||0}px;height:${img.height||img.style.height||0}px;`;
+        img.replaceWith(ph);
+        resolve();
+      };
+    });
+  }));
+
+  // 3. Dois frames para o browser pintar o layout final
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
   try {
     return await htmlToImage.toPng(el, {
       pixelRatio: EXPORT_MULT,
