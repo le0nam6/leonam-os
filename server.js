@@ -580,8 +580,10 @@ async function buscarNotasVault(tema) {
   }));
 }
 
-// ── HUMANIZER v3.1 — regras anti-IA para toda geração de conteúdo ───────────
-const BLOCO_HUMANIZER = `
+// ── HUMANIZER — regras anti-IA carregadas do arquivo raiz do projeto ─────────
+// Edite /humanizer.md para atualizar as regras em todos os prompts de uma vez.
+const BLOCO_HUMANIZER = fs.readFileSync(path.join(__dirname, 'humanizer.md'), 'utf8');
+const _BLOCO_HUMANIZER_LEGACY = `
 ## LINGUAGEM: COLOQUIAL BRASILEIRO — OBRIGATÓRIO
 
 Esta é a regra mais importante. Todo texto deve soar como um brasileiro escrevendo de forma natural. Não como tradução de inglês, não como redação escolar, não como copy corporativo.
@@ -694,7 +696,7 @@ Regra prática: se o checklist é pra o leitor aplicar em si mesmo, escreva na v
 
 Antes de entregar, leia o texto em voz alta. Pergunte: "O que ainda denuncia texto de IA nessa versão?"
 Se a resposta for qualquer coisa da lista acima, reescreva antes de entregar.
-`;
+`; // _BLOCO_HUMANIZER_LEGACY — não usado, mantido só como fallback de referência
 
 // ── FRAMEWORKS DE CONTEÚDO ───────────────────────────────────────────────────
 function gerarInstrucaoFramework(framework) {

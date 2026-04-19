@@ -4107,14 +4107,27 @@ function updateSlideField(idx, field, value) {
   if (!edSlides[idx]) return;
   edSlides[idx][field] = value;
   if (idx === activeIdx) {
-    mountActiveSlide(true);
-    // Só reconstrói o painel se o foco NÃO estiver num input vivo —
-    // reconstruir enquanto o usuário digita destrói o textarea e perde o foco.
-    const tag  = document.activeElement?.tagName;
-    const type = document.activeElement?.type;
+    // Salva referência e posição do cursor ANTES de qualquer operação de DOM —
+    // mountActiveSlide faz innerHTML='' em elementos vizinhos, o que causa blur
+    // momentâneo em alguns browsers e o cursor pula pro final do textarea.
+    const activeEl  = document.activeElement;
+    const selStart  = activeEl?.selectionStart;
+    const selEnd    = activeEl?.selectionEnd;
+    const tag  = activeEl?.tagName;
+    const type = activeEl?.type;
     const liveInput = tag === 'TEXTAREA' ||
       (tag === 'INPUT' && (type === 'text' || type === 'range' || type === 'color'));
-    if (!liveInput) updatePropsPanel();
+
+    mountActiveSlide(true);
+
+    if (!liveInput) {
+      updatePropsPanel();
+    } else if (activeEl && document.contains(activeEl)) {
+      // Restaura foco e posição exata do cursor (permite Enter criar quebra de linha
+      // no lugar certo, mesmo se o mountActiveSlide causou blur involuntário)
+      activeEl.focus();
+      try { activeEl.setSelectionRange(selStart, selEnd); } catch (_) {}
+    }
   }
   renderThumbItem(idx);
 }
