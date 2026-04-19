@@ -2703,7 +2703,7 @@ function renderSlideEl(data) {
           checklistCols = 1, statFontSize = 72,
           headlineFontWeight = 800,
           logoPosX = 50, logoPosY = 22, logoW = 116,
-          logoText = '', logoFont = '', logoWeight = 700, logoColor = '#ffffff',
+          logoText = '', logoFont = '', logoWeight = 700, logoColor = '#ffffff', logoHidden = false,
           imgBlockOffset = 0 } = data;
 
   const _hFont  = headlineFont  || 'Syne';
@@ -3114,7 +3114,7 @@ function renderSlideEl(data) {
   if (isCover) {
     // Logo — posição livre (position:absolute) controlada por logoPosX/logoPosY
     const logoWrap = document.createElement('div');
-    logoWrap.style.cssText = `position:absolute;left:${logoPosX}%;top:${logoPosY}%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;`;
+    logoWrap.style.cssText = `position:absolute;left:${logoPosX}%;top:${logoPosY}%;transform:translate(-50%,-50%);z-index:3;pointer-events:none;${logoHidden ? 'display:none;' : ''}`;
 
     if (logoText) {
       // Modo texto — renderiza a logo como texto com fonte/peso/cor customizáveis
@@ -3680,8 +3680,14 @@ function updatePropsPanel() {
 
     ${data.isCover ? `
     <div class="props-group" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
-      <div class="props-label" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--neon)">⬡ Logo</div>
-      <div style="margin-top:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div class="props-label" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--neon)">⬡ Logo</div>
+        <button onclick="updateSlideField(${activeIdx},'logoHidden',${!data.logoHidden})"
+          style="font-size:10px;padding:3px 10px;border-radius:6px;cursor:pointer;transition:all 0.15s;border:1.5px solid ${data.logoHidden ? 'var(--border)' : 'var(--accent-lt)'};background:${data.logoHidden ? 'var(--s2)' : 'var(--accent-dim)'};color:${data.logoHidden ? 'var(--muted)' : 'var(--accent)'};font-family:'DM Sans',sans-serif">
+          ${data.logoHidden ? '👁 Mostrar' : '🚫 Ocultar'}
+        </button>
+      </div>
+      ${data.logoHidden ? '' : `<div style="margin-top:8px">
         <div class="props-label">Texto da logo <span style="color:var(--dim);font-weight:400">(vazio = imagem PNG)</span></div>
         <input type="text" value="${(data.logoText||'').replace(/"/g,'&quot;')}" placeholder="Ex: LeonamIA"
           oninput="updateSlideField(${activeIdx},'logoText',this.value)"
@@ -3709,6 +3715,7 @@ function updatePropsPanel() {
       <input type="range" min="0" max="90" value="${data.logoPosY??22}"
         oninput="this.parentElement.querySelector('.logo-y-val').textContent='('+this.value+'%)';updateSlideField(${activeIdx},'logoPosY',+this.value)"
         style="width:100%;accent-color:var(--neon);margin-top:4px">
+      `}
     </div>` : ''}
 
     ${(!data.isCover && data.imgSrc) ? `
