@@ -1840,16 +1840,14 @@ GANCHO: [primeira linha do conteúdo — situação concreta ou dado, nunca come
 });
 
 app.post('/api/sugestao-temas', async (req, res) => {
-  const { contexto } = req.body;
+  const { contexto, canal = 'carrossel' } = req.body;
   try {
-    // Busca temas já cobertos no vault para não repetir
     const { data: recentes } = await supabase
       .from('insights')
       .select('titulo, tipo')
       .order('criado_em', { ascending: false })
       .limit(30);
 
-    // Busca métricas do Substack para informar o que performa (opcional — ignora erro se tabela não existir)
     let metricas = null;
     try {
       const { data: m } = await supabase
@@ -1864,29 +1862,55 @@ app.post('/api/sugestao-temas', async (req, res) => {
     const topPerformers = metricas && metricas.length > 0
       ? `\nTEMAS QUE MAIS ABRIRAM NO SUBSTACK:\n${metricas.map(m => `- "${m.titulo}" (${m.taxa_abertura}% abertura)`).join('\n')}`
       : '';
-    const ctxExtra = contexto ? `\nCONTEXTO ADICIONAL: ${contexto}` : '';
+    const ctxExtra = contexto ? `\nCONTEXTO ADICIONAL DO CRIADOR: ${contexto}` : '';
 
-    const prompt = `Você é o diretor editorial do Leonam Alves.
+    const instrucoesPorCanal = canal === 'substack' ? `
+CANAL: Newsletter Substack
 
-LINHA EDITORIAL: marketing de posicionamento, marca pessoal para criativos, precificação, copywriting, IA aplicada a negócios criativos, gestão de freelancers e agências pequenas.
+BOAS PRÁTICAS DO CANAL:
+- Título = assunto de e-mail: deve criar curiosidade sem entregar tudo. Funciona bem "Por que X faz Y" e "A verdade sobre X".
+- O leitor abre o e-mail por causa do título. Ele lê por causa da história. Ele responde por causa da virada.
+- Estrutura vencedora: história pessoal ou de terceiro → virada contraintuitiva → framework aplicável → CTA simples.
+- Evite listas longas — prosa fluida com 1-3 insights profundos performa melhor que 10 dicas rasas.
+- Tamanho ideal: 600-1000 palavras. Leitor de newsletter tem atenção mais longa que redes, mas é impaciente com enrolação.
+- Tom: conselheiro direto, sem perfumaria acadêmica. Como uma conversa honesta com alguém que já errou.
+- Métricas que importam: taxa de abertura (influenciada pelo título) e resposta direta ao e-mail.
+- Temas que performam: erros pessoais com lição, "o que eu aprendi fazendo X", desmonte de mito popular do mercado.
 
-TEMAS RECENTES NO VAULT (evitar repetir):
+FORMATO DA SUGESTÃO:
+TEMA: [título como assunto de e-mail — gera curiosidade, não entrega tudo]
+ÂNGULO: [virada contraintuitiva — 1 frase]
+ABERTURA SUGERIDA: [primeira frase do artigo — prende ou mata o artigo]
+POR QUÊ AGORA: [1 frase — relevância para o momento]` : `
+CANAL: Carrossel do Instagram
+
+BOAS PRÁTICAS DO CANAL:
+- Slide 1 = hook absoluto: tem 1-2 segundos para parar o scroll. Deve criar tensão, curiosidade ou identificação imediata.
+- Títulos funcionam em caixa alta, curtos (máx 8 palavras), com número ou palavra de impacto.
+- Estrutura vencedora: Slide 1 hook → Slides 2-5 desenvolvimento com 1 insight por slide → Slide final CTA ou virada.
+- Cada slide = 1 ideia. Quem tenta colocar 3 ideias num slide perde o leitor.
+- Linguagem visual: use frases que criam imagem mental. Evite abstrato. "Você deixou R$3.000 na mesa" > "há uma oportunidade perdida".
+- O que faz salvar: checklist, revelação contraintuitiva, framework renomeado, "erros que você vai reconhecer".
+- O que faz compartilhar: indignação (contra norma do mercado), identidade ("isso sou eu"), validação de crença.
+- Temas que viralizam em nichos criativos: precificação, cliente ruim, posicionamento, IA vs humano, trabalho vs resultado.
+- Evite: "5 dicas para X" genérico. Prefira: "O motivo real por que X não funciona" ou "Por que fazer Y é um erro de posicionamento".
+
+FORMATO DA SUGESTÃO:
+TEMA: [título do carrossel — hook direto, máx 10 palavras, caixa alta mental]
+ÂNGULO: [perspectiva contraintuitiva — 1 frase]
+SLIDE 1 (HOOK): [texto exato do primeiro slide — deve parar o scroll]
+POR QUÊ AGORA: [1 frase — relevância para o momento]`;
+
+    const prompt = `Você é o diretor editorial do Leonam Alves — especialista em marketing para criativos, posicionamento e negócios freelance.
+
+LINHA EDITORIAL: marca pessoal para criativos e freelancers, precificação, posicionamento, copywriting, IA aplicada a negócios criativos, gestão de agências pequenas, cliente bom vs cliente ruim, receita previsível.
+
+TEMAS RECENTES NO VAULT (não repetir):
 ${historicoVault || 'Nenhum disponível'}
 ${topPerformers}${ctxExtra}
+${instrucoesPorCanal}
 
-Gere 8 sugestões de temas originais. Para cada um:
-
-TEMA: [título direto — não genérico, com ângulo específico]
-TIPO: newsletter ou carrossel
-ÂNGULO: [perspectiva contraintuitiva — 1 frase]
-POR QUÊ AGORA: [1 frase — relevância para o momento]
-
-Priorize temas que:
-- Contradizem o senso comum do mercado criativo
-- Têm uma virada lógica inesperada
-- Conectam criatividade com negócios e dinheiro
-
-Sem introdução. Só o formato, 8 vezes.`;
+Gere 6 sugestões originais para este canal. Cada sugestão no formato acima. Sem introdução, sem numeração, só o formato — 6 vezes separadas por "---".`;
 
     const sugestoes = await chamarClaude(prompt);
     res.json({ ok: true, sugestoes });

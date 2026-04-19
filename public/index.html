@@ -976,6 +976,54 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   </div>
 </div>
 
+<!-- ── MODAL SELEÇÃO DE CANAL ────────────────────────────────────────────── -->
+<div id="modal-canal" style="
+  display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,0.72);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;
+">
+  <div style="
+    background:#13131a;border:1px solid rgba(255,255,255,0.09);border-radius:16px;
+    width:100%;max-width:440px;margin:24px;padding:28px 24px;
+  ">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff">Para qual canal?</div>
+      <button onclick="fecharModalCanal()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:20px;cursor:pointer;line-height:1;padding:0">×</button>
+    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:20px">O canal define o formato, tamanho e estilo das sugestões.</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <button onclick="_escolherCanal('carrossel')" style="
+        padding:20px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.08);
+        background:rgba(255,255,255,0.03);cursor:pointer;text-align:center;
+        transition:all 0.15s;font-family:'DM Sans',sans-serif;
+      "
+      onmouseenter="this.style.borderColor='rgba(139,92,246,0.5)';this.style.background='rgba(139,92,246,0.08)'"
+      onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='rgba(255,255,255,0.03)'">
+        <div style="font-size:26px;margin-bottom:8px">📱</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">Carrossel</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.4">Instagram · Hook forte · Slides curtos · Visual first</div>
+      </button>
+      <button onclick="_escolherCanal('substack')" style="
+        padding:20px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.08);
+        background:rgba(255,255,255,0.03);cursor:pointer;text-align:center;
+        transition:all 0.15s;font-family:'DM Sans',sans-serif;
+      "
+      onmouseenter="this.style.borderColor='rgba(249,115,22,0.5)';this.style.background='rgba(249,115,22,0.08)'"
+      onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='rgba(255,255,255,0.03)'">
+        <div style="font-size:26px;margin-bottom:8px">✉️</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">Substack</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.4">Newsletter · Narrativa longa · Argumento · Taxa de abertura</div>
+      </button>
+    </div>
+
+    <div style="margin-bottom:6px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.3);font-weight:700">Contexto adicional (opcional)</div>
+    <textarea id="ctx-sugestao-modal" placeholder="Evento recente, ideia que surgiu, pauta que quer explorar..."
+      style="width:100%;box-sizing:border-box;min-height:64px;background:#0a0a0e;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical"
+      onfocus="this.style.borderColor='rgba(139,92,246,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'"></textarea>
+  </div>
+</div>
+
 <!-- ── PROJETOS MODAL ─────────────────────────────────────────────────────── -->
 <div id="projetos-modal" style="
   display:none;position:fixed;inset:0;z-index:9999;
@@ -1360,7 +1408,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
             <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">Sugestão de temas</div>
             <div style="font-size:12px;color:var(--muted);margin-top:2px">Baseado na sua linha editorial, vault e dados do Substack</div>
           </div>
-          <button class="btn btn-primary" onclick="sugerirTemas()" id="btn-sugestao">🧠 Sugerir temas</button>
+          <button class="btn btn-primary" onclick="abrirModalCanal()" id="btn-sugestao">🧠 Sugerir temas</button>
         </div>
         <div class="form-group" style="margin-bottom:12px">
           <textarea id="ctx-sugestao" placeholder="Opcional: contexto adicional (evento recente, ideia que surgiu, pauta que você quer explorar...)" style="min-height:70px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;resize:vertical"></textarea>
@@ -2604,21 +2652,28 @@ async function buscarTendencias() {
   btn.textContent = '⚡ Buscar tendências';
 }
 
-async function sugerirTemas() {
+function _escolherCanal(canal) {
+  fecharModalCanal();
+  const contexto = document.getElementById('ctx-sugestao-modal')?.value.trim() || '';
+  document.getElementById('ctx-sugestao-modal').value = '';
+  sugerirTemas(canal, contexto);
+}
+
+async function sugerirTemas(canal = 'carrossel', contexto = '') {
   const btn = document.getElementById('btn-sugestao');
   btn.disabled = true;
   btn.textContent = 'Gerando...';
   const statusEl = document.getElementById('status-sugestao');
   statusEl.style.display = 'block';
   statusEl.className = 'status-box loading';
-  statusEl.textContent = 'Cruzando vault + dados do Substack + linha editorial...';
-  const contexto = document.getElementById('ctx-sugestao').value.trim();
+  const label = canal === 'substack' ? 'Substack' : 'Carrossel';
+  statusEl.textContent = `Gerando sugestões para ${label}...`;
 
   try {
     const r = await fetch(`${API}/api/sugestao-temas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contexto })
+      body: JSON.stringify({ contexto, canal })
     });
     const data = await r.json();
     statusEl.style.display = 'none';
@@ -4540,6 +4595,20 @@ function _esc(str) {
 // Fechar modal clicando fora
 document.getElementById('projetos-modal').addEventListener('click', function(e) {
   if (e.target === this) fecharProjetos();
+});
+
+// ── Modal de seleção de canal ──────────────────────────────────────────────────
+
+function abrirModalCanal() {
+  document.getElementById('modal-canal').style.display = 'flex';
+}
+
+function fecharModalCanal() {
+  document.getElementById('modal-canal').style.display = 'none';
+}
+
+document.getElementById('modal-canal').addEventListener('click', function(e) {
+  if (e.target === this) fecharModalCanal();
 });
 
 // ── Templates ──────────────────────────────────────────────────────────────────
