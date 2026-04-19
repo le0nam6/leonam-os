@@ -2117,4 +2117,81 @@ app.post('/api/imagem/gerar', async (req, res) => {
   return res.status(500).json({ ok: false, erro: 'Todas as fontes falharam', detalhes: erros });
 });
 
+// ─── PROJETOS DE CARROSSEL ────────────────────────────────────────────────────
+
+// Listar todos os projetos
+app.get('/api/carrossel/projetos', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('projetos_carrossel')
+      .select('id, nome, total_slides, template, criado_em, atualizado_em')
+      .order('atualizado_em', { ascending: false });
+    if (error) throw error;
+    res.json({ ok: true, projetos: data });
+  } catch (e) {
+    res.status(500).json({ ok: false, erro: e.message });
+  }
+});
+
+// Buscar projeto individual (com slides completos)
+app.get('/api/carrossel/projetos/:id', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('projetos_carrossel')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+    if (error) throw error;
+    res.json({ ok: true, projeto: data });
+  } catch (e) {
+    res.status(500).json({ ok: false, erro: e.message });
+  }
+});
+
+// Criar novo projeto
+app.post('/api/carrossel/projetos', async (req, res) => {
+  const { nome, slides, template, total_slides } = req.body || {};
+  if (!nome || !slides) return res.status(400).json({ ok: false, erro: 'nome e slides são obrigatórios' });
+  try {
+    const { data, error } = await supabase
+      .from('projetos_carrossel')
+      .insert({ nome, slides, template: template || 'noite', total_slides: total_slides || slides.length })
+      .select('id')
+      .single();
+    if (error) throw error;
+    res.json({ ok: true, id: data.id });
+  } catch (e) {
+    res.status(500).json({ ok: false, erro: e.message });
+  }
+});
+
+// Atualizar projeto existente
+app.put('/api/carrossel/projetos/:id', async (req, res) => {
+  const { nome, slides, template, total_slides } = req.body || {};
+  try {
+    const { error } = await supabase
+      .from('projetos_carrossel')
+      .update({ nome, slides, template, total_slides: total_slides || slides?.length, atualizado_em: new Date().toISOString() })
+      .eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true, id: parseInt(req.params.id) });
+  } catch (e) {
+    res.status(500).json({ ok: false, erro: e.message });
+  }
+});
+
+// Deletar projeto
+app.delete('/api/carrossel/projetos/:id', async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('projetos_carrossel')
+      .delete()
+      .eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, erro: e.message });
+  }
+});
+
 app.listen(PORT, () => console.log(`\n✓ Leonam OS rodando em http://localhost:${PORT}\n`));

@@ -68,5 +68,18 @@ CREATE TABLE IF NOT EXISTS historico_conteudo (
 
 CREATE INDEX IF NOT EXISTS historico_tipo_idx ON historico_conteudo (tipo, criado_em DESC);
 
--- 6. Migrar dados do JSON antigo (rodar manualmente se precisar)
+-- 6. Projetos de carrossel
+CREATE TABLE IF NOT EXISTS projetos_carrossel (
+  id BIGSERIAL PRIMARY KEY,
+  nome TEXT NOT NULL,
+  slides JSONB NOT NULL,
+  template TEXT DEFAULT 'noite',
+  total_slides INT DEFAULT 0,
+  criado_em TIMESTAMPTZ DEFAULT NOW(),
+  atualizado_em TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS projetos_carrossel_updated_idx ON projetos_carrossel (atualizado_em DESC);
+
+-- 7. Migrar dados do JSON antigo (rodar manualmente se precisar)
 -- Use o endpoint POST /api/migrar para importar leonam-os-db.json
