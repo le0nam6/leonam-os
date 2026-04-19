@@ -112,20 +112,22 @@ async function chamarGemini(prompt, tentativas = 3) {
   }
 }
 
-async function chamarClaude(prompt) {
-  const msg = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 4096,
+async function chamarClaude(prompt, opts = {}) {
+  const params = {
+    model: opts.model || 'claude-haiku-4-5-20251001',
+    max_tokens: opts.maxTokens || 4096,
     messages: [{ role: 'user', content: prompt }],
-  });
+  };
+  if (opts.temperature !== undefined) params.temperature = opts.temperature;
+  const msg = await anthropic.messages.create(params);
   return msg.content[0].text;
 }
 
 async function chamarClaudeComSystem(systemPrompt, userPrompt, opts = {}) {
   const msg = await anthropic.messages.create({
-    model: opts.model || 'claude-haiku-4-5-20251001',
+    model: opts.model || 'claude-sonnet-4-5-20251001',
     max_tokens: opts.maxTokens || 2000,
-    temperature: opts.temperature ?? 0.7,
+    temperature: opts.temperature ?? 0.6,
     system: systemPrompt,
     messages: [{ role: 'user', content: userPrompt }],
   });
@@ -1128,7 +1130,91 @@ SLIDE [N] — CTA
 [texto]
 
 LEGENDA
-[texto da legenda — tom coloquial, 3 a 5 parágrafos curtos, assina com — Leo]`;
+[texto da legenda — tom coloquial, 3 a 5 parágrafos curtos, assina com — Leo]
+
+---
+
+## EXEMPLOS DE REFERÊNCIA
+
+Use esses exemplos pra calibrar voz, ritmo e estrutura. Não replique o tema — replique a qualidade de execução. Cada exemplo usa ângulo e abertura diferentes de propósito.
+
+---
+
+EXEMPLO 1 — ângulo: análise de caso / tema: precificação
+
+SLIDE 1 — HOOK
+Uma designer dobrou o preço cobrado por identidade visual.
+A fila de espera cresceu.
+
+SLIDE 2
+Ela achava que ia perder cliente. Perdeu alguns.
+Os que ficaram pagaram o dobro, questionaram metade e indicaram pessoas com o mesmo perfil.
+Conclusão dela, três meses depois: "Deveria ter feito isso antes."
+
+SLIDE 3
+O que acontece quando você cobra pouco não é só dinheiro que sai — é o tipo de cliente que entra.
+Cliente de preço baixo tende a questionar tudo, mudar de ideia no meio do processo e tratar revisão como serviço ilimitado. Não porque é mal-intencionado. Porque pagou pouco e inconscientemente atribui pouco valor ao que recebeu.
+
+SLIDE 4
+Cobrar mais muda o filtro.
+Chega quem já entende que precisa do serviço, já fez as contas e já decidiu investir. A negociação muda porque a postura de quem compra é diferente desde o início.
+
+SLIDE 5 — GATILHO DE SALVAMENTO
+Antes de subir o preço, três perguntas pra saber se faz sentido agora:
+1. Meu portfólio mostra o nível de trabalho que quero cobrar ou o que eu cobrava antes?
+2. Minha proposta explica o que eu entrego ou só lista o que eu faço?
+3. Meus últimos clientes me indicaram pra alguém?
+Se qualquer uma for não, ajusta isso primeiro. O preço vem depois.
+
+SLIDE 6 — CTA
+Você já subiu o preço e se surpreendeu com o resultado?
+Me conta nos comentários.
+
+LEGENDA
+Cobrar pouco não é humildade. É filtro errado.
+Quando o preço é baixo, o cliente que chega já chega com a mentalidade de quem comprou algo descartável. Não tem como reverter isso no meio do projeto.
+A única forma de mudar o perfil de cliente é mudar o que você cobra. Não quando se sentir "pronto" — esse momento nunca vem antes da decisão. Vem depois.
+— Leo
+
+---
+
+EXEMPLO 2 — ângulo: contraintuitivo / tema: portfólio como argumento de venda
+
+SLIDE 1 — HOOK
+Dois designers com portfólio no mesmo nível técnico.
+Um fecha todo mês. O outro fica esperando indicação.
+
+SLIDE 2
+O que muda não tá no trabalho. Tá no que está escrito ao redor dele.
+Um explica o problema que existia antes do projeto começar e a decisão que foi tomada pra resolver. O outro deixa a imagem falar sozinha.
+Imagem não fala sozinha.
+
+SLIDE 3
+Portfólio mostra o que você entrega. Não mostra como você pensa.
+Pra quem vai contratar, o raciocínio importa mais do que o resultado final. Porque é o raciocínio que vai resolver o problema que o cliente ainda não sabe que tem.
+
+SLIDE 4
+A diferença aparece em três lugares específicos:
+O contexto antes do projeto começar. A decisão que foi tomada e por quê. O que mudou depois que o trabalho foi entregue.
+Sem isso, o portfólio é uma pasta bonita. Não é argumento de venda.
+
+SLIDE 5 — GATILHO DE SALVAMENTO
+Pega o seu portfólio agora e passa por isso:
+1. Cada projeto explica o problema que existia antes?
+2. Tem pelo menos uma decisão de design explicada em palavras, não só em imagem?
+3. Tem algum retorno real do cliente sobre o que mudou depois?
+Se não, você tá mostrando o resultado e escondendo o argumento.
+
+SLIDE 6 — CTA
+Me manda o link do seu portfólio nos comentários.
+Vou dar uma olhada e responder o que tá faltando.
+
+LEGENDA
+Portfólio sem contexto é pasta de trabalho. Não é argumento de venda.
+Quando um prospect abre o seu site, ele não tá avaliando a qualidade visual. Ele tá tentando entender se você consegue resolver o problema dele. Se não tem nada escrito que responda isso, o projeto mais bonito não fecha.
+A boa notícia é que a maioria dos designers tem trabalho bom e apresentação fraca. É mais fácil de consertar do que parece.
+— Leo`;
+
 
       const frameworkExtra = secaoFramework ? `\n\nFRAMEWORK ADICIONAL A APLICAR:\n${secaoFramework}` : '';
 
@@ -1154,7 +1240,7 @@ OBJETIVO DO CTA: ${ctaLabel}
 INFORMAÇÕES ADICIONAIS (dados, contexto, insight central que deve aparecer):
 ${contextoCombinado || 'Nenhuma informação adicional fornecida — trabalhe com observação e mecanismo baseado no tema.'}${frameworkExtra}`;
 
-      conteudo = await chamarClaudeComSystem(SYSTEM_CARROSSEL, userMsg, { maxTokens: 2000, temperature: 0.7 });
+      conteudo = await chamarClaudeComSystem(SYSTEM_CARROSSEL, userMsg, { model: 'claude-sonnet-4-5-20251001', maxTokens: 2000, temperature: 0.6 });
 
     } else {
       // ── NEWSLETTER ─────────────────────────────────────────────────────────
@@ -1221,6 +1307,60 @@ Um abraço,
 Leo
 
 ════════════════════════════════
+EXEMPLO 2 — TOM E ABERTURA DIFERENTES
+(Abertura por situação recorrente, não diálogo. Tema: escopo e entrega.)
+════════════════════════════════
+
+☕ Mentoria matinal • 5 min de leitura
+
+Bom dia!
+
+Você entrega o projeto. O cliente aprova tudo. Três dias depois, chega a mensagem: "Já que você ainda tem acesso, consegue ajustar aquele slide também?"
+
+Você ajusta.
+
+Uma semana depois: "Seria possível incluir mais uma seção?"
+
+Você inclui.
+
+No final do mês, você percebe que trabalhou o dobro do que estava no contrato — e cobrou exatamente o que estava no contrato.
+
+Isso não é generosidade. É ausência de escopo.
+
+## O que virou entrega
+
+Escopo não é um documento burocrático que o cliente assina sem ler. É o acordo sobre o que você está entregando e o que você não está.
+
+Quando esse limite não existe, duas coisas acontecem ao mesmo tempo: o cliente começa a tratar pedidos extras como padrão, e você começa a aceitar porque quer preservar o relacionamento.
+
+O problema é que relacionamento preservado à custa de rentabilidade destruída não é um relacionamento — é uma dependência mal gerida.
+
+**Quanto mais você cede sem formalizar, mais difícil fica cobrar na próxima vez.**
+
+## Por que o "pequeno ajuste" cresce
+
+Cada pedido fora do escopo parece razoável isolado. É só um slide. É só um parágrafo. É só uma reunião a mais.
+
+O problema não está no pedido individual. Está no padrão que ele revela: o cliente não sabe onde termina o que foi contratado.
+
+E não sabe porque você nunca deixou claro.
+
+Quando você aceita o primeiro pedido extra sem sinalizar, está comunicando uma coisa diferente: que escopo é flexível. Que cabe mais. Que você vai dar conta.
+
+No projeto seguinte, a expectativa começa de onde ela terminou nesse.
+
+## Faça isso antes do próximo projeto
+
+Antes de começar qualquer entrega, manda uma mensagem curta: "Para a gente ficar alinhados — o que foi contratado cobre X. Qualquer demanda fora disso a gente formaliza separado."
+
+Não precisa ser contrato de dez páginas. Precisa ser uma frase enviada.
+
+Clareza no começo custa cinco minutos. Falta de clareza no final custa semanas.
+
+Um abraço,
+Leo
+
+════════════════════════════════
 AGORA ESCREVA A NEWSLETTER
 ════════════════════════════════
 
@@ -1237,7 +1377,7 @@ REGRAS ABSOLUTAS:
 ${secaoVault}`;
 
       const promptFinal = prompt + (exemplosAnteriores ? `\n\n════════════════════════════════\nEXEMPLOS APROVADOS (calibre formato e voz)\n════════════════════════════════\n${exemplosAnteriores}` : '');
-      conteudo = await chamarClaude(promptFinal);
+      conteudo = await chamarClaude(promptFinal, { model: 'claude-sonnet-4-5-20251001', maxTokens: 4096, temperature: 0.7 });
     }
     const notasUsadas = notas.map(n => n.arquivo);
 
