@@ -3,33 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Leonam OS</title>
+<title>LeonamIA</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700;900&family=Bebas+Neue&display=swap" rel="stylesheet">
 <style>
 /* ─── DESIGN TOKENS ─────────────────────────────────────────── */
 :root {
-  --bg:          #07070d;
-  --s1:          #0d0d16;
-  --s2:          #131320;
-  --s3:          #1c1c2e;
-  --border:      rgba(255,255,255,0.07);
-  --border-hi:   rgba(139,92,246,0.45);
-  --accent:      #7c3aed;
-  --accent-lt:   #8b5cf6;
-  --accent-dim:  rgba(139,92,246,0.12);
-  --accent-glow: rgba(139,92,246,0.3);
-  --neon:        #a78bfa;
-  --cyan:        #22d3ee;
-  --text:        #f1f5f9;
-  --muted:       #94a3b8;
-  --dim:         #4b5563;
-  --success:     #10b981;
+  --bg:          #f8fafc;
+  --s1:          #ffffff;
+  --s2:          #f1f5f9;
+  --s3:          #e2e8f0;
+  --border:      #e2e8f0;
+  --border-hi:   rgba(34,197,94,0.5);
+  --accent:      #16a34a;
+  --accent-lt:   #22c55e;
+  --accent-dim:  rgba(34,197,94,0.1);
+  --accent-glow: rgba(34,197,94,0.25);
+  --neon:        #16a34a;
+  --cyan:        #0ea5e9;
+  --text:        #0f172a;
+  --muted:       #64748b;
+  --dim:         #94a3b8;
+  --success:     #22c55e;
   --danger:      #ef4444;
-  --youtube:     #f87171;
-  --pdf:         #fb923c;
-  --nota:        #a78bfa;
-  --r:           10px;
-  --r-lg:        14px;
+  --youtube:     #ef4444;
+  --pdf:         #f97316;
+  --nota:        #8b5cf6;
+  --r:           12px;
+  --r-lg:        16px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -96,7 +96,7 @@ body.sidebar-collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 .logo-text {
   font-family: 'Syne', sans-serif;
   font-size: 19px; font-weight: 800; letter-spacing: -0.5px;
-  background: linear-gradient(120deg, #fff 0%, var(--neon) 100%);
+  background: linear-gradient(120deg, var(--text) 0%, var(--accent-lt) 100%);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
   transition: opacity 0.2s;
@@ -831,6 +831,39 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   position: fixed; bottom: 20px; right: 260px;
   z-index: 200; min-width: 220px;
 }
+
+/* ─── LAYOUT BUTTONS ─────────────────────────────────────────── */
+.layout-btns { display:flex;flex-wrap:wrap;gap:6px;padding:2px 0; }
+.layout-btn {
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  width:60px;padding:8px 4px 6px;border-radius:10px;
+  border:1.5px solid var(--border);background:var(--s2);
+  color:var(--muted);cursor:pointer;font-size:9px;font-family:'DM Sans',sans-serif;
+  font-weight:600;text-transform:uppercase;letter-spacing:0.05em;
+  transition:all 0.15s;
+}
+.layout-btn:hover { border-color:var(--border-hi);color:var(--text); }
+.layout-btn.active { border-color:var(--accent-lt);color:var(--accent);background:var(--accent-dim); }
+.layout-btn svg { opacity:0.6; }
+.layout-btn.active svg { opacity:1; }
+
+/* ─── ICON PANEL BUTTONS ─────────────────────────────────────── */
+.icon-pick-btn {
+  width:36px;height:36px;border-radius:8px;border:1px solid var(--border);
+  background:var(--s2);cursor:pointer;font-size:18px;display:flex;
+  align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;
+}
+.icon-pick-btn:hover { border-color:var(--border-hi);background:var(--accent-dim);transform:scale(1.1); }
+.emoji-cat-btn {
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--border);
+  background:var(--s2);cursor:pointer;font-size:16px;transition:all 0.15s;
+}
+.emoji-cat-btn:hover,.emoji-cat-btn.active { border-color:var(--accent-lt);background:var(--accent-dim); }
+.emoji-pick {
+  width:32px;height:32px;border-radius:6px;border:1px solid transparent;
+  background:none;cursor:pointer;font-size:18px;transition:all 0.15s;
+}
+.emoji-pick:hover { background:var(--s3);border-color:var(--border);transform:scale(1.15); }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -845,8 +878,8 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
     <span class="nav-label">Menu</span>
   </button>
   <div class="logo">
-    <div class="logo-text">Leonam<span>OS</span></div>
-    <div class="logo-sub">Segundo Cérebro</div>
+    <div class="logo-text">LeonamIA</div>
+    <div class="logo-sub">segundo cérebro</div>
   </div>
   <nav class="nav">
     <div class="nav-item active" onclick="irPara('ingestao', this)">
@@ -1265,6 +1298,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
     <button class="tb-btn" id="btn-undo" onclick="edUndo()" title="Desfazer (Ctrl+Z)" disabled>↩ Desfazer</button>
     <button class="tb-btn" id="btn-redo" onclick="edRedo()" title="Refazer (Ctrl+Shift+Z)" disabled>↪ Refazer</button>
     <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="toggleIconPanel()" title="Ícones e Emojis">😀 Emoji</button>
     <button class="tb-btn" onclick="toggleImport()">📥 Importar</button>
     <div class="tb-sep"></div>
     <button class="tb-btn" onclick="exportCurrentSlide()">⬇ PNG</button>
@@ -1323,6 +1357,38 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
     </div>
   </div>
 
+  <!-- PAINEL ÍCONES & EMOJIS -->
+  <div id="icon-panel" style="display:none;background:var(--s1);border-bottom:1px solid var(--border);padding:14px 18px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <span style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--text)">Ícones & Emojis</span>
+      <button onclick="toggleIconPanel()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;">✕</button>
+    </div>
+
+    <!-- Social action icons -->
+    <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);font-weight:700;margin-bottom:8px;">Ações sociais</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+      <button class="icon-pick-btn" onclick="insertEmoji('❤️')" title="Curtir">❤️</button>
+      <button class="icon-pick-btn" onclick="insertEmoji('🔁')" title="Compartilhar">🔁</button>
+      <button class="icon-pick-btn" onclick="insertEmoji('🔖')" title="Salvar">🔖</button>
+      <button class="icon-pick-btn" onclick="insertEmoji('➕')" title="Seguir">➕</button>
+      <button class="icon-pick-btn" onclick="insertEmoji('💬')" title="Comentar">💬</button>
+      <button class="icon-pick-btn" onclick="insertEmoji('📤')" title="Enviar">📤</button>
+      <button class="icon-pick-btn" onclick="insertEmoji('👀')" title="Ver">👀</button>
+      <button class="icon-pick-btn" onclick="insertEmoji('🔔')" title="Notificação">🔔</button>
+    </div>
+
+    <!-- Emoji categories -->
+    <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--dim);font-weight:700;margin-bottom:8px;">Emojis</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+      <button class="emoji-cat-btn active" onclick="showEmojiCat(this,'rostos')">😊</button>
+      <button class="emoji-cat-btn" onclick="showEmojiCat(this,'maos')">👋</button>
+      <button class="emoji-cat-btn" onclick="showEmojiCat(this,'objetos')">💡</button>
+      <button class="emoji-cat-btn" onclick="showEmojiCat(this,'simbolos')">✅</button>
+      <button class="emoji-cat-btn" onclick="showEmojiCat(this,'setas')">➡️</button>
+    </div>
+    <div id="emoji-grid" style="display:flex;flex-wrap:wrap;gap:4px;max-height:120px;overflow-y:auto;"></div>
+  </div>
+
   <!-- LAYOUT PRINCIPAL -->
   <div class="ed-main">
 
@@ -1338,6 +1404,16 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 
       <!-- Feature sections -->
       <div class="ep-sections">
+
+        <!-- Layout -->
+        <div class="ep-section open" id="ep-layout">
+          <div class="ep-section-header" onclick="toggleEpSection('ep-layout')">
+            <span>Layout</span><i class="ep-chevron">▾</i>
+          </div>
+          <div class="ep-section-body">
+            <div class="layout-btns" id="layout-btns"></div>
+          </div>
+        </div>
 
         <!-- Template -->
         <div class="ep-section open" id="ep-tpl">
@@ -2446,6 +2522,37 @@ const TEMPLATES = {
 };
 Object.assign(TEMPLATES, JSON.parse(localStorage.getItem('customTemplates') || '{}'));
 
+const LAYOUTS = {
+  default:    { nome: 'Padrão',    icon: '▤' },
+  checklist:  { nome: 'Resumo',    icon: '☑' },
+  funnel:     { nome: 'Funil',     icon: '⊽' },
+  comparison: { nome: 'Versus',    icon: '⇌' },
+  quote:      { nome: 'Citação',   icon: '❝' },
+  stat:       { nome: 'Dado',      icon: '#' },
+};
+let activeLayout = 'default';
+
+function renderLayoutBtns() {
+  const container = document.getElementById('layout-btns');
+  if (!container) return;
+  container.innerHTML = '';
+  Object.entries(LAYOUTS).forEach(([key, ly]) => {
+    const btn = document.createElement('button');
+    btn.className = 'layout-btn' + (key === activeLayout ? ' active' : '');
+    btn.innerHTML = `<span style="font-size:16px;line-height:1">${ly.icon}</span><span>${ly.nome}</span>`;
+    btn.onclick = () => aplicarLayout(key);
+    container.appendChild(btn);
+  });
+}
+
+function aplicarLayout(nome) {
+  activeLayout = nome;
+  renderLayoutBtns();
+  edSlides.forEach(s => { s.layout = nome; });
+  mountActiveSlide(true);
+  rebuildSlideList();
+}
+
 // edSlides: [{ label, headline, subtitle, body, isCover, funcTag, bgColor, bgImage, accentColor, username, topicLabel, idx, total }]
 let edSlides    = [];
 let activeIdx   = 0;
@@ -2522,7 +2629,8 @@ function renderSlideEl(data) {
           accentColor, username, topicLabel, funcTag = '', idx = 0, total = 1,
           headlineFont, headlineColor, headlineFontSize,
           bodyFont, bodyColor, bodyFontSize,
-          bgPosX = 50, bgPosY = 50, imgPosX = 50, imgPosY = 50 } = data;
+          bgPosX = 50, bgPosY = 50, imgPosX = 50, imgPosY = 50,
+          layout = 'default' } = data;
 
   const _hFont  = headlineFont  || 'Syne';
   const _hColor = headlineColor || '#ffffff';
@@ -2647,6 +2755,157 @@ function renderSlideEl(data) {
     }
 
     return el; // early return — skip the normal layout
+  }
+
+  // ── LAYOUT HELPERS ────────────────────────────────────────────────────────────
+  function _uBadge(el2, user) {
+    const b = document.createElement('div');
+    b.style.cssText = `background:rgba(0,0,0,0.52);border:1px solid rgba(255,255,255,0.13);border-radius:9px;padding:3px 8px;font-size:8px;color:#fff;letter-spacing:0.04em;white-space:nowrap;align-self:flex-start;font-family:'DM Sans',sans-serif;`;
+    b.textContent = user || '@leonamalves'; el2.appendChild(b);
+  }
+  function _solidBg(el2, color) {
+    const ov = document.createElement('div');
+    ov.style.cssText = `position:absolute;inset:0;background:${color||'#0c0c0f'};z-index:0;`;
+    el2.appendChild(ov);
+  }
+
+  // ── CHECKLIST LAYOUT ─────────────────────────────────────────────────────────
+  if (layout === 'checklist') {
+    el.style.cssText += ';display:flex;flex-direction:column;';
+    _solidBg(el, bgColor);
+    const lyr = document.createElement('div');
+    lyr.style.cssText = 'position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:16px 18px;';
+    const tagEl = document.createElement('div');
+    tagEl.style.cssText = `align-self:flex-start;background:${accentColor||'rgba(124,106,247,0.2)'};border:1px solid ${accentColor||'rgba(124,106,247,0.4)'};border-radius:20px;padding:3px 10px;font-size:8px;font-weight:700;color:${accentColor||'#c4b5fd'};letter-spacing:0.08em;text-transform:uppercase;font-family:'DM Sans',sans-serif;margin-bottom:10px;`;
+    tagEl.textContent = funcTag || 'RESUMO'; lyr.appendChild(tagEl);
+    const titleEl = document.createElement('div');
+    titleEl.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||20}px;font-weight:800;color:${_hColor};line-height:1.2;margin-bottom:12px;word-break:break-word;`;
+    titleEl.innerHTML = _buildAccentHtml(headline, accentColor); lyr.appendChild(titleEl);
+    const items = (body || subtitle || '').split(/\n+/).filter(l => l.trim().length > 2);
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:flex-start;gap:10px;margin-bottom:8px;flex-shrink:0;';
+      const check = document.createElement('div');
+      check.style.cssText = `width:18px;height:18px;border-radius:5px;border:1.5px solid ${accentColor||'rgba(124,106,247,0.5)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;`;
+      check.innerHTML = `<svg width="10" height="10" viewBox="0 0 12 12"><path d="M2 6l3 3 5-5" stroke="${accentColor||'#a78bfa'}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
+      const txt = document.createElement('div');
+      txt.style.cssText = `font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};line-height:1.45;word-break:break-word;flex:1;`;
+      txt.textContent = item.replace(/^[\d.\-*•]+\s*/, '');
+      row.appendChild(check); row.appendChild(txt); lyr.appendChild(row);
+    });
+    const sp = document.createElement('div'); sp.style.flex = '1'; lyr.appendChild(sp);
+    _uBadge(lyr, username); el.appendChild(lyr); return el;
+  }
+
+  // ── FUNNEL LAYOUT ─────────────────────────────────────────────────────────────
+  if (layout === 'funnel') {
+    el.style.cssText += ';display:flex;flex-direction:column;';
+    _solidBg(el, bgColor);
+    const lyr = document.createElement('div');
+    lyr.style.cssText = 'position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:14px 18px;align-items:center;';
+    const tF = document.createElement('div');
+    tF.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||17}px;font-weight:800;color:${_hColor};text-align:center;margin-bottom:12px;word-break:break-word;`;
+    tF.innerHTML = _buildAccentHtml(headline, accentColor); lyr.appendChild(tF);
+    const stages = (body || subtitle || '').split(/\n+/).filter(l => l.trim().length > 1).slice(0, 5);
+    const fc = [accentColor||'#7c6af7','#6366f1','#8b5cf6','#a78bfa','#c4b5fd'];
+    stages.forEach((stage, i) => {
+      const w = Math.round(280 * (1 - i * 0.15));
+      const s = document.createElement('div');
+      s.style.cssText = `width:${w}px;padding:7px 10px;background:${fc[i]||fc[4]};border-radius:6px;margin-bottom:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0;`;
+      const st = document.createElement('span');
+      st.style.cssText = `font-family:'${_bFont}',sans-serif;font-size:10px;font-weight:600;color:#fff;text-align:center;`;
+      st.textContent = stage.replace(/^[\d.\-*•]+\s*/, ''); s.appendChild(st);
+      lyr.appendChild(s);
+      if (i < stages.length - 1) {
+        const arr = document.createElement('div');
+        arr.style.cssText = `width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:8px solid ${fc[i]||fc[4]};margin-bottom:2px;flex-shrink:0;`;
+        lyr.appendChild(arr);
+      }
+    });
+    const sp = document.createElement('div'); sp.style.flex = '1'; lyr.appendChild(sp);
+    _uBadge(lyr, username); el.appendChild(lyr); return el;
+  }
+
+  // ── QUOTE LAYOUT ──────────────────────────────────────────────────────────────
+  if (layout === 'quote') {
+    el.style.cssText += ';display:flex;flex-direction:column;';
+    _solidBg(el, bgColor);
+    const lyr = document.createElement('div');
+    lyr.style.cssText = 'position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;';
+    const qi = document.createElement('div');
+    qi.style.cssText = `font-size:52px;color:${accentColor||'rgba(124,106,247,0.4)'};line-height:1;margin-bottom:8px;font-family:Georgia,serif;`;
+    qi.textContent = '"'; lyr.appendChild(qi);
+    const qt = document.createElement('div');
+    qt.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||22}px;font-weight:700;color:${_hColor};line-height:1.35;text-align:center;word-break:break-word;margin-bottom:14px;`;
+    qt.innerHTML = _buildAccentHtml(headline, accentColor); lyr.appendChild(qt);
+    if (body || subtitle) {
+      const at = document.createElement('div');
+      at.style.cssText = `font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};text-align:center;`;
+      at.textContent = '— ' + (body || subtitle); lyr.appendChild(at);
+    }
+    const ub = document.createElement('div');
+    ub.style.cssText = `position:absolute;bottom:10px;left:18px;background:rgba(0,0,0,0.52);border:1px solid rgba(255,255,255,0.13);border-radius:9px;padding:3px 8px;font-size:8px;color:#fff;letter-spacing:0.04em;white-space:nowrap;font-family:'DM Sans',sans-serif;`;
+    ub.textContent = username || '@leonamalves'; lyr.appendChild(ub);
+    el.appendChild(lyr); return el;
+  }
+
+  // ── STAT LAYOUT ───────────────────────────────────────────────────────────────
+  if (layout === 'stat') {
+    el.style.cssText += ';display:flex;flex-direction:column;';
+    _solidBg(el, bgColor);
+    const lyr = document.createElement('div');
+    lyr.style.cssText = 'position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 24px;';
+    const lines = headline.replace(/\*/g,'').split('\n');
+    const sn = document.createElement('div');
+    sn.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:72px;font-weight:900;color:${accentColor||_hColor};line-height:1;text-align:center;margin-bottom:4px;`;
+    sn.textContent = lines[0] || ''; lyr.appendChild(sn);
+    if (lines[1]) {
+      const sl = document.createElement('div');
+      sl.style.cssText = `font-family:'${_bFont}',sans-serif;font-size:14px;color:${_hColor};text-align:center;letter-spacing:0.05em;text-transform:uppercase;font-weight:600;margin-bottom:10px;`;
+      sl.textContent = lines[1]; lyr.appendChild(sl);
+    }
+    if (body) {
+      const sd = document.createElement('div');
+      sd.style.cssText = `font-family:'${_bFont}',sans-serif;font-size:${_bSize}px;color:${_bColor};text-align:center;line-height:1.5;max-width:280px;`;
+      sd.textContent = body; lyr.appendChild(sd);
+    }
+    const ub = document.createElement('div');
+    ub.style.cssText = `position:absolute;bottom:10px;left:18px;background:rgba(0,0,0,0.52);border:1px solid rgba(255,255,255,0.13);border-radius:9px;padding:3px 8px;font-size:8px;color:#fff;letter-spacing:0.04em;white-space:nowrap;font-family:'DM Sans',sans-serif;`;
+    ub.textContent = username || '@leonamalves'; lyr.appendChild(ub);
+    el.appendChild(lyr); return el;
+  }
+
+  // ── COMPARISON LAYOUT ─────────────────────────────────────────────────────────
+  if (layout === 'comparison') {
+    el.style.cssText += ';display:flex;flex-direction:column;';
+    _solidBg(el, bgColor);
+    const lyr = document.createElement('div');
+    lyr.style.cssText = 'position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;padding:14px 14px;';
+    const tc = document.createElement('div');
+    tc.style.cssText = `font-family:'${_hFont}',sans-serif;font-size:${headlineFontSize||18}px;font-weight:800;color:${_hColor};margin-bottom:10px;word-break:break-word;`;
+    tc.innerHTML = _buildAccentHtml(headline, accentColor); lyr.appendChild(tc);
+    const cols = document.createElement('div');
+    cols.style.cssText = 'display:flex;gap:8px;flex:1;';
+    const allText = body || subtitle || '';
+    const splitIdx = allText.search(/\n---\n|\n\|\n|\n\n/);
+    const leftText = splitIdx > -1 ? allText.slice(0, splitIdx) : allText.slice(0, Math.floor(allText.length / 2));
+    const rightText = splitIdx > -1 ? allText.slice(splitIdx).replace(/^\n(---|\|)\n/, '').trim() : allText.slice(Math.floor(allText.length / 2));
+    [{ label: '✕ Antes', txt: leftText, col: '#ef4444' }, { label: '✓ Depois', txt: rightText, col: '#22c55e' }].forEach(side => {
+      const col = document.createElement('div');
+      col.style.cssText = `flex:1;background:rgba(255,255,255,0.04);border:1px solid ${side.col}44;border-radius:10px;padding:10px;overflow:hidden;`;
+      const ch = document.createElement('div');
+      ch.style.cssText = `font-size:10px;font-weight:700;color:${side.col};letter-spacing:0.05em;margin-bottom:8px;font-family:'DM Sans',sans-serif;`;
+      ch.textContent = side.label; col.appendChild(ch);
+      const cb = document.createElement('div');
+      cb.style.cssText = `font-family:'${_bFont}',sans-serif;font-size:${Math.max(_bSize-1,10)}px;color:${_bColor};line-height:1.45;word-break:break-word;`;
+      cb.textContent = side.txt; col.appendChild(cb);
+      cols.appendChild(col);
+    });
+    lyr.appendChild(cols);
+    const ub = document.createElement('div');
+    ub.style.cssText = `background:rgba(0,0,0,0.52);border:1px solid rgba(255,255,255,0.13);border-radius:9px;padding:3px 8px;font-size:8px;color:#fff;letter-spacing:0.04em;white-space:nowrap;align-self:flex-start;font-family:'DM Sans',sans-serif;margin-top:8px;`;
+    ub.textContent = username || '@leonamalves'; lyr.appendChild(ub);
+    el.appendChild(lyr); return el;
   }
 
   // Background image — draggable to reposition
@@ -2995,6 +3254,7 @@ function initEditor() {
   rebuildSlideList();
   mountActiveSlide();
   renderTemplateBtns();
+  renderLayoutBtns();
   initPalettes();
   updateNavArrows();
   updateSlideBadge();
@@ -3141,12 +3401,12 @@ function edEscolherImagem() {
   modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);';
 
   const box = document.createElement('div');
-  box.style.cssText = 'background:#13131f;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:22px 18px 16px;width:292px;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 60px rgba(0,0,0,0.6);';
+  box.style.cssText = 'background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:22px 18px 16px;width:292px;display:flex;flex-direction:column;gap:14px;box-shadow:0 24px 60px rgba(0,0,0,0.15);color:#0f172a;';
 
   box.innerHTML = `
     <div>
-      <div style="font-size:13px;font-weight:700;color:#fff;font-family:'Syne',sans-serif;letter-spacing:0.02em;">Adicionar imagem</div>
-      <div style="font-size:10px;color:rgba(255,255,255,0.35);font-family:'DM Sans',sans-serif;margin-top:3px;">Escolha a fonte e onde encaixar</div>
+      <div style="font-size:13px;font-weight:700;color:#0f172a;font-family:'Syne',sans-serif;letter-spacing:0.02em;">Adicionar imagem</div>
+      <div style="font-size:10px;color:#64748b;font-family:'DM Sans',sans-serif;margin-top:3px;">Escolha a fonte e onde encaixar</div>
     </div>
   `;
 
@@ -3163,7 +3423,7 @@ function edEscolherImagem() {
   opts.forEach(opt => {
     const btn = document.createElement('button');
     btn.style.cssText = `display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:${opt.bg};border:1px solid ${opt.br};border-radius:10px;padding:10px 12px;cursor:pointer;transition:all 0.15s;text-align:left;`;
-    btn.innerHTML = `<span style="font-size:12px;font-weight:600;color:${opt.c};font-family:'DM Sans',sans-serif;">${opt.label}</span><span style="font-size:10px;color:rgba(255,255,255,0.38);font-family:'DM Sans',sans-serif;">${opt.sub}</span>`;
+    btn.innerHTML = `<span style="font-size:12px;font-weight:600;color:${opt.c};font-family:'DM Sans',sans-serif;">${opt.label}</span><span style="font-size:10px;color:rgba(15,23,42,0.45);font-family:'DM Sans',sans-serif;">${opt.sub}</span>`;
     btn.onmouseenter = () => { btn.style.filter = 'brightness(1.3)'; btn.style.transform = 'translateY(-1px)'; };
     btn.onmouseleave = () => { btn.style.filter = ''; btn.style.transform = ''; };
     btn.onclick = () => {
@@ -3175,7 +3435,7 @@ function edEscolherImagem() {
   });
 
   const cancelBtn = document.createElement('button');
-  cancelBtn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,0.3);font-size:11px;font-family:"DM Sans",sans-serif;cursor:pointer;text-align:center;padding:2px 0;';
+  cancelBtn.style.cssText = 'background:none;border:none;color:rgba(15,23,42,0.4);font-size:11px;font-family:"DM Sans",sans-serif;cursor:pointer;text-align:center;padding:2px 0;';
   cancelBtn.textContent = 'Cancelar';
   cancelBtn.onclick = () => document.body.removeChild(modal);
   modal.onclick = (e) => { if (e.target === modal) document.body.removeChild(modal); };
@@ -3429,14 +3689,14 @@ async function importarTextoNoEditor() {
         label: s.label, headline, subtitle: subParas.join('\n'), body: '', isCover: true,
         funcTag: (s.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') || 'GANCHO').toUpperCase(),
         bgColor: '#0c0c0f', bgImage: '', accentColor, username, topicLabel,
-        idx: 0, total: parsed.length,
+        layout: activeLayout, idx: 0, total: parsed.length,
       });
     } else {
       edSlides.push({
         label: s.label, headline, subtitle: '', body: paras.slice(1).join('\n\n'), isCover: false,
         funcTag: (s.label.replace(/^SLIDE\s+\d+\s*[—–-]\s*/i, '') || '').toUpperCase(),
         bgColor: '#0c0c0f', bgImage: '', accentColor, username, topicLabel,
-        idx: i, total: parsed.length,
+        layout: activeLayout, idx: i, total: parsed.length,
       });
     }
   }
@@ -3913,6 +4173,47 @@ function setAccentColor(color) {
   if (color === null) localStorage.removeItem('accentColor');
   else localStorage.setItem('accentColor', color);
   renderAccentSwatches();
+}
+
+// ── Emoji / Icon panel ─────────────────────────────────────────────────────────
+const EMOJI_CATS = {
+  rostos: ['😀','😃','😄','😁','😅','😂','🤣','😊','😇','🙂','😉','😍','🤩','😎','🤓','🧐','😏','😒','😞','😔','😟','😕','🙁','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😑','😬','🙄','😮','🤐','😪','😴','🥱','😵','🤧','🤒','🤕','🤑','🤠','😈','👿'],
+  maos: ['👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🫀','🫁','🧠','🦷','🦴','👀','👁️','👅','👄'],
+  objetos: ['💡','🔥','⚡','🌟','✨','💫','🎯','🎪','🎨','📌','📍','📎','🔗','📏','✏️','🖊️','📝','📋','📊','📈','📉','💰','💵','💴','💶','💷','💳','🏆','🥇','🎖️','🏅','🎗️','🎁','🎀','🎊','🎉','🎈','🎭','🎬','🎤','🎧','📱','💻','⌨️','🖥️','🖨️','🖱️','📷','📸','📹','🎥','📡','🔭','🔬','💎','🔑','🗝️','🔒','🔓'],
+  simbolos: ['✅','❌','⭕','🔴','🟠','🟡','🟢','🔵','🟣','⚫','⚪','🟤','🔶','🔷','🔸','🔹','🔺','🔻','💠','🔘','🔲','🔳','▪️','▫️','◾','◽','◼️','◻️','⬛','⬜','🟥','🟧','🟨','🟩','🟦','🟪','⚠️','🚫','❗','❕','❓','❔','‼️','⁉️','🔞','📵','🚷','🚯','🚳','🚱','📛','🔕','💯','🆒','🆓','🆕','🆙','🆚','🈵','🈹','🈲'],
+  setas: ['➡️','⬅️','⬆️','⬇️','↗️','↘️','↙️','↖️','↕️','↔️','↩️','↪️','⤴️','⤵️','🔃','🔄','🔙','🔚','🔛','🔜','🔝','▶️','⏩','⏪','⏫','⏬','◀️','🔼','🔽'],
+};
+
+function toggleIconPanel() {
+  const p = document.getElementById('icon-panel');
+  if (!p) return;
+  const isOpen = p.style.display !== 'none';
+  p.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) showEmojiCat(null, 'rostos');
+}
+
+function showEmojiCat(btn, cat) {
+  document.querySelectorAll('.emoji-cat-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const grid = document.getElementById('emoji-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  (EMOJI_CATS[cat] || []).forEach(em => {
+    const b = document.createElement('button');
+    b.className = 'emoji-pick';
+    b.textContent = em;
+    b.onclick = () => insertEmoji(em);
+    grid.appendChild(b);
+  });
+}
+
+function insertEmoji(em) {
+  if (!edSlides[activeIdx]) return;
+  edSlides[activeIdx].headline = (edSlides[activeIdx].headline || '') + ' ' + em;
+  mountActiveSlide();
+  updatePropsPanel();
+  historyPush();
+  toast('Emoji adicionado ao headline!');
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────────
