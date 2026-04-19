@@ -1045,7 +1045,7 @@ EXEMPLOS REAIS DO LEONAM (últimos ${label} — calibre formato, tamanho e voz c
 
     // Salva no histórico (silencioso em caso de falha)
     try {
-      await supabase.from('historico_conteudo').insert({ tema, tipo, angulo: angulo || '', conteudo, framework: framework || 'leonam' });
+      await supabase.from('historico_conteudo').insert({ tema, tipo, angulo: angulo || '', conteudo });
     } catch (_) {}
 
     res.json({ ok: true, conteudo, notasUsadas, tema, tipo });
@@ -1065,8 +1065,8 @@ app.get('/api/conteudo/historico', async (req, res) => {
     if (tipo && tipo !== 'todos') query = query.eq('tipo', tipo);
     const { data, error } = await query;
     if (error) throw new Error(error.message);
-    res.json(data || []);
-  } catch (e) { res.status(500).json({ erro: e.message }); }
+    res.json({ ok: true, historico: data || [] });
+  } catch (e) { res.status(500).json({ ok: false, erro: e.message }); }
 });
 
 app.delete('/api/conteudo/historico/:id', async (req, res) => {
