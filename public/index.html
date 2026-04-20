@@ -77,8 +77,8 @@
   --neon:        #16a34a;
   --cyan:        #0ea5e9;
   --text:        #0f172a;
-  --muted:       #64748b;
-  --dim:         #94a3b8;
+  --muted:       #475569;
+  --dim:         #64748b;
   --success:     #22c55e;
   --danger:      #ef4444;
   --youtube:     #ef4444;
@@ -422,18 +422,18 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 /* ─── TOAST (HeroUI chip style) ─────────────────────────────── */
 .toast {
   position: fixed; bottom: 24px; right: 24px;
-  background: #0f172a; color: #f8fafc;
-  border: 1px solid rgba(255,255,255,0.08);
+  background: var(--s1); color: var(--text);
+  border: 1px solid var(--border);
   border-radius: var(--r-lg); padding: 11px 18px;
   font-size: 13px; z-index: 9999;
   transform: translateY(80px); opacity: 0;
   transition: all 0.25s cubic-bezier(.4,0,.2,1);
   display: flex; align-items: center; gap: 8px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.16);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
 .toast.show    { transform: translateY(0); opacity: 1; }
-.toast.success { border-color: rgba(34,197,94,0.5); color: #86efac; }
-.toast.error   { border-color: rgba(239,68,68,0.4); color: #fca5a5; }
+.toast.success { border-color: rgba(34,197,94,0.5); color: var(--accent); }
+.toast.error   { border-color: rgba(239,68,68,0.4); color: var(--danger); }
 
 /* ─── EXPORT BAR ─────────────────────────────────────────────── */
 .export-bar {
@@ -491,7 +491,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 }
 .tb-btn:hover  { background: var(--s2); border-color: var(--border); color: var(--text); }
 .tb-btn:active { transform: scale(0.96); }
-.tb-btn:disabled { opacity: 0.28; cursor: not-allowed; }
+.tb-btn:disabled { opacity: 0.42; cursor: not-allowed; }
 .tb-btn.active { background: var(--accent-dim); border-color: var(--border-hi); color: var(--neon); }
 
 .tb-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
@@ -514,13 +514,13 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   border-bottom: 1px solid var(--border);
 }
 .ep-slides-head-label {
-  font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
   color: var(--dim); font-weight: 700;
 }
 .ep-add-btn {
-  width: 22px; height: 22px; border-radius: 6px;
+  width: 28px; height: 28px; border-radius: 7px;
   background: var(--accent-dim); border: 1px solid var(--border-hi);
-  color: var(--neon); font-size: 15px; cursor: pointer;
+  color: var(--neon); font-size: 16px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: all 0.15s; line-height: 1; padding: 0; font-family: inherit;
 }
@@ -540,7 +540,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 .ep-section-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 12px; cursor: pointer;
-  font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
   color: var(--muted); font-weight: 700;
   transition: color 0.15s; user-select: none;
 }
@@ -553,7 +553,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 .ep-toggle-row {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 12px; cursor: pointer;
-  font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
   color: var(--muted); font-weight: 700; transition: color 0.15s;
   border-bottom: 1px solid var(--border);
 }
@@ -656,7 +656,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 
 /* Creator info fields */
 .ep-creator-fields { display: flex; flex-direction: column; gap: 6px; }
-.ep-field label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); display: block; margin-bottom: 4px; font-weight: 700; }
+.ep-field label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--dim); display: block; margin-bottom: 4px; font-weight: 700; }
 .ep-field input {
   width: 100%; background: var(--s2); border: 1px solid var(--border);
   border-radius: 6px; padding: 6px 9px; color: var(--text);
@@ -701,7 +701,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   display: flex; flex-direction: column;
 }
 .ed-props-title {
-  font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
   color: var(--dim); font-weight: 700; margin-bottom: 14px; flex-shrink: 0;
 }
 
@@ -743,7 +743,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 .props-group:last-child { border-bottom: none; margin-bottom: 0; }
 
 .props-label {
-  font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
   color: var(--dim); margin-bottom: 9px; font-weight: 700;
 }
 .props-row { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
@@ -756,7 +756,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 .props-row input[type="number"],
 .props-row input[type="text"] {
   background: var(--s2); border: 1px solid var(--border);
-  border-radius: 6px; padding: 4px 7px; color: var(--text);
+  border-radius: 6px; padding: 6px 8px; color: var(--text);
   font-size: 12px; font-family: 'DM Sans', sans-serif; outline: none;
   transition: border-color 0.15s;
 }
@@ -770,16 +770,16 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 }
 .props-row select {
   background: var(--s2); border: 1px solid var(--border);
-  border-radius: 6px; padding: 4px 7px; color: var(--text);
+  border-radius: 6px; padding: 6px 8px; color: var(--text);
   font-size: 12px; outline: none; transition: border-color 0.15s;
 }
 .props-row select:focus { border-color: rgba(34,197,94,0.5); }
 .props-row input[type="range"] { accent-color: var(--accent-lt); flex: 1; }
 
 .props-btn {
-  flex: 1; padding: 5px 8px; border-radius: 6px;
+  flex: 1; padding: 7px 10px; border-radius: 6px;
   border: 1px solid var(--border); background: var(--s2);
-  color: var(--muted); font-size: 11px; font-weight: 500;
+  color: var(--muted); font-size: 12px; font-weight: 500;
   cursor: pointer; text-align: center;
   font-family: 'DM Sans', sans-serif; white-space: nowrap;
   transition: all 0.15s;
@@ -795,9 +795,9 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 .counter-style-opts { padding: 6px 0 2px; }
 .counter-style-btns { display: flex; gap: 5px; flex-wrap: wrap; }
 .cs-btn {
-  padding: 4px 9px; border-radius: 6px;
+  padding: 6px 10px; border-radius: 6px;
   border: 1px solid var(--border); background: var(--s2);
-  color: var(--muted); cursor: pointer; font-size: 10px;
+  color: var(--muted); cursor: pointer; font-size: 12px;
   font-family: 'DM Sans', sans-serif; font-weight: 500;
   transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
 }
@@ -835,7 +835,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   gap: 10px; margin-bottom: 14px;
 }
 .tpl-field label {
-  font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px;
   color: var(--dim); display: block; margin-bottom: 5px; font-weight: 700;
 }
 .tpl-field input[type="text"],
@@ -860,7 +860,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 .import-config-row .ep-field { min-width: 0; }
 .accent-swatches { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; margin-top: 4px; }
 .accent-swatch {
-  width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+  width: 26px; height: 26px; border-radius: 50%; cursor: pointer;
   border: 2px solid transparent; transition: transform 0.15s, border-color 0.15s;
   flex-shrink: 0;
 }
@@ -938,7 +938,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
 <!-- ── LOGIN SCREEN ────────────────────────────────────────────────────────── -->
 <div id="login-screen" style="
   position:fixed;inset:0;z-index:99999;
-  background:#0a0a0e;
+  background:#f8fafc;
   display:flex;align-items:center;justify-content:center;
   font-family:'DM Sans',sans-serif;
 ">
@@ -947,24 +947,24 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   ">
     <div style="text-align:center;margin-bottom:32px">
       <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;
-        background:linear-gradient(120deg,#fff 0%,#8b5cf6 100%);
+        background:linear-gradient(120deg,#0f172a 0%,#7c3aed 100%);
         -webkit-background-clip:text;-webkit-text-fill-color:transparent;
         margin-bottom:6px">Leonam OS</div>
-      <div style="font-size:13px;color:rgba(255,255,255,0.35);letter-spacing:0.04em">Acesso restrito</div>
+      <div style="font-size:13px;color:#64748b;letter-spacing:0.04em">Acesso restrito</div>
     </div>
 
-    <div style="background:#13131a;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:28px 24px">
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:28px 24px;box-shadow:0 4px 24px rgba(0,0,0,0.06)">
       <div style="margin-bottom:16px">
-        <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,0.4);font-weight:700;margin-bottom:7px">E-mail</label>
+        <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#475569;font-weight:700;margin-bottom:7px">E-mail</label>
         <input id="login-email" type="email" autocomplete="email" placeholder="seu@email.com"
-          style="width:100%;box-sizing:border-box;background:#0a0a0e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s"
-          onfocus="this.style.borderColor='rgba(139,92,246,0.6)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
+          style="width:100%;box-sizing:border-box;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:11px 14px;color:#0f172a;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s"
+          onfocus="this.style.borderColor='rgba(34,197,94,0.5)'" onblur="this.style.borderColor='#e2e8f0'">
       </div>
       <div style="margin-bottom:20px">
-        <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:rgba(255,255,255,0.4);font-weight:700;margin-bottom:7px">Senha</label>
+        <label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#475569;font-weight:700;margin-bottom:7px">Senha</label>
         <input id="login-password" type="password" autocomplete="current-password" placeholder="••••••••"
-          style="width:100%;box-sizing:border-box;background:#0a0a0e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:11px 14px;color:#fff;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s"
-          onfocus="this.style.borderColor='rgba(139,92,246,0.6)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'"
+          style="width:100%;box-sizing:border-box;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:11px 14px;color:#0f172a;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s"
+          onfocus="this.style.borderColor='rgba(34,197,94,0.5)'" onblur="this.style.borderColor='#e2e8f0'"
           onkeydown="if(event.key==='Enter')_loginSubmit()">
       </div>
       <button onclick="_loginSubmit()" id="login-btn"
@@ -983,44 +983,45 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;
 ">
   <div style="
-    background:#13131a;border:1px solid rgba(255,255,255,0.09);border-radius:16px;
+    background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;
     width:100%;max-width:440px;margin:24px;padding:28px 24px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.10);
   ">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff">Para qual canal?</div>
-      <button onclick="fecharModalCanal()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:20px;cursor:pointer;line-height:1;padding:0">×</button>
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#0f172a">Para qual canal?</div>
+      <button onclick="fecharModalCanal()" style="background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;line-height:1;padding:0">×</button>
     </div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:20px">O canal define o formato, tamanho e estilo das sugestões.</div>
+    <div style="font-size:12px;color:#64748b;margin-bottom:20px">O canal define o formato, tamanho e estilo das sugestões.</div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
       <button onclick="_escolherCanal('carrossel')" style="
-        padding:20px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.08);
-        background:rgba(255,255,255,0.03);cursor:pointer;text-align:center;
+        padding:20px 14px;border-radius:12px;border:1.5px solid #e2e8f0;
+        background:#f8fafc;cursor:pointer;text-align:center;
         transition:all 0.15s;font-family:'DM Sans',sans-serif;
       "
-      onmouseenter="this.style.borderColor='rgba(139,92,246,0.5)';this.style.background='rgba(139,92,246,0.08)'"
-      onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='rgba(255,255,255,0.03)'">
+      onmouseenter="this.style.borderColor='rgba(139,92,246,0.5)';this.style.background='rgba(139,92,246,0.06)'"
+      onmouseleave="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
         <div style="font-size:26px;margin-bottom:8px">📱</div>
-        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">Carrossel</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.4">Instagram · Hook forte · Slides curtos · Visual first</div>
+        <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:4px">Carrossel</div>
+        <div style="font-size:11px;color:#64748b;line-height:1.4">Instagram · Hook forte · Slides curtos · Visual first</div>
       </button>
       <button onclick="_escolherCanal('substack')" style="
-        padding:20px 14px;border-radius:12px;border:1.5px solid rgba(255,255,255,0.08);
-        background:rgba(255,255,255,0.03);cursor:pointer;text-align:center;
+        padding:20px 14px;border-radius:12px;border:1.5px solid #e2e8f0;
+        background:#f8fafc;cursor:pointer;text-align:center;
         transition:all 0.15s;font-family:'DM Sans',sans-serif;
       "
-      onmouseenter="this.style.borderColor='rgba(249,115,22,0.5)';this.style.background='rgba(249,115,22,0.08)'"
-      onmouseleave="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='rgba(255,255,255,0.03)'">
+      onmouseenter="this.style.borderColor='rgba(249,115,22,0.5)';this.style.background='rgba(249,115,22,0.06)'"
+      onmouseleave="this.style.borderColor='#e2e8f0';this.style.background='#f8fafc'">
         <div style="font-size:26px;margin-bottom:8px">✉️</div>
-        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">Substack</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);line-height:1.4">Newsletter · Narrativa longa · Argumento · Taxa de abertura</div>
+        <div style="font-size:13px;font-weight:700;color:#0f172a;margin-bottom:4px">Substack</div>
+        <div style="font-size:11px;color:#64748b;line-height:1.4">Newsletter · Narrativa longa · Argumento · Taxa de abertura</div>
       </button>
     </div>
 
-    <div style="margin-bottom:6px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.3);font-weight:700">Contexto adicional (opcional)</div>
+    <div style="margin-bottom:6px;font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#475569;font-weight:700">Contexto adicional (opcional)</div>
     <textarea id="ctx-sugestao-modal" placeholder="Evento recente, ideia que surgiu, pauta que quer explorar..."
-      style="width:100%;box-sizing:border-box;min-height:64px;background:#0a0a0e;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical"
-      onfocus="this.style.borderColor='rgba(139,92,246,0.4)'" onblur="this.style.borderColor='rgba(255,255,255,0.08)'"></textarea>
+      style="width:100%;box-sizing:border-box;min-height:64px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;color:#0f172a;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;resize:vertical"
+      onfocus="this.style.borderColor='rgba(34,197,94,0.5)'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
   </div>
 </div>
 
@@ -1031,20 +1032,20 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
   align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;
 ">
   <div style="
-    background:#13131a;border:1px solid rgba(255,255,255,0.09);border-radius:16px;
+    background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;
     width:100%;max-width:560px;max-height:80vh;display:flex;flex-direction:column;
-    margin:24px;overflow:hidden;
+    margin:24px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.10);
   ">
     <!-- Header -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0">
-      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff">📂 Meus projetos</div>
-      <button onclick="fecharProjetos()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:20px;cursor:pointer;line-height:1;padding:0">×</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px 16px;border-bottom:1px solid #e2e8f0;flex-shrink:0">
+      <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#0f172a">📂 Meus projetos</div>
+      <button onclick="fecharProjetos()" style="background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;line-height:1;padding:0">×</button>
     </div>
     <!-- Save current as new project -->
-    <div id="proj-save-area" style="padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;display:flex;gap:8px">
+    <div id="proj-save-area" style="padding:16px 24px;border-bottom:1px solid #e2e8f0;flex-shrink:0;display:flex;gap:8px">
       <input id="proj-nome-input" type="text" placeholder="Nome do projeto atual..."
-        style="flex:1;background:#0a0a0e;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:9px 12px;color:#fff;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"
-        onfocus="this.style.borderColor='rgba(139,92,246,0.5)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'"
+        style="flex:1;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;color:#0f172a;font-size:13px;font-family:'DM Sans',sans-serif;outline:none"
+        onfocus="this.style.borderColor='rgba(34,197,94,0.5)'" onblur="this.style.borderColor='#e2e8f0'"
         onkeydown="if(event.key==='Enter')_salvarProjetoComNome()">
       <button onclick="_salvarProjetoComNome()" style="
         padding:9px 16px;border:none;border-radius:8px;
@@ -1054,7 +1055,7 @@ textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
     </div>
     <!-- Projects list -->
     <div id="proj-lista" style="flex:1;overflow-y:auto;padding:12px 24px 20px">
-      <div style="text-align:center;color:rgba(255,255,255,0.3);font-size:13px;padding:40px 0">Carregando...</div>
+      <div style="text-align:center;color:#94a3b8;font-size:13px;padding:40px 0">Carregando...</div>
     </div>
   </div>
 </div>
@@ -4333,7 +4334,7 @@ async function _gerarImagensCarrossel(parsed) {
     if (!el) {
       el = document.createElement('div');
       el.id = 'img-gen-toast';
-      el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1c1c2e;border:1px solid rgba(139,92,246,0.4);color:#f1f5f9;padding:10px 18px;border-radius:20px;font-size:12px;font-family:"DM Sans",sans-serif;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5)';
+      el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#ffffff;border:1px solid #e2e8f0;color:#0f172a;padding:10px 18px;border-radius:20px;font-size:12px;font-family:"DM Sans",sans-serif;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(0,0,0,0.08)';
       document.body.appendChild(el);
     }
     if (current > total) {
